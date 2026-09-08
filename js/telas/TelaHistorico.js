@@ -10,6 +10,7 @@ function TelaHistorico({ chamados, voltar }) {
     const [mostrarBaixar, setMostrarBaixar] = React.useState(false);
     const [baixarUnidade, setBaixarUnidade] = React.useState('TODOS');
     const [baixarFormato, setBaixarFormato] = React.useState('excel');
+    const [detalhes, setDetalhes] = React.useState(null);
     const itensPorPagina = 6;
     const encerrados = chamados.filter(c => c.concluido);
     const parciais = chamados.filter(c => c.status === 'AGUARDANDO_USUARIO');
