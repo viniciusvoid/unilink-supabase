@@ -2,9 +2,9 @@
 ### Documentação Completa do Projeto (Supabase)
 
 **Empresa:** UNILINK Transportes Integrados Ltda.  
-**Versão:** 4.0 (Assumir → Concluir por Item + Logs + Seed Demo)  
-**Última atualização:** 02/09/2026  
-**Changelog:** ver §22, §23, §24, §25  
+**Versão:** 5.0 (API Enxuta + Notificações + Câmera + Deploy Split)  
+**Última atualização:** 08/09/2026  
+**Changelog:** ver §22, §23, §24, §25, §26, §27  
 **Stack:** React 18 (CDN/Babel, sem build), Tailwind CSS (CDN), Supabase (Postgres + Auth + Storage + Realtime), Node/Express (API), SheetJS, HTML5
 
 ---
@@ -17,17 +17,17 @@
 5. [Funcionalidades por Perfil](#5-funcionalidades-por-perfil)
 6. [Detalhamento das Telas](#6-detalhamento-das-telas)
 7. [Fluxos Críticos](#7-fluxos-críticos)
-8. [Autenticação — Janela Única de Login](#8-autenticação--janela-única-de-login)
+8. [Autenticação — Janela Única + Recuperação](#8-autenticação--janela-única--recuperação)
 9. [Autorização e Papéis (RBAC)](#9-autorização-e-papéis-rbac)
 10. [Interface, Responsividade e Dark Mode](#10-interface-responsividade-e-dark-mode)
 11. [Banco de Dados — Schema e Migrations](#11-banco-de-dados--schema-e-migrations)
 12. [Segurança — RLS e Camada Dupla](#12-segurança--rls-e-camada-dupla)
-13. [API Própria (`/api`)](#13-api-própria-api)
-14. [Logs — Arquivo, VS Code e Extração](#14-logs--arquivo-vs-code-e-extração)
+13. [API Própria Enxuta (`/api`)](#13-api-própria-enxuta-api)
+14. [Logs e Notificações (Toast)](#14-logs-e-notificações-toast)
 15. [Requisitos de Sistema](#15-requisitos-de-sistema)
 16. [Instalação Local — Passo a Passo](#16-instalação-local--passo-a-passo)
 17. [Configuração de Ambiente](#17-configuração-de-ambiente)
-18. [Deploy em Produção](#18-deploy-em-produção)
+18. [Deploy em Produção (Front + Back separados)](#18-deploy-em-produção-front--back-separados)
 19. [Operação no Dia a Dia](#19-operação-no-dia-a-dia)
 20. [Seed de Dados Fictícios (Apresentação)](#20-seed-de-dados-fictícios-apresentação)
 21. [Troubleshooting](#21-troubleshooting)
@@ -481,6 +481,19 @@ Verificado em 02/09/2026: 50 registros inseridos (ex: `UNK-... (EM_ATENDIMENTO)`
 | **Operação** | `Pendentes → checkbox → Concluir` | `Pendentes → Assumir → Concluir → selecionar itens → observações → fotos → parcial/total` | `§19` |
 
 **Como testar:** `Pendentes` → `Assumir` (vira `EM_ATENDIMENTO`) → `Concluir` → selecionar 1 de 2 itens → preencher `Serviço executado` + `Observações` + foto → `Concluir parcial` (fica `AGUARDANDO_USUARIO` com `Itens pendentes`) → repetir `Concluir` com item restante → `FECHADO`.
+
+---
+## 26. Changelog 08/09/2026 — API Enxuta + Notificações + Câmera + Deploy Split
+
+**API Enxuta `api/server.js:1` (80 linhas, 512 removidas):** `CORS` permissivo `*.up.railway.app` + `localhost`, `GET /health`, `PATCH /assumir` público (sem `exigirAutenticacao`, grava `Anônimo` se sem token) + `PATCH /concluir` com `exigirAutenticacao` para rastreabilidade, sem `meu-perfil`/`logs` acoplados. `js/services/chamadosService.js:181` sem fallback `supabase.from().update` — toda trilha passa pela API.
+
+**Notificações `js/components/Toast.js:1` + `js/App.js:233`:** `ToastContainer` global `window.showToast` com 4 tipos `success emerald`/`error red`/`warning amber`/`info slate`, ícones, auto-dismiss 3-5s. `TelaCorretiva`/`TelaPendencia` validam com `notifyWarning` (ex: `Informe o equipamento`, `Selecione ao menos um serviço`), `App.js` `assumir` → `✓ UNK-... assumido! Em atendimento por você.`.
+
+**Câmera `js/components/CameraCapture.js:1` + `TelaCorretiva.js:81`/`TelaPendencia.js:185`:** `CameraCapture` com `getUserMedia` `facingMode:environment`, preview fullscreen, `capture` via `canvas.toBlob` → `File`, e fallback `input capture="environment"` para galeria. Botões `Galeria` (file) + `Câmera` (video) com `min-h-[44px]`.
+
+**Deploy Split:** `front` branch (`index.html` + `js/`) → Railway `Root .` `nixpacks.toml` `python -m http.server`; `backend` branch (`api/`) → Railway `Root api` `railway.json` `npm start`. `js/supabaseConfig.js:23` `API_BASE_URL = https://clever-expression...` para `front`, `api/.env.example` `CORS_ORIGIN` com `https://unilinkmnt-production...`.
+
+**Correções visuais:** `ServiceBadge.js:56` `BORRACHARIA` padronizada de `bg-black text-white` para `bg-white text-slate-700 border-slate-300` (igual aos outros), `TelaPendencia.js:176` `Observações` textarea com `text-slate-900 dark:text-white placeholder:text-slate-500` (antes sem `text` causava branco sobre branco).
 
 ---
 *Documentação gerada a partir do código em `unilink-supabase/` — manter sincronizada a cada migration ou tela nova.*

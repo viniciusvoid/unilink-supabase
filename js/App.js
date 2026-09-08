@@ -168,7 +168,7 @@ function App() {
         try {
             await ChamadosService.assumirChamado(chamado);
             setChamadoPendenteAcao(null);
-            window.notifySuccess && window.notifySuccess('Chamado assumido! Status: Em atendimento');
+            window.notifySuccess && window.notifySuccess(`✓ ${chamado.protocolo || ''} assumido! Em atendimento por você.`.trim());
         }
         catch (e) {
             console.error("Erro ao assumir: ", e);

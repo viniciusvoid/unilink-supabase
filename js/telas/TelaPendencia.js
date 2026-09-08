@@ -357,7 +357,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                 <label className="block text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-1.5">Observações / Considerações importantes</label>
 
-                                <textarea rows="3" maxLength="1000" placeholder="Ex: peça pendente, orientação ao solicitante, risco..." className="w-full border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg p-2.5 text-base sm:text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none" value={observacoes} onChange={(e)=>setObservacoes(e.target.value)}></textarea>
+                                <textarea rows="3" maxLength="1000" placeholder="Ex: peça pendente, orientação ao solicitante, risco..." className="w-full border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg p-2.5 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none" value={observacoes} onChange={(e)=>setObservacoes(e.target.value)}></textarea>
 
                                 <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-1">Aparece no histórico e no acompanhamento por protocolo.</p>
 

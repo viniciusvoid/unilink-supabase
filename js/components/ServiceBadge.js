@@ -56,7 +56,7 @@ const ServiceBadge = ({ servico, selected, onClick, className = "" }) => {
             case 'BORRACHARIA':
                 styles = selected
                     ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
-                    : 'bg-black text-white border border-black hover:bg-slate-900';
+                    : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700';
                 icon = (
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="9" />
