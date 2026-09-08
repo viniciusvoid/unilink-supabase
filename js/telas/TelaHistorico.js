@@ -80,38 +80,54 @@ function TelaHistorico({ chamados, voltar }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 mb-4">
-                        <div className="flex flex-col sm:flex-row gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5">
-                            <div className="flex items-center gap-2 flex-wrap flex-1">
-                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase shrink-0">Unidade</span>
-                                <div className="flex gap-1.5">
-                                    {['TODOS','MATRIZ','PECÉM'].map(u=>(
-                                        <button key={u} onClick={()=>setUnidadeFiltro(u)} className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition ${unidadeFiltro===u?'bg-emerald-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{u}</button>
-                                    ))}
-                                </div>
+                    <div className="flex flex-col gap-2 mb-4">
+                        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Filial</span>
+                                <select value={unidadeFiltro} onChange={e=>setUnidadeFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option value="TODOS">Todas filiais</option>
+                                    <option value="MATRIZ">Matriz</option>
+                                    <option value="PECÉM">Pecém</option>
+                                </select>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap flex-1">
-                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase shrink-0">Status</span>
-                                <div className="flex gap-1 flex-wrap">
-                                    {['TODOS','FECHADO','RESOLVIDO','AGUARDANDO_USUARIO'].map(s=>(
-                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-amber-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{s==='TODOS'?'Todos': s==='AGUARDANDO_USUARIO'?'Parcial':s}</button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Status</span>
+                                <select value={statusFiltro} onChange={e=>setStatusFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option value="TODOS">Todos status</option>
+                                    <option value="FECHADO">Fechado</option>
+                                    <option value="RESOLVIDO">Resolvido</option>
+                                    <option value="AGUARDANDO_USUARIO">Parcial</option>
+                                </select>
                             </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase shrink-0">Data</span>
-                                <div className="flex gap-1.5 flex-wrap">
-                                    {[{k:'TODOS',l:'Todas'},{k:'HOJE',l:'Hoje'},{k:'7d',l:'7d'},{k:'30d',l:'30d'},{k:'MES_ATUAL',l:'Mês atual'}].map(o=>(
-                                        <button key={o.k} onClick={()=>setDataFiltro(o.k)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${dataFiltro===o.k?'bg-sky-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{o.l}</button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[130px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Período</span>
+                                <select value={dataFiltro} onChange={e=>setDataFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option value="TODOS">Todo período</option>
+                                    <option value="HOJE">Hoje</option>
+                                    <option value="7d">Últimos 7 dias</option>
+                                    <option value="30d">Últimos 30 dias</option>
+                                    <option value="MES_ATUAL">Mês atual</option>
+                                    <option value="CALENDARIO">Calendário...</option>
+                                </select>
                             </div>
-                            {(statusFiltro!=='TODOS'||dataFiltro!=='TODOS'||unidadeFiltro!=='TODOS') && (
-                                <button onClick={()=>{setStatusFiltro('TODOS');setDataFiltro('TODOS');setUnidadeFiltro('TODOS');setBusca('');}} className="sm:ml-auto text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 underline">Limpar filtros</button>
+                            {(statusFiltro!=='TODOS'||dataFiltro!=='TODOS'||unidadeFiltro!=='TODOS'|| busca) && (
+                                <button onClick={()=>{setStatusFiltro('TODOS');setDataFiltro('TODOS');setUnidadeFiltro('TODOS');setBusca('');}} className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 underline px-2">Limpar</button>
                             )}
                         </div>
+                        {dataFiltro==='CALENDARIO' && (
+                            <div className="flex gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl p-2.5">
+                                <input type="date" onChange={e=>{
+                                    const d = e.target.value ? new Date(e.target.value) : null;
+                                    if (d) { d.setHours(0,0,0,0); setDataFiltro('CALENDARIO'); // usa filtrarChamadosPorIntervalo com d
+                                    }
+                                }} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
+                                <span className="text-xs text-slate-500 self-center">até</span>
+                                <input type="date" onChange={e=>{
+                                    const d2 = e.target.value ? new Date(e.target.value) : null;
+                                    if (d2) { d2.setHours(23,59,59,999); }
+                                }} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
+                            </div>
+                        )}
                     </div>
 
                     <input type="text" placeholder="Pesquisar por equipamento..." className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg mb-4 text-base sm:text-sm bg-white dark:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:outline-none placeholder:text-slate-500 min-h-[44px]" value={busca} onChange={(e)=>setBusca(e.target.value.toUpperCase())}/>
