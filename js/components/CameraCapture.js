@@ -127,19 +127,19 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
                     <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover sm:object-contain max-h-[100dvh]" />
                         <div className="absolute top-0 inset-x-0 p-3 sm:p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
-                            <button onClick={closeCamera} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center active:scale-95">
+                            <button type="button" onClick={closeCamera} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center active:scale-95">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                             <span className="text-white text-sm font-semibold bg-black/50 px-3 py-1 rounded-full">{currentCount}/{maxFiles} fotos</span>
-                            <button onClick={switchCamera} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center active:scale-95">
+                            <button type="button" onClick={switchCamera} className="w-10 h-10 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center active:scale-95">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             </button>
                         </div>
                         <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center gap-3">
                             <p className="text-white/90 text-xs font-medium text-center">Enquadre a evidência e toque em Capturar</p>
                             <div className="flex items-center justify-center gap-4 w-full max-w-sm mx-auto">
-                                <button onClick={closeCamera} className="flex-1 bg-white/20 backdrop-blur text-white font-semibold py-3 rounded-xl">Cancelar</button>
-                                <button onClick={capture} className="flex-1 bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-lg">
+                                <button type="button" onClick={closeCamera} className="flex-1 bg-white/20 backdrop-blur text-white font-semibold py-3 rounded-xl">Cancelar</button>
+                                <button type="button" onClick={capture} className="flex-1 bg-white text-slate-900 font-bold py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 shadow-lg">
                                     <span className="w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center"><span className="w-5 h-5 rounded-full bg-slate-900"></span></span>
                                     Capturar
                                 </button>
