@@ -83,9 +83,8 @@
     -->
     <!-- FRONT branch: API em serviço separado -->
     <script>
-      // Em produção, aponte para o serviço BACKEND no Railway
       if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-        window.API_BASE_URL = window.API_BASE_URL || "https://unilink-api-production.up.railway.app";
+        window.API_BASE_URL = window.API_BASE_URL || "https://clever-expression-production-8bf5.up.railway.app";
       }
     </script>
     <!-- Logger frontend (precisa vir ANTES do App para capturar tudo) -->
