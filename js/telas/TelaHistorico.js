@@ -48,7 +48,7 @@ function TelaHistorico({ chamados, voltar }) {
                                     <svg className={`w-3 h-3 transition ${mostrarBaixar?'rotate-180':''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
                                 </button>
                                 {mostrarBaixar && (
-                                    <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-[92vw] sm:w-72 max-w-[320px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-20">
+                                    <div className="fixed sm:absolute inset-x-3 sm:inset-x-auto sm:right-0 mt-2 sm:mt-2 w-auto sm:w-72 max-w-[320px] mx-auto sm:mx-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-3 z-20 sm:translate-x-0" style={{left: window.innerWidth < 640 ? "50%" : undefined, transform: window.innerWidth < 640 ? "translateX(-50%)" : undefined}}>
                                         <p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Filial</p>
                                         <div className="grid grid-cols-3 gap-1.5 mb-3">
                                             {['TODOS','MATRIZ','PECÉM'].map(u=>(

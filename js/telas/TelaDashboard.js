@@ -45,39 +45,51 @@ function TelaDashboard({ chamados, voltar }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 mb-5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-3">
-                        <div className="flex flex-col lg:flex-row gap-3 justify-between">
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Período</span>
-                                <div className="flex gap-1.5">
-                                    {[{ v: 7, l: '7d' }, { v: 30, l: '30d' }, { v: 90, l: '90d' }, { v: null, l: 'Tudo' }].map(opt => (
-                                        <button key={opt.l} onClick={() => setFiltro({ tipo: 'dias', valor: opt.v })} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${filtro.tipo === 'dias' && filtro.valor === opt.v ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}>{opt.l}</button>
-                                    ))}
-                                </div>
+                    <div className="flex flex-col gap-2 mb-5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Filial</span>
+                                <select value={unidadeFiltro} onChange={e=>setUnidadeFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                                    <option value="TODOS">Todas filiais</option>
+                                    <option value="MATRIZ">Matriz</option>
+                                    <option value="PECÉM">Pecém</option>
+                                </select>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Unidade</span>
-                                <div className="flex gap-1.5">
-                                    {['TODOS','MATRIZ','PECÉM'].map(u=>(
-                                        <button key={u} onClick={()=>setUnidadeFiltro(u)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${unidadeFiltro===u?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}>{u}</button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Status</span>
+                                <select value={statusFiltro} onChange={e=>setStatusFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                    <option value="TODOS">Todos status</option>
+                                    <option value="ABERTO">Aberto</option>
+                                    <option value="EM_ATENDIMENTO">Em atendimento</option>
+                                    <option value="AGUARDANDO_USUARIO">Parcial</option>
+                                    <option value="ATRIBUIDO">Atribuído</option>
+                                    <option value="FECHADO">Fechado</option>
+                                </select>
                             </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Status</span>
-                                <div className="flex gap-1 flex-wrap">
-                                    {['TODOS','ABERTO','EM_ATENDIMENTO','AGUARDANDO_USUARIO','ATRIBUIDO','FECHADO'].map(s=>(
-                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-amber-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}>{s==='TODOS'?'Todos':s.replace('_',' ')}</button>
-                                    ))}
-                                </div>
+                            <div className="flex items-center gap-1.5 flex-1 min-w-[130px]">
+                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Período</span>
+                                <select value={filtro.tipo==='intervalo'?filtro.label:filtro.valor===7?'7d':filtro.valor===30?'30d':filtro.valor===90?'90d':filtro.valor===null?'Tudo':'7d'} onChange={e=>{
+                                    const v=e.target.value;
+                                    if(v==='Hoje'){const {inicio,fim}=obterIntervaloHoje(); setFiltro({tipo:'intervalo',inicio,fim,label:'Hoje'});}
+                                    else if(v==='Ontem'){const {inicio,fim}=obterIntervaloOntem(); setFiltro({tipo:'intervalo',inicio,fim,label:'Ontem'});}
+                                    else if(v==='Mês atual'){const {inicio,fim}=obterIntervaloMesAtual(); setFiltro({tipo:'intervalo',inicio,fim,label:'Mês atual'});}
+                                    else if(v==='Mês anterior'){const {inicio,fim}=obterIntervaloMesAnterior(); setFiltro({tipo:'intervalo',inicio,fim,label:'Mês anterior'});}
+                                    else if(v==='Tudo') setFiltro({tipo:'dias', valor:null});
+                                    else setFiltro({tipo:'dias', valor: parseInt(v) || 30});
+                                }} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:outline-none">
+                                    <option value="7d">Últimos 7 dias</option>
+                                    <option value="30d">Últimos 30 dias</option>
+                                    <option value="90d">Últimos 90 dias</option>
+                                    <option value="Tudo">Todo período</option>
+                                    <option value="Hoje">Hoje</option>
+                                    <option value="Ontem">Ontem</option>
+                                    <option value="Mês atual">Mês atual</option>
+                                    <option value="Mês anterior">Mês anterior</option>
+                                </select>
                             </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
-                            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 uppercase mr-1">Atalhos:</span>
-                            {[{label:'Hoje',obter:obterIntervaloHoje},{label:'Ontem',obter:obterIntervaloOntem},{label:'Mês atual',obter:obterIntervaloMesAtual},{label:'Mês anterior',obter:obterIntervaloMesAnterior}].map(a=>(
-                                <button key={a.label} onClick={()=>{const {inicio,fim}=a.obter(); setFiltro({tipo:'intervalo',inicio,fim,label:a.label});}} className={`px-2.5 py-1 rounded-full text-xs font-medium ${filtro.tipo==='intervalo'&&filtro.label===a.label?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800'}`}>{a.label}</button>
-                            ))}
-                            {(statusFiltro!=='TODOS' || unidadeFiltro!=='TODOS') && <button onClick={()=>{setStatusFiltro('TODOS'); setUnidadeFiltro('TODOS');}} className="ml-auto text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 underline">Limpar</button>}
+                            {(statusFiltro!=='TODOS'||unidadeFiltro!=='TODOS'||filtro.tipo==='intervalo'||filtro.valor!==30) && (
+                                <button onClick={()=>{setStatusFiltro('TODOS'); setUnidadeFiltro('TODOS'); setFiltro({tipo:'dias', valor:30});}} className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 underline px-2">Limpar</button>
+                            )}
                         </div>
                     </div>
 
