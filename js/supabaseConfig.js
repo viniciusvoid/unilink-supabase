@@ -16,16 +16,9 @@ const SUPABASE_URL = "https://lylnrlybiyfoogfsnctz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5bG5ybHliaXlmb29nZnNuY3R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODc5NjgsImV4cCI6MjEwMzE2Mzk2OH0.5BeBVkVlzLOtO7As-adNA2vvbrxedX7CUqyRBvcMZVI";
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Base da API — FRONT branch: aponta para o BACKEND no Railway
+// Base da API — enxuta: front (Railway) -> API (Railway)
 const API_BASE_URL = window.API_BASE_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3001'
     : 'https://clever-expression-production-8bf5.up.railway.app'
 );
-// Fallback: se o front e a API estiverem no mesmo host com prefixo /api (Vercel), tente também
-// Para Railway com 2 serviços, defina window.API_FALLBACK_URL com a URL da API
-window.API_FALLBACK_URL = window.API_FALLBACK_URL || null;
-// Tentativa automática: se API_BASE_URL for o front e retornar 404 HTML, ApiClient tentará API_FALLBACK_URL
-if (!window.API_FALLBACK_URL && API_BASE_URL.includes('unilinkmnt-production')) {
-  window.API_FALLBACK_URL = API_BASE_URL.replace('unilinkmnt-production', 'unilinkmnt-api-production');
-}
