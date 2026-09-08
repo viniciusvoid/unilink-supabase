@@ -442,7 +442,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                         <div className="flex flex-wrap gap-2">
 
-                            <button onClick={()=>{const dados=pendentes.filter(c=>unidadeFiltro==='TODOS'||(c.unidade||'MATRIZ')===unidadeFiltro); exportarParaExcel(dados, unidadeFiltro);}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-2 rounded-lg text-xs">Excel ({unidadeFiltro})</button>
+                            <DownloadPopover dados={pendentes} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
 
                             <button onClick={()=>setOrdenarPorPrioridade(!ordenarPorPrioridade)} className="bg-slate-900 hover:bg-black text-white font-medium px-3.5 py-2 rounded-lg text-xs">{ordenarPorPrioridade?'Prioridade':'Data'}</button>
 

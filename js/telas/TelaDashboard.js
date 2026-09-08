@@ -40,7 +40,7 @@ function TelaDashboard({ chamados, voltar }) {
                             <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{periodoLabel} • {unidadeFiltro} • {statusFiltro==='TODOS'?'Todos status':statusFiltro}</p>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:border-slate-800 hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-2 rounded-lg text-xs">PDF relatório</button>
+                            <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-2 rounded-lg text-xs">PDF relatório</button>
                             <button onClick={voltar} className="bg-slate-900 hover:bg-black text-white font-medium px-3.5 py-2 rounded-lg text-xs">Menu</button>
                         </div>
                     </div>
