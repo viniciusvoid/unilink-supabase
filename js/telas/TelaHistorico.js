@@ -117,7 +117,7 @@ function TelaHistorico({ chamados, voltar }) {
 
                     <div className="grid grid-cols-1 gap-3 md:hidden">
                         {listaExibicaoPaginada.map(c=>(
-                            <div key={c.idFirebase} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                            <div key={c.idFirebase} onClick={()=>setDetalhes(c)} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition active:scale-[0.98]">
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                     <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">{c.unidade||'MATRIZ'}</span>
                                     <PriorityBadge prioridade={c.prioridade}/>
@@ -130,7 +130,7 @@ function TelaHistorico({ chamados, voltar }) {
                                     <p className="text-emerald-700"><span className="font-semibold">Encerrado:</span> {formatarApenasData(c.dataEncerramento)}</p>
                                     <p><span className="font-semibold text-slate-700 dark:text-slate-300">Feito:</span> {c.servicoFeito||'-'}</p>
                                 </div>
-                                <button onClick={()=>handleImprimirOS(c)} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg> Imprimir OS</button>
+                                <button onClick={(e)=>{e.stopPropagation(); handleImprimirOS(c)}} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg> Imprimir OS</button>
                             </div>
                         ))}
                         {listaExibicaoPaginada.length===0 && <div className="p-6 text-center text-base sm:text-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">Nenhum chamado concluído.</div>}
@@ -153,7 +153,7 @@ function TelaHistorico({ chamados, voltar }) {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {listaExibicaoPaginada.map((c,i)=>(
-                                    <tr key={c.idFirebase} className={`${i%2===0?'bg-white dark:bg-slate-800':'bg-slate-50 dark:bg-slate-700'} hover:bg-slate-50 dark:hover:bg-slate-700`}>
+                                    <tr key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`cursor-pointer ${i%2===0?'bg-white dark:bg-slate-800':'bg-slate-50 dark:bg-slate-700'} hover:bg-slate-50 dark:hover:bg-slate-700`}>
                                         <td className="p-3 text-center"><span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300">{c.unidade||'MATRIZ'}</span></td>
                                         <td className="p-3 text-center"><PriorityBadge prioridade={c.prioridade}/></td>
                                         <td className="p-3 text-center text-xs text-slate-600 dark:text-slate-300">{formatarApenasData(c.dataAbertura)}</td>
@@ -162,7 +162,7 @@ function TelaHistorico({ chamados, voltar }) {
                                         <td className="p-3 text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{c.descricao}</td>
                                         <td className="p-3 text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{c.servicoFeito||'-'}</td>
                                         <td className="p-3 text-center text-xs font-medium text-emerald-700">{formatarApenasData(c.dataEncerramento)}</td>
-                                        <td className="p-3 text-center"><button onClick={()=>handleImprimirOS(c)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"><svg className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button></td>
+                                        <td className="p-3 text-center"><button onClick={(e)=>{e.stopPropagation(); handleImprimirOS(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"><svg className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button></td>
                                     </tr>
                                 ))}
                                 {listaExibicaoPaginada.length===0 && <tr><td colSpan="9" className="p-8 text-center text-slate-700 dark:text-slate-300">Nenhum chamado concluído.</td></tr>}
