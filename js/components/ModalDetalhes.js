@@ -21,14 +21,14 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 fade-in" onClick={aoFechar}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 fade-in">
             {imgAmpliada && (
                 <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={()=>setImgAmpliada(null)}>
                     <img src={imgAmpliada} alt="Evidência" className="max-w-full max-h-full rounded-xl shadow-2xl" onClick={e=>e.stopPropagation()} />
                     <button onClick={()=>setImgAmpliada(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center">×</button>
                 </div>
             )}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700" onClick={e=>e.stopPropagation()}>
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
                 <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3 bg-slate-50 dark:bg-slate-800">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
