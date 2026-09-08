@@ -97,7 +97,7 @@ function TelaDashboard({ chamados, voltar }) {
                             <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por status — em aberto vs concluídos</h3>
                             <div className="flex gap-1">
                                 <button onClick={()=>setChartMode(s=>({...s, status:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.status==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
-                                <button onClick={()=>setChartMode(s=>({...s, status:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.status==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                                <button onClick={()=>setChartMode(s=>({...s, status:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.status==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Circular</button>
                             </div>
                         </div>
                         {chartMode.status==='bar' ? (
@@ -158,7 +158,7 @@ function TelaDashboard({ chamados, voltar }) {
                                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por prioridade</h3>
                                 <div className="flex gap-1">
                                     <button onClick={()=>setChartMode(s=>({...s, pri:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.pri==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
-                                    <button onClick={()=>setChartMode(s=>({...s, pri:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.pri==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                                    <button onClick={()=>setChartMode(s=>({...s, pri:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.pri==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Circular</button>
                                 </div>
                             </div>
                             {chartMode.pri==='bar' ? (
@@ -182,7 +182,7 @@ function TelaDashboard({ chamados, voltar }) {
                                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por unidade</h3>
                                 <div className="flex gap-1">
                                     <button onClick={()=>setChartMode(s=>({...s, uni:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.uni==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
-                                    <button onClick={()=>setChartMode(s=>({...s, uni:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.uni==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                                    <button onClick={()=>setChartMode(s=>({...s, uni:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.uni==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Circular</button>
                                 </div>
                             </div>
                             {chartMode.uni==='bar' ? (
