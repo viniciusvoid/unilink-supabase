@@ -5,6 +5,8 @@ function TelaDashboard({ chamados, voltar }) {
     const [filtro, setFiltro] = React.useState({ tipo: 'dias', valor: 30 });
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
+    const [expandReinc, setExpandReinc] = React.useState(false);
+    const [chartMode, setChartMode] = React.useState({ pri: 'bar', uni: 'bar', status: 'bar' });
     const [detalhes, setDetalhes] = React.useState(null);
     const periodoLabel = filtro.tipo === 'intervalo' ? filtro.label : (filtro.valor === null ? 'Todo o período' : `Últimos ${filtro.valor} dias`);
     const chamadosFiltrados = React.useMemo(() => {
@@ -91,68 +93,111 @@ function TelaDashboard({ chamados, voltar }) {
                     </div>
 
                     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 mb-5 shadow-sm">
-                        <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm mb-3">Por status — em aberto vs concluídos</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-                            {Object.entries(distStatus).map(([s,qtd])=>{
-                                const cores = { ABERTO:'bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-slate-700 border-slate-200', EM_ANALISE:'bg-sky-50 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800 text-sky-700 border-sky-200', ATRIBUIDO:'bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800 text-indigo-700 border-indigo-200', EM_ATENDIMENTO:'bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800 text-amber-800 border-amber-200', AGUARDANDO_USUARIO:'bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800 text-orange-800 border-orange-200', RESOLVIDO:'bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800 text-emerald-700 border-emerald-200', FECHADO:'bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700 text-emerald-800 border-emerald-300' };
-                                const label = s.replace('_',' ');
-                                return (
-                                    <div key={s} className={`rounded-lg border px-3 py-3 text-center ${cores[s]||'bg-slate-50 border-slate-200'}`}>
-                                        <div className="text-lg font-bold">{qtd}</div>
-                                        <div className="text-[11px] font-semibold uppercase tracking-wide mt-1">{label}</div>
-                                    </div>
-                                );
-                            })}
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por status — em aberto vs concluídos</h3>
+                            <div className="flex gap-1">
+                                <button onClick={()=>setChartMode(s=>({...s, status:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.status==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
+                                <button onClick={()=>setChartMode(s=>({...s, status:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.status==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                            </div>
                         </div>
+                        {chartMode.status==='bar' ? (
+                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                                {Object.entries(distStatus).map(([s,qtd])=>{
+                                    const cores = { ABERTO:'bg-slate-100 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-slate-700 border-slate-200', EM_ANALISE:'bg-sky-50 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-800 text-sky-700 border-sky-200', ATRIBUIDO:'bg-indigo-50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800 text-indigo-700 border-indigo-200', EM_ATENDIMENTO:'bg-amber-100 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800 text-amber-800 border-amber-200', AGUARDANDO_USUARIO:'bg-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800 text-orange-800 border-orange-200', RESOLVIDO:'bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800 text-emerald-700 border-emerald-200', FECHADO:'bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700 text-emerald-800 border-emerald-300' };
+                                    const label = s.replace('_',' ');
+                                    return (
+                                        <div key={s} className={`rounded-lg border px-3 py-3 text-center ${cores[s]||'bg-slate-50 border-slate-200'}`}>
+                                            <div className="text-lg font-bold">{qtd}</div>
+                                            <div className="text-[11px] font-semibold uppercase tracking-wide mt-1">{label}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <PieChart data={distStatus} colors={{ABERTO:'#94a3b8', EM_ANALISE:'#0ea5e9', ATRIBUIDO:'#6366f1', EM_ATENDIMENTO:'#f59e0b', AGUARDANDO_USUARIO:'#f97316', RESOLVIDO:'#10b981', FECHADO:'#059669'}} />
+                        )}
 
                     </div>
 
-                    <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-200 dark:border-amber-800 p-4 mb-5">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="font-semibold text-amber-900 dark:text-amber-200 text-sm">⚠️ Reincidências — equipamentos com múltiplos chamados</h3>
-                            <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-full font-bold">{metricasServico.reduce((a,m)=>a+m.recorrentes,0)} casos</span>
-                        </div>
-                        {metricasServico.filter(m=>m.recorrentes>0).length===0 ? (
-                            <p className="text-sm text-amber-800/70 dark:text-amber-300/70 text-center py-3">Nenhuma reincidência no período — ótimo!</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {metricasServico.filter(m=>m.recorrentes>0).slice(0,5).map(m=>(
-                                    <div key={m.servico} className="flex items-center justify-between bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-                                        <div className="flex items-center gap-2"><ServiceBadge servico={m.servico}/><span className="text-sm font-semibold text-slate-800 dark:text-white">{m.servico}</span></div>
-                                        <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{m.recorrentes} reincid.</span>
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 mb-5">
+                        <button onClick={()=>setExpandReinc(prev=>!prev)} className="w-full flex items-center justify-between gap-2 text-left">
+                            <div className="flex items-center gap-2">
+                                <span className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 flex items-center justify-center">⚠️</span>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-sm leading-none">Reincidências</h3>
+                                    <p className="text-[11px] text-slate-500">{metricasServico.reduce((a,m)=>a+m.recorrentes,0)} equipamentos repetidos</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="hidden sm:inline text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-full font-bold">{metricasServico.filter(m=>m.recorrentes>0).length} serviços</span>
+                                <svg className={`w-4 h-4 text-slate-500 transition ${expandReinc ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </button>
+                        {expandReinc && (
+                            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                {metricasServico.filter(m=>m.recorrentes>0).length===0 ? (
+                                    <p className="text-sm text-slate-600 dark:text-slate-400 text-center py-4">Nenhuma reincidência — ótimo!</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {metricasServico.filter(m=>m.recorrentes>0).slice(0,5).map(m=>(
+                                            <div key={m.servico} onClick={()=>setDetalhes(m)} className="flex items-center justify-between bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 cursor-pointer hover:shadow-sm active:scale-[0.98]">
+                                                <div className="flex items-center gap-2"><ServiceBadge servico={m.servico}/><span className="text-sm font-semibold text-slate-800 dark:text-white">{m.servico}</span></div>
+                                                <span className="text-sm font-bold text-amber-700 dark:text-amber-300">{m.recorrentes} ×</span>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
+                                <p className="text-[11px] text-slate-500 mt-2">Mesmo equipamento com &gt;1 chamado do mesmo serviço no período filtrado.</p>
                             </div>
                         )}
-                        <p className="text-[11px] text-amber-700/70 dark:text-amber-300/70 mt-2">Reincidência = mesmo equipamento com &gt;1 chamado do mesmo serviço no período. Clique em um serviço abaixo para detalhes.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                            <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm mb-3">Por prioridade</h3>
-                            <div className="space-y-2.5">
-                                {Object.entries(distPrioridade).map(([p,qtd])=>(
-                                    <div key={p} className="flex items-center gap-2">
-                                        <span className="w-16 text-xs font-medium text-slate-600 dark:text-slate-300">{p}</span>
-                                        <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                                            <div className={`h-full ${corPrioridade[p]||'bg-slate-400'} rounded-full`} style={{width:`${(qtd/maiorPrioridade)*100}%`}}></div>
-                                        </div>
-                                        <span className="w-6 text-xs font-semibold text-slate-700 dark:text-slate-300 text-right">{qtd}</span>
-                                    </div>
-                                ))}
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por prioridade</h3>
+                                <div className="flex gap-1">
+                                    <button onClick={()=>setChartMode(s=>({...s, pri:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.pri==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
+                                    <button onClick={()=>setChartMode(s=>({...s, pri:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.pri==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                                </div>
                             </div>
+                            {chartMode.pri==='bar' ? (
+                                <div className="space-y-2.5">
+                                    {Object.entries(distPrioridade).map(([p,qtd])=>(
+                                        <div key={p} className="flex items-center gap-2">
+                                            <span className="w-16 text-xs font-medium text-slate-600 dark:text-slate-300">{p}</span>
+                                            <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                                                <div className={`h-full ${corPrioridade[p]||'bg-slate-400'} rounded-full`} style={{width:`${(qtd/maiorPrioridade)*100}%`}}></div>
+                                            </div>
+                                            <span className="w-6 text-xs font-semibold text-slate-700 dark:text-slate-300 text-right">{qtd}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <PieChart data={distPrioridade} colors={{Urgente:'#ef4444', Alta:'#f97316', 'Média':'#eab308', Baixa:'#22c55e'}} />
+                            )}
                         </div>
                         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                            <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm mb-3">Por unidade</h3>
-                            <div className="space-y-2">
-                                {Object.entries(distUnidade).length===0 && <p className="text-xs text-slate-600 dark:text-slate-300">Sem dados no período.</p>}
-                                {Object.entries(distUnidade).map(([u,qtd])=>(
-                                    <div key={u} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2">
-                                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{u}</span>
-                                        <span className="text-sm font-bold text-slate-900 dark:text-white">{qtd}</span>
-                                    </div>
-                                ))}
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-base sm:text-sm">Por unidade</h3>
+                                <div className="flex gap-1">
+                                    <button onClick={()=>setChartMode(s=>({...s, uni:'bar'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.uni==='bar'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Barra</button>
+                                    <button onClick={()=>setChartMode(s=>({...s, uni:'pie'}))} className={`px-2 py-1 rounded text-xs font-bold ${chartMode.uni==='pie'?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>Pizza</button>
+                                </div>
                             </div>
+                            {chartMode.uni==='bar' ? (
+                                <div className="space-y-2">
+                                    {Object.entries(distUnidade).length===0 && <p className="text-xs text-slate-600 dark:text-slate-300">Sem dados no período.</p>}
+                                    {Object.entries(distUnidade).map(([u,qtd])=>(
+                                        <div key={u} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2">
+                                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{u}</span>
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white">{qtd}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <PieChart data={distUnidade} colors={{MATRIZ:'#0E3263', 'PECÉM':'#f59e0b'}} />
+                            )}
                         </div>
                     </div>
 
