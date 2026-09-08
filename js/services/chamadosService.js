@@ -230,13 +230,53 @@ const ChamadosService = {
             throw lastError || e2;
         }
     },
-    // Novo fluxo: concluir (parcial ou total) com observações
+    // Novo fluxo: concluir (parcial ou total) com observações — com fallback Supabase se API falhar (mesmo que assumir)
     async concluirChamado(chamado, { itensConcluidos, servicoFeito, pendencia, observacoes }) {
-        const res = await ApiClient.patch(`/chamados/${chamado.idFirebase}/concluir`, {
-            itensConcluidos: itensConcluidos || [],
-            servicoFeito, pendencia, observacoes
-        });
-        return res;
+        try {
+            const res = await ApiClient.patch(`/chamados/${chamado.idFirebase}/concluir`, {
+                itensConcluidos: itensConcluidos || [],
+                servicoFeito, pendencia, observacoes
+            });
+            return res;
+        } catch (e) {
+            const isApiNotFound = e.message.includes('API não encontrada') || e.message.includes('Failed to fetch') || e.message.includes('conectar à API');
+            const is404Html = e.message.includes('404 HTML');
+            if (isApiNotFound || is404Html) {
+                console.warn('Concluir via API falhou, tentando fallback Supabase direto', e.message);
+                const todosItens = String(chamado.servico||'').split(',').map(s=>s.trim()).filter(Boolean);
+                const concluidos = Array.isArray(itensConcluidos) ? itensConcluidos : [];
+                const todosConcluidos = todosItens.length>0 && concluidos.length===todosItens.length;
+                const parcial = !todosConcluidos && concluidos.length>0;
+                const update = {};
+                if (todosConcluidos || (!parcial && todosItens.length<=1)) {
+                    update.status = 'FECHADO';
+                    update.concluido = true;
+                    update.servico_feito = servicoFeito;
+                    update.pendencia = pendencia || 'NENHUMA';
+                    update.observacoes = observacoes || null;
+                    update.data_encerramento = new Date().toISOString();
+                } else if (parcial) {
+                    const pendentes = todosItens.filter(i=>!concluidos.includes(i));
+                    update.status = 'AGUARDANDO_USUARIO';
+                    update.servico_feito = servicoFeito;
+                    update.pendencia = pendentes.length ? `Itens pendentes: ${pendentes.join(', ')}` + (pendencia?` | ${pendencia}`:'') : pendencia;
+                    update.observacoes = observacoes || null;
+                    update.itens_concluidos = concluidos;
+                    update.conclusao_parcial = true;
+                } else {
+                    update.status = 'FECHADO';
+                    update.concluido = true;
+                    update.servico_feito = servicoFeito;
+                    update.pendencia = pendencia || 'NENHUMA';
+                }
+                const { error } = await supabase.from('chamados_unilink').update(update).eq('id', chamado.idFirebase);
+                if (error) throw error;
+                await this.registrarEvento(chamado.idFirebase, todosConcluidos ? 'ENCERRAMENTO' : 'OBSERVACAO', `Concluído via fallback Supabase: ${servicoFeito}`);
+                window.notifySuccess && window.notifySuccess(parcial ? 'Conclusão parcial (fallback) registrada!' : 'Chamado concluído (fallback)!');
+                return { ok: true, status: update.status, fallback: true };
+            }
+            throw e;
+        }
     },
 
     /**
