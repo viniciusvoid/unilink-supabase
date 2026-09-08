@@ -7,6 +7,7 @@ function TelaHistorico({ chamados, voltar }) {
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
     const [dataFiltro, setDataFiltro] = React.useState('TODOS');
     const [paginaAtual, setPaginaAtual] = React.useState(1);
+    const [detalhes, setDetalhes] = React.useState(null);
     const itensPorPagina = 6;
     const encerrados = chamados.filter(c => c.concluido);
     const parciais = chamados.filter(c => c.status === 'AGUARDANDO_USUARIO');
@@ -82,12 +83,12 @@ function TelaHistorico({ chamados, voltar }) {
 
                     <div className="grid grid-cols-1 gap-3 md:hidden">
                         {listaExibicaoPaginada.map(c=>(
-                            <div key={c.idFirebase} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white">
+                            <div key={c.idFirebase} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                                 <div className="flex items-center justify-between gap-2 mb-2">
                                     <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">{c.unidade||'MATRIZ'}</span>
                                     <PriorityBadge prioridade={c.prioridade}/>
                                 </div>
-                                <h3 className="font-semibold text-slate-900 text-base sm:text-sm">{c.equipamento}</h3>
+                                <h3 className="font-semibold text-slate-900 dark:text-white text-base sm:text-sm">{c.equipamento}</h3>
                                 <p className="text-[11px] font-mono text-slate-600 dark:text-slate-300 mb-2">{c.protocolo}</p>
                                 <div className="mb-3"><ServiceBadge servico={c.servico}/></div>
                                 <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-700 dark:text-slate-300 dark:text-slate-300 space-y-1 mb-3">
@@ -118,7 +119,7 @@ function TelaHistorico({ chamados, voltar }) {
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {listaExibicaoPaginada.map((c,i)=>(
-                                    <tr key={c.idFirebase} className={`${i%2===0?'bg-white':'bg-slate-50 dark:bg-slate-800/50'} hover:bg-slate-50 dark:hover:bg-slate-700`}>
+                                    <tr key={c.idFirebase} className={`${i%2===0?'bg-white dark:bg-slate-800':'bg-slate-50 dark:bg-slate-700'} hover:bg-slate-50 dark:hover:bg-slate-700`}>
                                         <td className="p-3 text-center"><span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300">{c.unidade||'MATRIZ'}</span></td>
                                         <td className="p-3 text-center"><PriorityBadge prioridade={c.prioridade}/></td>
                                         <td className="p-3 text-center text-xs text-slate-600 dark:text-slate-300">{formatarApenasData(c.dataAbertura)}</td>
@@ -135,6 +136,7 @@ function TelaHistorico({ chamados, voltar }) {
                         </table>
                     </div>
 
+                    {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={()=>setDetalhes(null)} aoImprimir={handleImprimirOS} />}
                     {totalPaginas>1 && (
                         <div className="flex justify-center items-center gap-1.5 mt-5">
                             <button disabled={paginaAtual===1} onClick={()=>setPaginaAtual(paginaAtual-1)} className="w-8 h-8 border rounded-lg bg-white disabled:opacity-40 text-base sm:text-sm">‹</button>

@@ -75,6 +75,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     const [enviandoFinalizacao, setEnviandoFinalizacao] = React.useState(false);
 
     const [assumindoId, setAssumindoId] = React.useState(null);
+    const [detalhes, setDetalhes] = React.useState(null);
 
 
 
@@ -531,7 +532,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                         {listaExibicaoPaginada.map(c=>(
 
-                            <div key={c.idFirebase} className={`p-4 rounded-xl border ${emAtendimento(c)?'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800': aguardando(c)?'bg-sky-50 border-sky-200 dark:bg-sky-950/20':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
+                            <div key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`p-4 rounded-xl border cursor-pointer hover:shadow-md ${emAtendimento(c)?'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800': aguardando(c)?'bg-sky-50 border-sky-200 dark:bg-sky-950/20':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
 
                                 <div className="flex items-center justify-between gap-2 mb-2">
 
@@ -569,7 +570,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                     {podeAssumir(c) ? (
 
-                                        <button onClick={()=>handleAssumir(c)} disabled={assumindoId===c.idFirebase} className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-60">{assumindoId===c.idFirebase?'Assumindo...':'Assumir'}</button>
+                                        <button onClick={(e)=>{e.stopPropagation(); handleAssumir(c)}} disabled={assumindoId===c.idFirebase} className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-60">{assumindoId===c.idFirebase?'Assumindo...':'Assumir'}</button>
 
                                     ) : emAtendimento(c) || aguardando(c) ? (
 
@@ -579,9 +580,9 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                     <div className="flex gap-1.5">
 
-                                        <button onClick={()=>imprimirOrdemServico(c)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-lg"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button>
+                                        <button onClick={(e)=>{e.stopPropagation(); imprimirOrdemServico(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-lg"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button>
 
-                                        <button onClick={()=>handleIniciarEncerramento(c)} className={`px-3 py-2 rounded-lg text-xs font-semibold ${(emAtendimento(c)||aguardando(c))?'bg-emerald-600 hover:bg-emerald-700 text-white':'bg-slate-200 text-slate-600 cursor-not-allowed'}`} disabled={!emAtendimento(c)&&!aguardando(c)}>Concluir</button>
+                                        <button onClick={(e)=>{e.stopPropagation(); handleIniciarEncerramento(c)}} className={`px-3 py-2 rounded-lg text-xs font-semibold ${(emAtendimento(c)||aguardando(c))?'bg-emerald-600 hover:bg-emerald-700 text-white':'bg-slate-200 text-slate-600 cursor-not-allowed'}`} disabled={!emAtendimento(c)&&!aguardando(c)}>Concluir</button>
 
                                     </div>
 
@@ -629,7 +630,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                 {listaExibicaoPaginada.map((c,i)=>(
 
-                                    <tr key={c.idFirebase} className={`${emAtendimento(c)?'bg-amber-50/60': aguardando(c)?'bg-sky-50/50': i%2===0?'bg-white dark:bg-slate-900':'bg-slate-50 dark:bg-slate-800/50'} hover:bg-slate-50`}>
+                                    <tr key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`cursor-pointer ${emAtendimento(c)?'bg-amber-50/60': aguardando(c)?'bg-sky-50/50': i%2===0?'bg-white dark:bg-slate-900':'bg-slate-50 dark:bg-slate-800/50'} hover:bg-slate-50`}>
 
                                         <td className="p-3 text-center"><span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300">{c.unidade||'MATRIZ'}</span></td>
 
@@ -649,15 +650,15 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                                 {podeAssumir(c) ? (
 
-                                                    <button onClick={()=>handleAssumir(c)} disabled={assumindoId===c.idFirebase} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1.5 rounded-md text-xs font-bold disabled:opacity-50">{assumindoId===c.idFirebase?'...':'Assumir'}</button>
+                                                    <button onClick={(e)=>{e.stopPropagation(); handleAssumir(c)}} disabled={assumindoId===c.idFirebase} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1.5 rounded-md text-xs font-bold disabled:opacity-50">{assumindoId===c.idFirebase?'...':'Assumir'}</button>
 
                                                 ) : (
 
-                                                    <button onClick={()=>handleIniciarEncerramento(c)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold">Concluir</button>
+                                                    <button onClick={(e)=>{e.stopPropagation(); handleIniciarEncerramento(c)}} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold">Concluir</button>
 
                                                 )}
 
-                                                <button onClick={()=>imprimirOrdemServico(c)} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096"/></svg></button>
+                                                <button onClick={(e)=>{e.stopPropagation(); imprimirOrdemServico(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096"/></svg></button>
 
                                             </div>
 
@@ -677,6 +678,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
 
 
+                    {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={()=>setDetalhes(null)} aoImprimir={(c)=>imprimirOrdemServico(c)} />}
                     {totalPaginas>1 && (
 
                         <div className="flex justify-center items-center gap-1.5 mt-5">
