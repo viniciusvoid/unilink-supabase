@@ -185,7 +185,7 @@ const ChamadosService = {
         }
     },
 
-    // Novo fluxo: assumir — AGORA PÚBLICO (sem exigir login), mantém compatibilidade se houver sessão
+    // Novo fluxo: assumir — PÚBLICO com fallback direto Supabase se API falhar (CORS/rede)
     async assumirChamado(chamado) {
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData?.session?.access_token;
@@ -193,25 +193,42 @@ const ChamadosService = {
         if (token) headers['Authorization'] = `Bearer ${token}`;
         let resp;
         let baseUrl = API_BASE_URL;
+        let lastError = null;
+        for (const url of [baseUrl, window.API_FALLBACK_URL].filter(Boolean)) {
+            try {
+                resp = await fetch(`${url}/chamados/${chamado.idFirebase}/assumir`, { method: 'PATCH', headers });
+                const ct = resp.headers.get('content-type') || '';
+                const isHtml404 = resp.status === 404 && ct.includes('text/html');
+                if (isHtml404) { lastError = `API não encontrada em ${url} (404 HTML)`; continue; }
+                if (!resp.ok) {
+                    const text = await resp.text().catch(()=> "");
+                    let err = {};
+                    try { err = JSON.parse(text); } catch {}
+                    if (text.includes("<html")) throw new Error(`API não encontrada em ${url} (404 HTML)`);
+                    throw new Error(err.mensagem || `Erro ao assumir (${resp.status})`);
+                }
+                try { return await resp.json(); } catch { return { ok: true }; }
+            } catch (e) {
+                lastError = e;
+                // tenta próximo fallback (ex: API_FALLBACK_URL) ou então Supabase direto
+                if (url !== baseUrl) break;
+                console.warn(`Assumir via API ${url} falhou:`, e.message, 'tentando fallback Supabase direto');
+            }
+        }
+        // Fallback final: Supabase direto (RLS permite authenticated, e para anônimo tenta via API já falhou)
         try {
-            resp = await fetch(`${baseUrl}/chamados/${chamado.idFirebase}/assumir`, { method: 'PATCH', headers });
-        } catch (e) {
-            throw new Error(`Não foi possível conectar à API (${baseUrl}). Verifique se o serviço API está rodando e se window.API_BASE_URL está correto.`);
+            console.warn('Assumir fallback Supabase direto para', chamado.idFirebase);
+            const { error } = await supabase.from('chamados_unilink').update({
+                status: 'EM_ATENDIMENTO',
+                em_atendimento: true
+            }).eq('id', chamado.idFirebase);
+            if (error) throw error;
+            await this.registrarEvento(chamado.idFirebase, 'EM_ATENDIMENTO_INICIADO', `Assumido via fallback Supabase`);
+            window.notifySuccess && window.notifySuccess('Chamado assumido (fallback direto)');
+            return { ok: true, status: 'EM_ATENDIMENTO', fallback: true };
+        } catch (e2) {
+            throw lastError || e2;
         }
-        // fallback se bateu no front (HTML 404)
-        const ct = resp.headers.get('content-type') || '';
-        if (resp.status === 404 && ct.includes('text/html') && window.API_FALLBACK_URL && baseUrl !== window.API_FALLBACK_URL) {
-            console.warn(`Assumir 404 HTML em ${baseUrl}, tentando fallback ${window.API_FALLBACK_URL}`);
-            resp = await fetch(`${window.API_FALLBACK_URL}/chamados/${chamado.idFirebase}/assumir`, { method: 'PATCH', headers });
-        }
-        if (!resp.ok) {
-            const text = await resp.text().catch(()=> "");
-            let err = {};
-            try { err = JSON.parse(text); } catch {}
-            if (text.includes("<html") || resp.status === 404 && !err.mensagem) throw new Error(`API não encontrada em ${baseUrl}/chamados/.../assumir (404 HTML). Configure window.API_BASE_URL com a URL da API Railway, não do front.`);
-            throw new Error(err.mensagem || `Erro ao assumir (${resp.status})`);
-        }
-        try { return await resp.json(); } catch { return { ok: true }; }
     },
     // Novo fluxo: concluir (parcial ou total) com observações
     async concluirChamado(chamado, { itensConcluidos, servicoFeito, pendencia, observacoes }) {

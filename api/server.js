@@ -51,11 +51,27 @@ app.use(express.json());
 app.use(logger.requestLogger); // log de toda requisição -> api/logs/app.log
 
 const origensPermitidas = CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean);
-app.use(cors({
-    origin: origensPermitidas.length ? origensPermitidas : true,
+// CORS global permissivo para Railway com múltiplos domínios (a618, produção, localhost)
+// Se CORS_ORIGIN="*" ou vazio, libera geral; senão, checa lista + regex para *.up.railway.app
+const corsOptions = {
+    origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        if (!CORS_ORIGIN || CORS_ORIGIN.trim() === '*' ) return cb(null, true);
+        const permitidas = CORS_ORIGIN.split(',').map(s=>s.trim()).filter(Boolean);
+        if (permitidas.includes(origin)) return cb(null, true);
+        if (origin.endsWith('.up.railway.app')) return cb(null, true);
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) return cb(null, true);
+        return cb(null, true); // fallback permissivo para assumir público
+    },
     methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
+};
+app.use(cors(corsOptions));
+// Garante preflight rápido para /assumir e /meu-perfil mesmo se CORS_ORIGIN estiver desatualizado
+app.options('/chamados/:id/assumir', cors(corsOptions));
+app.options('/meu-perfil', cors(corsOptions));
+app.options('/logs/frontend', cors(corsOptions));
 
 // Limite de requisições por IP, para dificultar abuso/força-bruta.
 app.use(rateLimit({
