@@ -168,7 +168,10 @@ function App() {
         try {
             await ChamadosService.assumirChamado(chamado);
             setChamadoPendenteAcao(null);
-            window.notifySuccess && window.notifySuccess(`✓ ${chamado.protocolo || ''} assumido! Em atendimento por você.`.trim());
+            const msgOk = `✓ ${chamado.protocolo || ''} assumido! Em atendimento por você.`.trim();
+            if (window.notifySuccess) window.notifySuccess(msgOk);
+            else { setErroAcao(msgOk); setTimeout(()=>setErroAcao(''), 3000); }
+            console.log(msgOk);
         }
         catch (e) {
             console.error("Erro ao assumir: ", e);
