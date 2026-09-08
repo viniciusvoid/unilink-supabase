@@ -347,7 +347,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Serviço executado *</label>
 
-                                <textarea required rows="3" maxLength="1000" placeholder="Descreva o que foi feito em cada item selecionado..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={servicoFeito} onChange={(e)=>setServicoFeito(e.target.value.toUpperCase())}></textarea>
+                                <textarea required rows="3" maxLength="1000" placeholder="Descreva o que foi feito em cada item selecionado..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={servicoFeito} onChange={(e)=>setServicoFeito(e.target.value.toUpperCase())}></textarea>
 
                                 <div className="text-right text-[11px] text-slate-700 dark:text-slate-300">{servicoFeito.length}/1000</div>
 
@@ -367,7 +367,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Pendência <span className="normal-case font-normal text-slate-600">(se parcial, descreva o que falta)</span></label>
 
-                                <textarea rows="2" maxLength="1000" placeholder="Se parcial, ex: aguardando peça X..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={pendencia} onChange={(e)=>setPendencia(e.target.value.toUpperCase())}></textarea>
+                                <textarea rows="2" maxLength="1000" placeholder="Se parcial, ex: aguardando peça X..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={pendencia} onChange={(e)=>setPendencia(e.target.value.toUpperCase())}></textarea>
 
                             </div>
 
@@ -481,7 +481,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
                                     {['TODOS','ABERTO','EM_ATENDIMENTO','AGUARDANDO_USUARIO','ATRIBUIDO'].map(s=>(
 
-                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-amber-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{s==='TODOS'?'Todos':s.replace('_',' ')}</button>
+                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-amber-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{s==='AGUARDANDO_USUARIO'?'Parcial':s==='TODOS'?'Todos':s.replace('_',' ')}</button>
 
                                     ))}
 

@@ -9,8 +9,10 @@ function TelaHistorico({ chamados, voltar }) {
     const [paginaAtual, setPaginaAtual] = React.useState(1);
     const itensPorPagina = 6;
     const encerrados = chamados.filter(c => c.concluido);
+    const parciais = chamados.filter(c => c.status === 'AGUARDANDO_USUARIO');
+    const baseHistorico = statusFiltro === 'AGUARDANDO_USUARIO' ? parciais : statusFiltro === 'TODOS' ? [...encerrados, ...parciais] : encerrados;
     React.useEffect(()=>{setPaginaAtual(1);},[busca, unidadeFiltro, statusFiltro, dataFiltro]);
-    let listaExibicao = encerrados.filter(c=>{
+    let listaExibicao = baseHistorico.filter(c=>{
         const atendeEquipamento = c.equipamento && c.equipamento.toLowerCase().includes(busca.toLowerCase());
         const unidadeDoChamado = c.unidade || 'MATRIZ';
         const atendeUnidade = unidadeFiltro==='TODOS' || unidadeDoChamado===unidadeFiltro;
@@ -32,7 +34,7 @@ function TelaHistorico({ chamados, voltar }) {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
                         <div>
                             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Histórico</h2>
-                            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{encerrados.length} concluídos • {listaExibicao.length} filtrados</p>
+                            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{statusFiltro === 'AGUARDANDO_USUARIO' ? `${parciais.length} parciais` : statusFiltro === 'TODOS' ? `${encerrados.length + parciais.length} concluídos/parciais` : `${encerrados.length} concluídos`} • {listaExibicao.length} filtrados</p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <button onClick={()=>{const d=encerrados.filter(c=>unidadeFiltro==='TODOS'||(c.unidade||'MATRIZ')===unidadeFiltro); exportarParaExcel(d, unidadeFiltro);}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-3 py-2 rounded-lg text-xs">Excel ({unidadeFiltro})</button>
@@ -55,8 +57,8 @@ function TelaHistorico({ chamados, voltar }) {
                             <div className="flex items-center gap-2 flex-wrap flex-1">
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase shrink-0">Status</span>
                                 <div className="flex gap-1 flex-wrap">
-                                    {['TODOS','FECHADO','RESOLVIDO'].map(s=>(
-                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-emerald-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{s==='TODOS'?'Todos':s}</button>
+                                    {['TODOS','FECHADO','RESOLVIDO','AGUARDANDO_USUARIO'].map(s=>(
+                                        <button key={s} onClick={()=>setStatusFiltro(s)} className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition ${statusFiltro===s?'bg-amber-600 text-white':'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50'}`}>{s==='TODOS'?'Todos': s==='AGUARDANDO_USUARIO'?'Parcial':s}</button>
                                     ))}
                                 </div>
                             </div>
