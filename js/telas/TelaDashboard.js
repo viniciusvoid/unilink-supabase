@@ -192,11 +192,11 @@ function TelaDashboard({ chamados }) {
                         <p className="py-2 text-xs text-slate-500">Nenhum chamado no período.</p>
                     ) : (
                         <div className="space-y-2.5">
-                            {metricasServico.slice(0, 6).map(m => (
+                            {metricasServico.slice(0, 6).map((m, idx) => (
                                 <div key={m.servico} className="flex items-center gap-2.5">
                                     <span className="w-24 shrink-0 truncate text-xs text-slate-500 dark:text-slate-400">{m.servico}</span>
                                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                                        <div className="h-full rounded-full bg-[#0E3263] dark:bg-sky-400" style={{ width: `${(m.total / maiorTotalServico) * 100}%` }}></div>
+                                        <div className={`h-full rounded-full ${idx === 0 ? 'bg-[#0E3263] dark:bg-sky-400' : 'bg-slate-300 dark:bg-slate-600'}`} style={{ width: `${(m.total / maiorTotalServico) * 100}%` }}></div>
                                     </div>
                                     <span className="w-7 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">{m.total}</span>
                                 </div>

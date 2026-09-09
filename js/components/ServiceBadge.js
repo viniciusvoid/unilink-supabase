@@ -14,7 +14,7 @@ const ServiceBadge = ({ servico, selected, onClick, className = "" }) => {
                 type="button"
                 onClick={onClick}
                 aria-pressed={!!selected}
-                className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${selected ? 'border-[#0E3263] bg-[#0E3263] text-white dark:border-sky-400 dark:bg-sky-400/10 dark:text-sky-300' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:bg-transparent dark:text-slate-300'}`}
+                className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${selected ? 'border-[#0E3263] bg-white text-[#0E3263] dark:border-sky-400 dark:bg-transparent dark:text-sky-300' : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:bg-transparent dark:text-slate-300'}`}
             >
                 {srvClean}
             </button>

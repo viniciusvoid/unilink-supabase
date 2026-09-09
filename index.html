@@ -138,6 +138,17 @@
         .btn-primary:hover { background: #0A2447; }
         .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
 
+        .btn-primary-outline {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: #fff; color: #0E3263; font-weight: 500; font-size: 13px;
+            padding: 8px 14px; border-radius: 6px; border: 1px solid #0E3263;
+            min-height: 36px; white-space: nowrap; transition: background .15s;
+        }
+        .btn-primary-outline:hover { background: rgba(14,50,99,.06); }
+        .btn-primary-outline:disabled { opacity: .55; cursor: not-allowed; }
+        html.dark .btn-primary-outline { background: transparent; color: #7DD3FC; border-color: #0369A1; }
+        html.dark .btn-primary-outline:hover { background: rgba(56,189,248,.08); }
+
         .btn-ghost {
             display: inline-flex; align-items: center; gap: 6px;
             font-size: 13px; font-weight: 500; color: #475569;

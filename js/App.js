@@ -99,8 +99,8 @@ function App() {
     }, []);
 
     const irManutencao = () => {
-        if (autenticado) { setTelaAtual('pendencia'); return; }
-        setDestinoAposLogin('pendencia');
+        if (autenticado) { setTelaAtual('manutencao'); return; }
+        setDestinoAposLogin('manutencao');
         setExibirLogin(true);
     };
     const solicitarLoginUnico = () => {
@@ -254,10 +254,22 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const conteudoManutencao = telaAtual === 'manutencao'
-        ? (autenticado ? 'pendencia' : 'gate')
-        : telaAtual;
-    const conteudoSolicitante = telaAtual === 'solicitante' ? 'corretiva' : telaAtual;
+
+    const EnvRow = ({ icon, label, badge, onClick, destaque }) => (
+        <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${destaque ? 'bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{icon}</span>
+            <span className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">{label}</span>
+            {badge}
+            <svg className="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+    );
+    const ICONS = {
+        plus: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>,
+        search: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>,
+        wrench: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>,
+        clock: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+        chart: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg>
+    };
 
     return (
         <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-slate-950 dark:text-slate-100">
@@ -300,7 +312,7 @@ function App() {
                         <nav className="border-t border-slate-100 dark:border-slate-800">
                             <div className="mx-auto flex w-full max-w-6xl items-center gap-1 overflow-x-auto px-3 sm:px-5">
                                 {NAV[ambiente].map(item => {
-                                    const ativo = telaAtual === item.k || (telaAtual === 'manutencao' && item.k === 'pendencia') || (telaAtual === 'solicitante' && item.k === 'corretiva');
+                                    const ativo = telaAtual === item.k;
                                     return (
                                         <button
                                             key={item.k}
@@ -361,11 +373,35 @@ function App() {
                     </div>
                 )}
 
-                {conteudoSolicitante === 'corretiva' && <TelaCorretiva aoSalvar={adicionarChamado} />}
+                {telaAtual === 'solicitante' && (
+                    <div className="fade-in mx-auto w-full max-w-[480px] pt-4">
+                        <PageHeader title="Solicitante" />
+                        <div className="u-surface divide-y u-divider overflow-hidden">
+                            <EnvRow destaque label="Novo chamado" onClick={() => setTelaAtual('corretiva')} icon={ICONS.plus} />
+                            <EnvRow label="Acompanhar chamado" onClick={() => abrirAcompanhamento()} icon={ICONS.search} />
+                        </div>
+                    </div>
+                )}
+                {telaAtual === 'corretiva' && <TelaCorretiva aoSalvar={adicionarChamado} />}
                 {telaAtual === 'acompanhamento' && (
                     <TelaAcompanhamento protocoloInicial={protocoloBusca} />
                 )}
-                {conteudoManutencao === 'gate' && (
+                {telaAtual === 'manutencao' && autenticado && (
+                    <div className="fade-in mx-auto w-full max-w-[480px] pt-4">
+                        <PageHeader
+                            title="Manutenção"
+                            meta={meuPerfil ? `${meuPerfil.email} • ${meuPerfil.papel}` : null}
+                            actions={<button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>}
+                        />
+                        <div className="u-surface divide-y u-divider overflow-hidden">
+                            <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
+                            <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
+                            <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
+                        </div>
+                        <button onClick={() => setTelaAtual('redefinir')} className="mt-3 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">Alterar senha</button>
+                    </div>
+                )}
+                {telaAtual === 'manutencao' && !autenticado && (
                     <div className="fade-in mx-auto w-full max-w-[420px] pt-10">
                         <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Manutenção</h1>
                         <div className="u-surface mt-3 flex items-center justify-between gap-3 px-4 py-3">
@@ -374,7 +410,7 @@ function App() {
                         </div>
                     </div>
                 )}
-                {conteudoManutencao === 'pendencia' && (
+                {telaAtual === 'pendencia' && (
                     <TelaPendencia
                         chamados={chamados}
                         assumir={assumirChamado}
