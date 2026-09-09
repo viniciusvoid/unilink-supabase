@@ -4,11 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>UNILINK - Manutenção</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: { brand: { DEFAULT: '#0E3263', dark: '#0A2447', soft: '#E8EEF6' } },
+            fontFamily: {
+              sans: ['Inter', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],
+              mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
+            },
+            borderRadius: { xl: '12px' }
+          }
+        }
+      };
+    </script>
     <!-- Biblioteca para Excel (SheetJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -16,51 +33,189 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
     <style>
+        /* ===== UNILINK · linguagem visual (SaaS operacional) ===== */
         * {
             box-sizing: border-box;
             font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         html, body {
-            background-color: #F1F5F9;
+            background-color: #EDF0F5;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
             width: 100%;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
-        html.dark, html.dark body { background-color: #0F172A; }
+        html.dark, html.dark body { background-color: #020617; }
 
         svg {
             shape-rendering: geometricPrecision;
             text-rendering: optimizeLegibility;
         }
 
-        .fade-in {
-            animation: fadeIn 0.22s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
+        /* Entrada de página: rápida e discreta */
+        .fade-in { animation: fadeUp 0.22s ease-out both; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Micro-feedback de dado atualizado */
+        .flash-update { animation: flashUpdate 0.9s ease-out; }
+        @keyframes flashUpdate {
+            0% { background-color: rgba(16, 185, 129, 0.14); }
+            100% { background-color: transparent; }
+        }
+        /* Toast compacto */
+        .toast-in { animation: toastIn 0.18s ease-out both; }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Skeleton */
+        .u-skeleton {
+            background: linear-gradient(90deg, rgba(148,163,184,.16) 25%, rgba(148,163,184,.30) 50%, rgba(148,163,184,.16) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite linear;
+        }
+        @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
         button, input, select, textarea {
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        /* Melhorias de responsividade mobile */
         @media (max-width: 640px) {
             button { min-height: 44px; }
             input, select, textarea { font-size: 16px !important; }
         }
         img, video { max-width: 100%; height: auto; }
 
-        /* Scrollbar sutil */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; }
         ::-webkit-scrollbar-track { background: transparent; }
+
+        :focus-visible { outline: 2px solid #0E3263; outline-offset: 2px; border-radius: 6px; }
+        html.dark :focus-visible { outline-color: #93c5fd; }
+
+        /* ----- Primitivos ----- */
+        .u-eyebrow {
+            font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+            text-transform: uppercase; color: #64748B;
+        }
+        html.dark .u-eyebrow { color: #94A3B8; }
+
+        .u-surface {
+            background: #fff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 12px;
+        }
+        html.dark .u-surface { background: #0F172A; border-color: rgba(255,255,255,0.08); }
+
+        .u-divider { border-color: #EEF2F7; }
+        html.dark .u-divider { border-color: rgba(255,255,255,0.07); }
+
+        .u-label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: #475569; margin-bottom: 6px;
+        }
+        html.dark .u-label { color: #CBD5E1; }
+
+        .u-input {
+            width: 100%; border-radius: 10px; padding: 10px 12px;
+            background: #fff; border: 1px solid #E2E8F0;
+            color: #0F172A; font-size: 14px; transition: border-color .15s, box-shadow .15s;
+        }
+        .u-input::placeholder { color: #94A3B8; text-transform: none; }
+        .u-input:focus { outline: none; border-color: #0E3263; box-shadow: 0 0 0 3px rgba(14,50,99,.12); }
+        html.dark .u-input { background: #1E293B; border-color: rgba(255,255,255,.1); color: #F1F5F9; }
+        html.dark .u-input:focus { border-color: #60A5FA; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+
+        select.u-input { appearance: auto; }
+
+        /* Botões: hierarquia única */
+        .btn-primary {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: #0E3263; color: #fff; font-weight: 600; font-size: 13px;
+            padding: 10px 16px; border-radius: 10px; transition: background .15s, transform .05s;
+        }
+        .btn-primary:hover { background: #0A2447; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+        html.dark .btn-primary { background: #F1F5F9; color: #0F172A; }
+        html.dark .btn-primary:hover { background: #E2E8F0; }
+
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 600; color: #475569;
+            padding: 9px 14px; border-radius: 10px;
+            background: #fff; border: 1px solid #E2E8F0; transition: background .15s;
+            white-space: nowrap;
+        }
+        .btn-ghost:hover { background: #F8FAFC; color: #0F172A; }
+        html.dark .btn-ghost { background: #1E293B; border-color: rgba(255,255,255,.1); color: #CBD5E1; }
+        html.dark .btn-ghost:hover { background: #334155; color: #fff; }
+
+        .btn-danger {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: #DC2626; color: #fff; font-weight: 600; font-size: 13px;
+            padding: 10px 16px; border-radius: 10px;
+        }
+        .btn-danger:hover { background: #B91C1C; }
+
+        .btn-success {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: #059669; color: #fff; font-weight: 600; font-size: 13px;
+            padding: 10px 16px; border-radius: 10px; transition: background .15s;
+        }
+        .btn-success:hover { background: #047857; }
+        .btn-success:disabled, .btn-danger:disabled { opacity: .55; cursor: not-allowed; }
+
+        .btn-page {
+            min-width: 32px; height: 32px; padding: 0 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px; font-size: 13px; font-weight: 600;
+            background: #fff; border: 1px solid #E2E8F0; color: #475569;
+        }
+        .btn-page:disabled { opacity: .4; }
+        .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
+        html.dark .btn-page { background: #1E293B; border-color: rgba(255,255,255,.1); color: #CBD5E1; }
+        html.dark .btn-page-ativo { background: #F1F5F9 !important; border-color: #F1F5F9 !important; color: #0F172A !important; }
+
+        /* Tabela operacional */
+        .u-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .u-table thead th {
+            text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+            text-transform: uppercase; color: #64748B; padding: 10px 14px;
+            border-bottom: 1px solid #EEF2F7; background: #F8FAFC; white-space: nowrap;
+            position: sticky; top: 0; z-index: 1;
+        }
+        html.dark .u-table thead th { color: #94A3B8; background: #0B1220; border-color: rgba(255,255,255,.07); }
+        .u-table tbody td { padding: 12px 14px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+        html.dark .u-table tbody td { border-color: rgba(255,255,255,.06); }
+        .u-table tbody tr:last-child td { border-bottom: none; }
+        .u-table tbody tr { transition: background .12s; }
+        .u-table tbody tr:hover { background: #F8FAFC; }
+        html.dark .u-table tbody tr:hover { background: rgba(255,255,255,.03); }
+
+        /* Modal: bottom-sheet no mobile */
+        @media (max-width: 640px) {
+            .sheet-mobile {
+                align-items: flex-end !important;
+                padding: 0 !important;
+            }
+            .sheet-mobile > div.sheet-panel {
+                border-radius: 16px 16px 0 0 !important;
+                max-height: 92dvh !important;
+                animation: sheetUp .22s ease-out both;
+            }
+        }
+        @keyframes sheetUp {
+            from { opacity: .6; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         @media print {
             body * { visibility: hidden; }
@@ -92,6 +247,7 @@
     <script type="text/babel" charset="utf-8" src="js/supabaseConfig.js"></script>
     <script type="text/babel" charset="utf-8" src="js/services/chamadosService.js"></script>
     <script type="text/babel" charset="utf-8" src="js/utils.js"></script>
+    <script type="text/babel" charset="utf-8" src="js/theme.js"></script>
 
     <script type="text/babel" charset="utf-8" src="js/components/Logo.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/DateBadge.js"></script>

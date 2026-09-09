@@ -1,96 +1,52 @@
 ﻿// ==========================================================
-
-// TELA: Chamados Pendentes — Fluxo Assumir -> Em Atendimento -> Concluir por item
-
+// TELA: Chamados Pendentes — visão operacional de triagem
+// Fluxo preservado: Assumir -> Em Atendimento -> Concluir.
+// Redesenho: linhas operacionais com tempo em destaque,
+// badges discretos e planilha refinada no desktop.
 // ==========================================================
-
 function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
-
-    // compat: App antigo passa toggleAtendimento/encerrar, novo passa assumir/concluir
-
     const assumirFn = assumir || encerrar && encerrar.assumir || (() => {});
-
-    // encerrar pode ser função legado ou objeto; normaliza para concluir
-
     const concluirFn = concluir || encerrar;
 
-
-
     const [busca, setBusca] = React.useState('');
-
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
-
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
-
     const [dataFiltro, setDataFiltro] = React.useState('TODOS');
-
     const [ordenarPorPrioridade, setOrdenarPorPrioridade] = React.useState(true);
-
     const [paginaAtual, setPaginaAtual] = React.useState(1);
-
     const [notificacaoAtiva, setNotificacaoAtiva] = React.useState(null);
-
     const [chamadoEmEncerramento, setChamadoEmEncerramento] = React.useState(null);
-
     const [servicoFeito, setServicoFeito] = React.useState('');
-
     const [pendencia, setPendencia] = React.useState('');
-
     const [observacoes, setObservacoes] = React.useState('');
-
     const [itensSelecionados, setItensSelecionados] = React.useState([]);
-
+    const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
     const itensPorPagina = 6;
-
     const pendentes = chamados.filter(c => !c.concluido);
-
     const idsConhecidos = React.useRef(new Set());
-
     const primeiroCarregamento = React.useRef(true);
-
     React.useEffect(() => {
-
         const idsAtuais = new Set(pendentes.map(c => c.idFirebase));
-
         if (primeiroCarregamento.current) { idsConhecidos.current = idsAtuais; primeiroCarregamento.current = false; }
-
         else {
-
             const novoChamado = pendentes.find(c => !idsConhecidos.current.has(c.idFirebase));
-
             if (novoChamado) { tocarSomPorPrioridade(novoChamado.prioridade); setNotificacaoAtiva(novoChamado); setTimeout(() => setNotificacaoAtiva(null), 5000); }
-
             idsConhecidos.current = idsAtuais;
-
         }
-
     }, [chamados]);
-
     React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, dataFiltro, ordenarPorPrioridade]);
-
     const [fotosResolucao, setFotosResolucao] = React.useState([]);
-
     const [erroFotoResolucao, setErroFotoResolucao] = React.useState('');
-
     const [enviandoFinalizacao, setEnviandoFinalizacao] = React.useState(false);
-
     const [assumindoId, setAssumindoId] = React.useState(null);
     const [detalhes, setDetalhes] = React.useState(null);
 
-
-
-    const getItens = (ch) => String(ch.servico||'').split(',').map(s=>s.trim()).filter(Boolean);
-
-    const podeAssumir = (c) => ['ABERTO','EM_ANALISE','ATRIBUIDO','AGUARDANDO_USUARIO'].includes(c.status) && !c.emAtendimento;
-
+    const getItens = (ch) => String(ch.servico || '').split(',').map(s => s.trim()).filter(Boolean);
+    const podeAssumir = (c) => ['ABERTO', 'EM_ANALISE', 'ATRIBUIDO', 'AGUARDANDO_USUARIO'].includes(c.status) && !c.emAtendimento;
     const emAtendimento = (c) => c.status === 'EM_ATENDIMENTO' || c.emAtendimento;
-
     const aguardando = (c) => c.status === 'AGUARDANDO_USUARIO';
 
-
-
     const handleAssumir = async (chamado) => {
-
         console.log('Assumir chamado:', chamado.idFirebase, chamado.protocolo, chamado.status);
         if (!chamado.idFirebase || chamado.idFirebase.length < 10) {
             console.error('idFirebase inválido:', chamado);
@@ -98,596 +54,317 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
             return;
         }
         setAssumindoId(chamado.idFirebase);
-
         try {
-
             if (typeof assumirFn === 'function' && assumirFn.length >= 1) {
-
-                // novo fluxo via ChamadosService.assumirChamado
-
                 await ChamadosService.assumirChamado(chamado);
-
             } else {
-
-                // fallback legado
-
                 await ChamadosService.atualizarStatus(chamado, 'EM_ATENDIMENTO');
-
             }
-
-        } catch(e){
+        } catch (e) {
             window.notifyError && window.notifyError(e.message || 'Falha ao assumir');
             if (window.UnilinkLogger) window.UnilinkLogger.error('handleAssumir', e);
         }
-
         finally { setAssumindoId(null); }
-
     };
-
-
 
     const handleIniciarEncerramento = (chamado) => {
-
         if (!emAtendimento(chamado) && !aguardando(chamado)) {
-
             window.notifyWarning && window.notifyWarning('Assuma o chamado primeiro para concluir');
             return;
-
         }
-
         const itens = getItens(chamado);
-
-        // se já houve parcial, pré-seleciona só os pendentes
-
         const jaConcluidos = chamado.itensConcluidos || [];
-
-        const pendentesItens = itens.filter(i=>!jaConcluidos.includes(i));
-
+        const pendentesItens = itens.filter(i => !jaConcluidos.includes(i));
         setChamadoEmEncerramento(chamado);
-
         setServicoFeito(''); setPendencia(''); setObservacoes('');
-
         setItensSelecionados(pendentesItens.length ? pendentesItens : itens);
-
         setFotosResolucao([]); setErroFotoResolucao('');
-
     };
-
     const toggleItem = (item) => {
-
-        setItensSelecionados(prev => prev.includes(item) ? prev.filter(i=>i!==item) : [...prev, item]);
-
+        setItensSelecionados(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
     };
-
     const handleSelecionarFotoResolucao = (files) => {
         const arquivos = Array.from(files || []); setErroFotoResolucao(''); const validos = [];
         let houveErro = false;
         for (const arq of arquivos) {
             const ext = (arq.name.split('.').pop() || '').toLowerCase();
-            if (!['jpg','jpeg','png','webp'].includes(ext)) { setErroFotoResolucao(`"${arq.name}" formato não permitido.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" ignorado: formato inválido`); houveErro = true; continue; }
-            if (arq.size > 8*1024*1024) { setErroFotoResolucao(`"${arq.name}" excede 8MB.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" excede 8MB`); houveErro = true; continue; }
+            if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) { setErroFotoResolucao(`"${arq.name}" formato não permitido.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" ignorado: formato inválido`); houveErro = true; continue; }
+            if (arq.size > 8 * 1024 * 1024) { setErroFotoResolucao(`"${arq.name}" excede 8MB.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" excede 8MB`); houveErro = true; continue; }
             validos.push(arq);
         }
         if (validos.length) window.notifySuccess && window.notifySuccess(`${validos.length} foto(s) adicionada(s)`);
         else if (houveErro) window.notifyError && window.notifyError('Nenhuma foto válida');
         if (fotosResolucao.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos — excedentes ignorados');
-        setFotosResolucao(prev => [...prev, ...validos].slice(0,5));
+        setFotosResolucao(prev => [...prev, ...validos].slice(0, 5));
     };
     const handleCaptureResolucao = (file) => handleSelecionarFotoResolucao([file]);
     const handleConfirmarFinalizacao = async (e) => {
         e.preventDefault(); if (!chamadoEmEncerramento) return;
         if (itensSelecionados.length === 0) { window.notifyWarning && window.notifyWarning('Selecione ao menos um item concluído'); return; }
         if (!servicoFeito.trim()) { window.notifyWarning && window.notifyWarning('Descreva o serviço executado'); return; }
-
         setEnviandoFinalizacao(true);
-
         try {
-
-            // tenta novo endpoint concluir (parcial/total)
-
             if (typeof concluirFn === 'function') {
-
                 try {
-
                     await ChamadosService.concluirChamado(chamadoEmEncerramento, {
-
                         itensConcluidos: itensSelecionados,
-
                         servicoFeito: servicoFeito.trim(),
-
                         pendencia: pendencia.trim(),
-
                         observacoes: observacoes.trim()
-
                     });
-
-                } catch(err) {
-
-                    // fallback legado se API não tiver /concluir ainda
-
+                } catch (err) {
                     if (err.message.includes('404') || err.message.includes('concluir')) {
-
                         await concluirFn(chamadoEmEncerramento, servicoFeito, pendencia);
-
                     } else throw err;
-
                 }
-
             }
-
             for (const foto of fotosResolucao) {
                 try { await ChamadosService.uploadEvidencia(chamadoEmEncerramento.idFirebase, foto, 'RESOLUCAO'); }
-                catch(e){ console.error(e); window.notifyWarning && window.notifyWarning('Foto não enviada: '+e.message); }
+                catch (e) { console.error(e); window.notifyWarning && window.notifyWarning('Foto não enviada: ' + e.message); }
             }
             setChamadoEmEncerramento(null); setFotosResolucao([]);
-            window.notifySuccess && window.notifySuccess('Chamado atualizado com sucesso!');
-        } catch(err){
+            window.notifySuccess && window.notifySuccess('Chamado atualizado com sucesso');
+        } catch (err) {
             window.notifyError && window.notifyError(err.message || 'Falha ao concluir');
             if (window.UnilinkLogger) window.UnilinkLogger.error('handleConfirmarFinalizacao', err);
         }
-
         finally { setEnviandoFinalizacao(false); }
-
     };
 
     let listaExibicao = pendentes.filter(c => {
-
         const atendeEquipamento = c.equipamento && c.equipamento.toLowerCase().includes(busca.toLowerCase());
-
         const unidadeDoChamado = c.unidade || 'MATRIZ';
-
-        const atendeUnidade = unidadeFiltro==='TODOS' || unidadeDoChamado===unidadeFiltro;
-
-        const atendeStatus = statusFiltro==='TODOS' || (c.status || (c.concluido?'FECHADO':'ABERTO'))===statusFiltro;
-
+        const atendeUnidade = unidadeFiltro === 'TODOS' || unidadeDoChamado === unidadeFiltro;
+        const atendeStatus = statusFiltro === 'TODOS' || (c.status || (c.concluido ? 'FECHADO' : 'ABERTO')) === statusFiltro;
         return atendeEquipamento && atendeUnidade && atendeStatus;
-
     });
-
-    // filtro por data (após status/unidade, usando helpers de utils.js)
-
     if (dataFiltro !== 'TODOS') {
-
         listaExibicao = filtrarChamadosPorData(listaExibicao, dataFiltro);
-
     }
-
-    const pesoStatus = { 'EM_ATENDIMENTO':0, 'AGUARDANDO_USUARIO':1, 'ATRIBUIDO':2, 'ABERTO':3, 'EM_ANALISE':3 };
-
-    listaExibicao.sort((a,b)=>{
-
+    const pesoStatus = { 'EM_ATENDIMENTO': 0, 'AGUARDANDO_USUARIO': 1, 'ATRIBUIDO': 2, 'ABERTO': 3, 'EM_ANALISE': 3 };
+    listaExibicao.sort((a, b) => {
         const pa = pesoStatus[a.status] ?? 9; const pb = pesoStatus[b.status] ?? 9;
-
         if (pa !== pb) return pa - pb;
-
-        return ordenarPorPrioridade ? priorityWeights[a.prioridade]-priorityWeights[b.prioridade] : b.id-a.id;
-
+        return ordenarPorPrioridade ? priorityWeights[a.prioridade] - priorityWeights[b.prioridade] : b.id - a.id;
     });
+    const totalPaginas = Math.ceil(listaExibicao.length / itensPorPagina);
+    const listaExibicaoPaginada = listaExibicao.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
+    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
+    const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const isCritico = (c) => c.prioridade === 'Urgente' || calcularDiasDecorridos(c.dataAbertura) > 3;
 
-    const totalPaginas = Math.ceil(listaExibicao.length/itensPorPagina);
-
-    const listaExibicaoPaginada = listaExibicao.slice((paginaAtual-1)*itensPorPagina, paginaAtual*itensPorPagina);
-
-
+    const acaoPrincipal = (c, mobile) => {
+        const cls = mobile ? 'flex-1 py-2.5 text-[13px]' : 'px-3 py-1.5 text-xs';
+        if (podeAssumir(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleAssumir(c); }} disabled={assumindoId === c.idFirebase} className={`btn-primary shrink-0 ${cls} disabled:opacity-60`}>{assumindoId === c.idFirebase ? 'Assumindo…' : 'Assumir'}</button>;
+        }
+        if (emAtendimento(c) || aguardando(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleIniciarEncerramento(c); }} className={`btn-success shrink-0 ${cls}`}>Concluir</button>;
+        }
+        return <StatusBadge status={c.status} concluido={c.concluido} />;
+    };
 
     return (
-
-        <div className="w-full flex justify-center fade-in">
-
+        <div className="fade-in w-full">
             {notificacaoAtiva && (
-
-                <div className="fixed top-4 right-4 left-4 sm:left-auto z-50 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex flex-col sm:max-w-sm">
-
-                    <span className="font-semibold text-base sm:text-sm">Novo chamado recebido</span>
-
-                    <span className="text-xs text-slate-300 mt-1">{notificacaoAtiva.equipamento} • {notificacaoAtiva.servico}</span>
-
+                <div className="toast-in fixed left-1/2 top-4 z-50 flex w-[92vw] max-w-sm -translate-x-1/2 items-center gap-2.5 rounded-xl bg-slate-900 py-3 pl-4 pr-3 text-white shadow-xl dark:bg-white dark:text-slate-900 sm:left-auto sm:right-5 sm:translate-x-0">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
+                    <span className="min-w-0 flex-1">
+                        <span className="block text-[13px] font-semibold">Novo chamado recebido</span>
+                        <span className="block truncate text-xs opacity-70">{notificacaoAtiva.equipamento} • {notificacaoAtiva.servico}</span>
+                    </span>
                 </div>
-
             )}
 
+            {/* Modal de conclusão — bottom-sheet no mobile */}
             {chamadoEmEncerramento && (
-
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 fade-in">
-
-                    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[100dvh] sm:max-h-[92vh]">
-
-                        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800">
-
-                            <div>
-
-                                <h3 className="font-bold text-slate-900 dark:text-white">Concluir chamado</h3>
-
-                                <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">{chamadoEmEncerramento.equipamento} • {chamadoEmEncerramento.protocolo} • {chamadoEmEncerramento.unidade}</p>
-
-                                <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-1">Selecione os itens concluídos. Parcial mantém o chamado pendente; total encerra.</p>
-
-                            </div>
-
-                            <button onClick={()=>setChamadoEmEncerramento(null)} className="text-slate-600 hover:text-slate-700 p-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
-
-                        </div>
-
-                        <form onSubmit={handleConfirmarFinalizacao} className="p-6 space-y-5 overflow-y-auto">
-
-                            <div>
-
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Itens do chamado *</label>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-
-                                    {getItens(chamadoEmEncerramento).map(item=>{
-
-                                        const checked = itensSelecionados.includes(item);
-
-                                        const jaFeito = (chamadoEmEncerramento.itensConcluidos||[]).includes(item);
-
-                                        return (
-
-                                            <label key={item} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition ${checked ? 'bg-emerald-50 border-emerald-300 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'} ${jaFeito?'opacity-60':''}`}>
-
-                                                <input type="checkbox" checked={checked} disabled={jaFeito} onChange={()=>toggleItem(item)} className="w-4 h-4 accent-emerald-600"/>
-
-                                                <span className="text-sm font-semibold text-slate-800 dark:text-white">{item}</span>
-
-                                                {jaFeito && <span className="ml-auto text-[10px] bg-slate-900 text-white px-1.5 py-0.5 rounded">feito</span>}
-
-                                            </label>
-
-                                        );
-
-                                    })}
-
+                <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-[2px] sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
+                    <div className="sheet-panel flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="border-b u-divider px-5 py-4">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <h3 className="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">Concluir chamado</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">{chamadoEmEncerramento.equipamento} • {chamadoEmEncerramento.unidade}</p>
                                 </div>
-
-                                <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-1.5">{itensSelecionados.length} de {getItens(chamadoEmEncerramento).length} selecionados </p>
-
+                                <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10">✕</button>
                             </div>
-
+                            <ProtocoloTag codigo={chamadoEmEncerramento.protocolo} />
+                        </div>
+                        <form onSubmit={handleConfirmarFinalizacao} className="space-y-4 overflow-y-auto px-5 py-4">
                             <div>
-
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Serviço executado *</label>
-
-                                <textarea required rows="3" maxLength="1000" placeholder="Descreva o que foi feito em cada item selecionado..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={servicoFeito} onChange={(e)=>setServicoFeito(e.target.value.toUpperCase())}></textarea>
-
-                                <div className="text-right text-[11px] text-slate-700 dark:text-slate-300">{servicoFeito.length}/1000</div>
-
+                                <p className="u-label">Itens concluídos *</p>
+                                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                    {getItens(chamadoEmEncerramento).map(item => {
+                                        const checked = itensSelecionados.includes(item);
+                                        const jaFeito = (chamadoEmEncerramento.itensConcluidos || []).includes(item);
+                                        return (
+                                            <label key={item} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition ${checked ? 'border-emerald-500/50 bg-emerald-500/[0.07]' : 'border-slate-200 dark:border-white/10'} ${jaFeito ? 'opacity-50' : ''}`}>
+                                                <input type="checkbox" checked={checked} disabled={jaFeito} onChange={() => toggleItem(item)} className="h-4 w-4 accent-emerald-600" />
+                                                <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{item}</span>
+                                                {jaFeito && <span className="ml-auto rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white dark:bg-white dark:text-slate-900">feito</span>}
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                <p className="mt-1.5 text-[11px] text-slate-400">{itensSelecionados.length} de {getItens(chamadoEmEncerramento).length} selecionados • parcial mantém pendente, total encerra</p>
                             </div>
-
                             <div>
-
-                                <label className="block text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wide mb-1.5">Observações / Considerações importantes</label>
-
-                                <textarea rows="3" maxLength="1000" placeholder="Ex: peça pendente, orientação ao solicitante, risco..." className="w-full border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 rounded-lg p-2.5 text-base sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none" value={observacoes} onChange={(e)=>setObservacoes(e.target.value)}></textarea>
-
-                                <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-1">Aparece no histórico e no acompanhamento por protocolo.</p>
-
+                                <label className="u-label">Serviço executado *</label>
+                                <textarea required rows="3" maxLength="1000" placeholder="Descreva o que foi feito…" className="u-input resize-none uppercase placeholder:normal-case" value={servicoFeito} onChange={(e) => setServicoFeito(e.target.value.toUpperCase())} />
                             </div>
-
                             <div>
-
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Pendência <span className="normal-case font-normal text-slate-600">(se parcial, descreva o que falta)</span></label>
-
-                                <textarea rows="2" maxLength="1000" placeholder="Se parcial, ex: aguardando peça X..." className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-base sm:text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none" value={pendencia} onChange={(e)=>setPendencia(e.target.value.toUpperCase())}></textarea>
-
+                                <label className="u-label">Observações</label>
+                                <textarea rows="2" maxLength="1000" placeholder="Peça pendente, orientação ao solicitante…" className="u-input resize-none placeholder:normal-case" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
                             </div>
-
                             <div>
-
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Fotos evidence <span className="normal-case font-normal text-slate-600 text-[11px]">({fotosResolucao.length}/5)</span></label>
-
-                                <CameraCapture
-
-                                    onCapture={handleCaptureResolucao}
-
-                                    onSelectFiles={handleSelecionarFotoResolucao}
-
-                                    maxFiles={5}
-
-                                    currentCount={fotosResolucao.length}
-
-                                />
-
-                                {erroFotoResolucao && <p className="text-xs text-red-600 dark:text-red-400 mt-2">{erroFotoResolucao}</p>}
-
-                                {fotosResolucao.length>0 && (
-
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3 mt-3">
-
-                                        {fotosResolucao.map((f,idx)=>(
-
-                                            <div key={idx} className="relative"><img src={URL.createObjectURL(f)} className="w-full h-24 sm:h-20 object-cover rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700"/><button type="button" onClick={()=>setFotosResolucao(prev=>prev.filter((_,i)=>i!==idx))} className="absolute -top-2 -right-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full w-7 h-7 sm:w-5 sm:h-5 flex items-center justify-center text-base sm:text-sm sm:text-xs shadow-md active:scale-95">×</button><p className="text-[9px] truncate mt-1 hidden sm:block">{f.name}</p></div>
-
+                                <label className="u-label">Pendência <span className="font-normal text-slate-400">(se parcial, o que falta)</span></label>
+                                <textarea rows="2" maxLength="1000" placeholder="Ex: aguardando peça X…" className="u-input resize-none uppercase placeholder:normal-case" value={pendencia} onChange={(e) => setPendencia(e.target.value.toUpperCase())} />
+                            </div>
+                            <div>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <label className="u-label !mb-0">Evidências</label>
+                                    <span className="text-[11px] tabular-nums text-slate-400">{fotosResolucao.length}/5</span>
+                                </div>
+                                <CameraCapture onCapture={handleCaptureResolucao} onSelectFiles={handleSelecionarFotoResolucao} maxFiles={5} currentCount={fotosResolucao.length} />
+                                {erroFotoResolucao && <p className="mt-2 text-xs font-medium text-red-600">{erroFotoResolucao}</p>}
+                                {fotosResolucao.length > 0 && (
+                                    <div className="mt-2 grid grid-cols-4 gap-2">
+                                        {fotosResolucao.map((f, idx) => (
+                                            <div key={idx} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5">
+                                                <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+                                                <button type="button" onClick={() => setFotosResolucao(prev => prev.filter((_, i) => i !== idx))} aria-label="Remover" className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-950/70 text-sm text-white">×</button>
+                                            </div>
                                         ))}
-
                                     </div>
-
                                 )}
-
                             </div>
-
-                            <div className="flex gap-2 pt-2">
-
-                                <button type="button" onClick={()=>setChamadoEmEncerramento(null)} className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2.5 rounded-lg text-base sm:text-sm">Cancelar</button>
-
-                                <button type="submit" disabled={enviandoFinalizacao} className={`flex-1 font-semibold py-2.5 rounded-lg text-base sm:text-sm disabled:opacity-60 text-white $`}>{enviandoFinalizacao?'Salvando...': itensSelecionados.length < getItens(chamadoEmEncerramento).length ? 'Concluir parcial' : 'Concluir total'}</button>
-
+                            <div className="flex gap-2 pb-1 pt-1">
+                                <button type="button" onClick={() => setChamadoEmEncerramento(null)} className="btn-ghost flex-1 !justify-center">Cancelar</button>
+                                <button type="submit" disabled={enviandoFinalizacao} className="btn-success flex-1 !justify-center disabled:opacity-60">{enviandoFinalizacao ? 'Salvando…' : itensSelecionados.length < getItens(chamadoEmEncerramento).length ? 'Concluir parcial' : 'Concluir total'}</button>
                             </div>
-
                         </form>
-
                     </div>
-
                 </div>
-
             )}
 
-
-
-            <div className="w-full max-w-7xl bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-
-                <div className="h-1 bg-[#0E3263] dark:bg-slate-700 w-full"></div>
-
-                <div className="p-4 sm:p-6">
-
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
-
-                        <div>
-
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Chamados pendentes</h2>
-
-                            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{pendentes.length} em aberto | {listaExibicao.length} filtrados</p>
-
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-
-                            <DownloadPopover dados={pendentes} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
-
-                            <button onClick={()=>setOrdenarPorPrioridade(!ordenarPorPrioridade)} className="bg-slate-900 hover:bg-black text-white font-medium px-3.5 py-2 rounded-lg text-xs">{ordenarPorPrioridade?'Prioridade':'Data'}</button>
-
-                            <button onClick={voltar} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-300 font-medium px-3.5 py-2 rounded-lg text-xs inline-flex items-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Menu</button>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <div className="flex flex-col gap-2 mb-4">
-                        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Filial</span>
-                                <select value={unidadeFiltro} onChange={e=>setUnidadeFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none">
-                                    <option value="TODOS">Todas filiais</option>
-                                    <option value="MATRIZ">Matriz</option>
-                                    <option value="PECÉM">Pecém</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Status</span>
-                                <select value={statusFiltro} onChange={e=>setStatusFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                                    <option value="TODOS">Todos status</option>
-                                    <option value="ABERTO">Aberto</option>
-                                    <option value="EM_ATENDIMENTO">Em atendimento</option>
-                                    <option value="AGUARDANDO_USUARIO">Parcial</option>
-                                    <option value="ATRIBUIDO">Atribuído</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[130px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Período</span>
-                                <select value={dataFiltro} onChange={e=>setDataFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-sky-500 focus:outline-none">
-                                    <option value="TODOS">Todo período</option>
-                                    <option value="HOJE">Hoje</option>
-                                    <option value="7d">Últimos 7 dias</option>
-                                    <option value="30d">Últimos 30 dias</option>
-                                    <option value="MES_ATUAL">Mês atual</option>
-                                    <option value="MES_ANTERIOR">Mês anterior</option>
-                                    <option value="CALENDARIO">Calendário...</option>
-                                </select>
-                            </div>
-                            {(statusFiltro!=='TODOS'||dataFiltro!=='TODOS'||unidadeFiltro!=='TODOS'|| busca) && (
-                                <button onClick={()=>{setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca('');}} className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 underline px-2">Limpar</button>
-                            )}
-                        </div>
-                        {dataFiltro==='CALENDARIO' && (
-                            <div className="flex flex-col sm:flex-row gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl p-2.5">
-                                <div className="flex items-center gap-2 flex-1">
-                                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">De</span>
-                                    <input type="date" onChange={e=>{ const d=e.target.value? new Date(e.target.value):null; if(d){ d.setHours(0,0,0,0); }}} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
-                                </div>
-                                <div className="flex items-center gap-2 flex-1">
-                                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Até</span>
-                                    <input type="date" onChange={e=>{ const d2=e.target.value? new Date(e.target.value):null; if(d2){ d2.setHours(23,59,59,999); }}} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-
-
-                    <input type="text" placeholder="Pesquisar por equipamento..." className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg mb-4 text-base sm:text-sm bg-white dark:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:outline-none placeholder:text-slate-500 min-h-[44px]" value={busca} onChange={(e)=>setBusca(e.target.value.toUpperCase())} />
-
-
-
-                    {/* Cards mobile */}
-
-                    <div className="grid grid-cols-1 gap-3 md:hidden">
-
-                        {listaExibicaoPaginada.map(c=>(
-
-                            <div key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`p-4 rounded-xl border cursor-pointer hover:shadow-md ${emAtendimento(c)?'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800': aguardando(c)?'bg-sky-50 border-sky-200 dark:bg-sky-950/20':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'}`}>
-
-                                <div className="flex items-center justify-between gap-2 mb-2">
-
-                                    <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 dark:text-slate-300 px-2 py-1 rounded-md">{c.unidade||'MATRIZ'}</span>
-
-                                    <PriorityBadge prioridade={c.prioridade}/>
-
-                                </div>
-
-                                <div className="flex items-center gap-2 mb-1">
-
-                                    <h3 className="font-semibold text-slate-900 dark:text-white text-base sm:text-sm flex-1 truncate">{c.equipamento}</h3>
-
-                                    <DateBadge dataStr={c.dataAbertura}/>
-
-                                </div>
-
-                                <div className="flex items-center gap-1 mb-1"><p className="text-[11px] font-mono text-slate-600 dark:text-slate-400">{c.protocolo} • {c.status}</p><button onClick={() => { navigator.clipboard.writeText(c.protocolo).then(()=>window.notifySuccess && window.notifySuccess('Protocolo '+c.protocolo+' copiado!'))(()=>window.notifySuccess && window.notifySuccess('Protocolo '+c.protocolo+' copiado!')); }} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700" title="Copiar protocolo"><svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></div>
-
-                                {c.atribuidoParaNome && <p className="text-[11px] text-amber-700 dark:text-amber-300 mb-2">• {c.atribuidoParaNome} {emAtendimento(c)?'em atendimento':''}</p>}
-
-                                <div className="mb-3"><ServiceBadge servico={c.servico}/>{c.itensConcluidos?.length ? <p className="text-[11px] text-emerald-600 mt-1">✓ {c.itensConcluidos.join(', ')} concluídos</p> : null}</div>
-
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-700 dark:text-slate-300 space-y-1 mb-3">
-
-                                    <p><span className="font-semibold text-slate-700 dark:text-slate-300">Descrição:</span> {c.descricao}</p>
-
-                                    <p><span className="font-semibold text-slate-700 dark:text-slate-300">Local:</span> {c.localizacao}</p>
-
-                                    {c.observacoes && <p><span className="font-semibold">Obs:</span> {c.observacoes}</p>}
-
-                                </div>
-
-                                <div className="flex items-center justify-between gap-2">
-
-                                    {podeAssumir(c) ? (
-
-                                        <button onClick={(e)=>{e.stopPropagation(); handleAssumir(c)}} disabled={assumindoId===c.idFirebase} className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2 rounded-lg text-xs font-bold disabled:opacity-60">{assumindoId===c.idFirebase?'Assumindo...':'Assumir'}</button>
-
-                                    ) : emAtendimento(c) || aguardando(c) ? (
-
-                                        <span className={`flex-1 text-center text-xs font-bold px-3 py-2 rounded-lg border ${aguardando(c)?'bg-sky-100 border-sky-200 text-sky-700':'bg-amber-100 border-amber-200 text-amber-700'}`}>{aguardando(c)?'Parcial — aguardando':'Em atendimento'}</span>
-
-                                    ) : <span className="flex-1 text-center text-xs font-medium text-slate-600">{c.status}</span>}
-
-                                    <div className="flex gap-1.5">
-
-                                        <button onClick={(e)=>{e.stopPropagation(); imprimirOrdemServico(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2 rounded-lg"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button>
-
-                                        <button onClick={(e)=>{e.stopPropagation(); handleIniciarEncerramento(c)}} className={`px-3 py-2 rounded-lg text-xs font-semibold ${(emAtendimento(c)||aguardando(c))?'bg-emerald-600 hover:bg-emerald-700 text-white':'bg-slate-200 text-slate-600 cursor-not-allowed'}`} disabled={!emAtendimento(c)&&!aguardando(c)}>Concluir</button>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        ))}
-
-                        {listaExibicaoPaginada.length===0 && <div className="p-6 text-center text-base sm:text-sm text-slate-600 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">Nenhum chamado encontrado.</div>}
-
-                    </div>
-
-
-
-                    {/* Tabela desktop */}
-
-                    <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-
-                        <table className="min-w-full text-base sm:text-sm">
-
-                            <thead>
-
-                                <tr className="bg-slate-900 dark:bg-slate-800 text-slate-100 text-xs uppercase">
-
-                                    <th className="p-3 text-center font-semibold">Unidade</th>
-
-                                    <th className="p-3 text-center font-semibold">Prioridade</th>
-
-                                    <th className="p-3 text-center font-semibold">Data</th>
-
-                                    <th className="p-3 font-semibold">Equipamento</th>
-
-                                    <th className="p-3 text-center font-semibold">Serviço</th>
-
-                                    <th className="p-3 font-semibold">Status</th>
-
-                                    <th className="p-3 text-center font-semibold">Ação</th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-
-                                {listaExibicaoPaginada.map((c,i)=>(
-
-                                    <tr key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`cursor-pointer ${emAtendimento(c)?'bg-amber-50/60': aguardando(c)?'bg-sky-50/50': i%2===0?'bg-white dark:bg-slate-900':'bg-slate-50 dark:bg-slate-800/50'} hover:bg-slate-50`}>
-
-                                        <td className="p-3 text-center"><span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300">{c.unidade||'MATRIZ'}</span></td>
-
-                                        <td className="p-3 text-center"><PriorityBadge prioridade={c.prioridade}/></td>
-
-                                        <td className="p-3 text-center"><DateBadge dataStr={c.dataAbertura}/></td>
-
-                                        <td className="p-3 font-medium text-slate-900 dark:text-white">{c.equipamento}<div className="flex items-center gap-1"><div className="text-[11px] font-mono text-slate-600 dark:text-slate-400">{c.protocolo}</div><button onClick={() => navigator.clipboard.writeText(c.protocolo).then(()=>window.notifySuccess && window.notifySuccess('Protocolo '+c.protocolo+' copiado!'))} className="p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700" title="Copiar protocolo"><svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></div><div className="text-[11px] text-slate-700 dark:text-slate-300">{c.servico}</div></td>
-
-                                        <td className="p-3 text-center"><ServiceBadge servico={c.servico}/>{c.itensConcluidos?.length?<div className="text-[10px] text-emerald-600">{c.itensConcluidos.join(', ')}</div>:null}</td>
-
-                                        <td className="p-3"><span className={`text-xs font-bold px-2 py-1 rounded-full border ${emAtendimento(c)?'bg-amber-100 border-amber-200 text-amber-800': aguardando(c)?'bg-sky-100 border-sky-200 text-sky-800':'bg-slate-100 border-slate-200 text-slate-600'}`}>{c.status}</span>{c.atribuidoParaNome && <div className="text-[11px] text-slate-700 dark:text-slate-300 mt-1 truncate max-w-[140px]">{c.atribuidoParaNome}</div>}</td>
-
-                                        <td className="p-3 text-center">
-
-                                            <div className="flex items-center justify-center gap-1">
-
-                                                {podeAssumir(c) ? (
-
-                                                    <button onClick={(e)=>{e.stopPropagation(); handleAssumir(c)}} disabled={assumindoId===c.idFirebase} className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-1.5 rounded-md text-xs font-bold disabled:opacity-50">{assumindoId===c.idFirebase?'...':'Assumir'}</button>
-
-                                                ) : (
-
-                                                    <button onClick={(e)=>{e.stopPropagation(); handleIniciarEncerramento(c)}} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold">Concluir</button>
-
-                                                )}
-
-                                                <button onClick={(e)=>{e.stopPropagation(); imprimirOrdemServico(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md"><svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096"/></svg></button>
-
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                ))}
-
-                                {listaExibicaoPaginada.length===0 && <tr><td colSpan="7" className="p-8 text-center text-slate-600">Nenhum chamado encontrado.</td></tr>}
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-
-
-                    {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={()=>setDetalhes(null)} aoImprimir={(c)=>imprimirOrdemServico(c)} />}
-                    {totalPaginas>1 && (
-
-                        <div className="flex justify-center items-center gap-1.5 mt-5">
-
-                            <button disabled={paginaAtual===1} onClick={()=>setPaginaAtual(paginaAtual-1)} className="w-8 h-8 border rounded-lg bg-white disabled:opacity-40 text-base sm:text-sm">â€¹</button>
-
-                            {Array.from({length: totalPaginas},(_,i)=>i+1).map(n=>(
-
-                                <button key={n} onClick={()=>setPaginaAtual(n)} className={`w-8 h-8 rounded-lg text-base sm:text-sm font-medium ${paginaAtual===n?'bg-slate-900 dark:bg-white text-white dark:text-slate-900':'bg-white border text-slate-600'}`}>{n}</button>
-
-                            ))}
-
-                            <button disabled={paginaAtual===totalPaginas} onClick={()=>setPaginaAtual(paginaAtual+1)} className="w-8 h-8 border rounded-lg bg-white disabled:opacity-40 text-base sm:text-sm">â€º</button>
-
-                        </div>
-
-                    )}
-
+            <PageHeader
+                eyebrow="Manutenção"
+                title="Chamados pendentes"
+                subtitle={`${pendentes.length} em aberto · ${listaExibicao.length} na triagem`}
+                live
+                back={voltar}
+                backLabel="Menu"
+                actions={
+                    <React.Fragment>
+                        <DownloadPopover dados={pendentes} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
+                        <button onClick={() => setOrdenarPorPrioridade(v => !v)} className="btn-ghost" title="Alternar ordenação">
+                            {ordenarPorPrioridade ? 'Prioridade' : 'Recentes'}
+                        </button>
+                    </React.Fragment>
+                }
+            />
+
+            {/* Pesquisa + filtros */}
+            <div className="mb-3 flex gap-2">
+                <div className="relative flex-1">
+                    <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+                    <input type="text" placeholder="Pesquisar chamado…" aria-label="Pesquisar" className="u-input !pl-9" value={busca} onChange={(e) => setBusca(e.target.value.toUpperCase())} />
                 </div>
-
+                <button onClick={() => setMostrarFiltros(v => !v)} className={`btn-ghost shrink-0 sm:hidden ${mostrarFiltros ? '!bg-slate-900 !text-white dark:!bg-white dark:!text-slate-900' : ''}`}>
+                    Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
+                </button>
+            </div>
+            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} mb-4 flex-col gap-2 sm:flex sm:flex-row`}>
+                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[170px]">
+                    <option value="TODOS">Filial ▾ · Todas</option>
+                    <option value="MATRIZ">Matriz</option>
+                    <option value="PECÉM">Pecém</option>
+                </select>
+                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[190px]">
+                    <option value="TODOS">Status ▾ · Todos</option>
+                    <option value="ABERTO">Aberto</option>
+                    <option value="EM_ATENDIMENTO">Em atendimento</option>
+                    <option value="AGUARDANDO_USUARIO">Parcial</option>
+                    <option value="ATRIBUIDO">Atribuído</option>
+                </select>
+                <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[190px]">
+                    <option value="TODOS">Período ▾ · Todo</option>
+                    <option value="HOJE">Hoje</option>
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d">Últimos 30 dias</option>
+                    <option value="MES_ATUAL">Mês atual</option>
+                    <option value="MES_ANTERIOR">Mês anterior</option>
+                </select>
+                {(filtrosAtivos > 0 || busca) && (
+                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:hover:text-white">Limpar</button>
+                )}
             </div>
 
+            {/* Lista operacional (mobile) */}
+            {listaExibicaoPaginada.length === 0 ? (
+                <div className="u-surface"><EmptyState hint="Tente alterar os filtros ou o período." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
+            ) : (
+                <div className="u-surface divide-y u-divider overflow-hidden md:hidden">
+                    {listaExibicaoPaginada.map(c => (
+                        <div key={c.idFirebase} onClick={() => setDetalhes(c)} className="flex cursor-pointer gap-3 px-4 py-3.5 transition hover:bg-slate-50 dark:hover:bg-white/[0.02]">
+                            {isCritico(c) && <span className="w-1 shrink-0 self-stretch rounded-full bg-red-500/80"></span>}
+                            <div className="min-w-0 flex-1">
+                                <ProtocoloTag codigo={c.protocolo} />
+                                <p className="mt-0.5 truncate text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">{c.equipamento}</p>
+                                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{c.descricao}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                    <PriorityBadge prioridade={c.prioridade} />
+                                    <StatusBadge status={c.status} concluido={c.concluido} />
+                                </div>
+                                {c.atribuidoParaNome && <p className="mt-1.5 text-[11px] text-slate-400">{c.atribuidoParaNome}</p>}
+                                <div className="mt-2.5 flex items-center justify-between gap-2">
+                                    <TempoAberto dataAbertura={c.dataAbertura} />
+                                    <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                        <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="btn-ghost !px-2.5 !py-2">
+                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                        </button>
+                                        {acaoPrincipal(c, true)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Tabela (desktop) */}
+            {listaExibicaoPaginada.length > 0 && (
+                <div className="u-surface hidden overflow-x-auto md:block">
+                    <table className="u-table">
+                        <thead><tr><th>Chamado</th><th>Prioridade</th><th>Status</th><th>Responsável</th><th className="!text-right">Tempo aberto</th><th className="!text-center">Ação</th></tr></thead>
+                        <tbody>
+                            {listaExibicaoPaginada.map(c => (
+                                <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
+                                    <td>
+                                        <p className="font-semibold text-slate-900 dark:text-white">{c.equipamento}</p>
+                                        <span className="mt-0.5 flex items-center gap-2"><ProtocoloTag codigo={c.protocolo} /> <span className="text-[11px] text-slate-400">{c.unidade || 'MATRIZ'}</span></span>
+                                    </td>
+                                    <td><PriorityBadge prioridade={c.prioridade} /></td>
+                                    <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
+                                    <td className="max-w-[160px] truncate text-[13px] text-slate-500">{c.atribuidoParaNome || '—'}</td>
+                                    <td className="text-right"><TempoAberto dataAbertura={c.dataAbertura} /></td>
+                                    <td className="!text-center" onClick={(e) => e.stopPropagation()}>
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {acaoPrincipal(c, false)}
+                                            <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="btn-ghost !px-2.5 !py-1.5">
+                                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                            </button>
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
+            <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />
         </div>
-
     );
-
 }
-

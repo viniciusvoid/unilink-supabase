@@ -88,24 +88,24 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
 
     return (
         <div className="w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
                 <button
                     type="button"
                     onClick={() => !isDisabled && fileInputRef.current && fileInputRef.current.click()}
                     disabled={isDisabled}
-                    className={`flex items-center justify-center gap-2 w-full border border-dashed rounded-xl p-3 sm:p-4 text-sm font-semibold transition min-h-[44px] ${isDisabled ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800 border-slate-200 text-slate-400' : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
+                    className={`flex items-center justify-center gap-2 w-full border border-dashed rounded-xl p-3 text-[13px] font-semibold transition min-h-[44px] ${isDisabled ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400' : 'border-slate-300 dark:border-white/15 hover:border-slate-400 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300'}`}
                 >
-                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/><circle cx="12" cy="13" r="3"/></svg>
-                    <span className="hidden sm:inline">Escolher da galeria</span><span className="sm:hidden">Galeria</span>
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/><circle cx="12" cy="13" r="3"/></svg>
+                    Galeria
                 </button>
                 <button
                     type="button"
                     onClick={openCamera}
                     disabled={isDisabled || !canUseCamera}
-                    className={`flex items-center justify-center gap-2 w-full rounded-xl p-3 sm:p-4 text-sm font-bold transition min-h-[44px] ${isDisabled ? 'opacity-40 cursor-not-allowed bg-slate-200 text-slate-500' : 'bg-[#0E3263] dark:bg-white hover:bg-[#0A2447] dark:hover:bg-slate-100 text-white dark:text-slate-900 shadow-sm active:scale-95'}`}
+                    className="btn-primary !rounded-xl"
                 >
-                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    <span className="hidden sm:inline">Tirar foto agora</span><span className="sm:hidden">Câmera</span>
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Câmera
                 </button>
             </div>
             <input

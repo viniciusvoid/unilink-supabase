@@ -1,7 +1,7 @@
 ﻿// ==========================================================
-// APP: Navegação por ambientes — logo grande só no início,
-// funções só aparecem após selecionar ambiente (sem redundância),
-// páginas internas sem logo e com menos scroll.
+// APP: UNILINK — navegação por ambientes, linguagem operacional
+// Lógica preservada integralmente; apenas layout/hierarquia
+// foram redesenhados (header discreto, splash elegante).
 // ==========================================================
 function App() {
     const [telaAtual, setTelaAtual] = React.useState('splash');
@@ -39,7 +39,6 @@ function App() {
     React.useEffect(() => {
         const aplicarSessao = async (session) => {
             const sessionId = session?.user?.id || null;
-            // idempotência: evita loop se onAuthStateChange disparar com mesma sessão repetida
             if (sessionId && lastSessionIdRef.current === sessionId && !session) return;
             if (isFetchingPerfilRef.current) return;
             lastSessionIdRef.current = sessionId;
@@ -57,7 +56,6 @@ function App() {
                     if (perfil) setMeuPerfil(perfil);
                     else setMeuPerfil({ email: session?.user?.email || 'usuario', papel: 'atendente' });
                 } catch (e) {
-                    // 404 de /meu-perfil por URL errada não deve travar app — usa fallback e não reloga
                     if (e.message.includes('(404)') || e.message.includes('API não encontrada')) {
                         console.warn('obterMeuPerfil 404 — API_BASE_URL provavelmente aponta para front, não API. Usando fallback.', e.message);
                     } else {
@@ -73,7 +71,6 @@ function App() {
             }
             setCarregandoAuth(false);
         };
-        // garante que carregandoAuth não fique preso se supabase falhar
         const timeout = setTimeout(() => setCarregandoAuth(false), 3000);
         try {
             if (typeof supabase === 'undefined' || !supabase?.auth) {
@@ -179,7 +176,6 @@ function App() {
             window.notifyError && window.notifyError(msg);
             if (msg.includes('Sessão') || msg.includes('expirada') || msg.includes('Token') || msg.includes('conectar à API')) {
                 setChamadoPendenteAcao(chamado);
-                // se for erro de API (deploy), não abre login, só mostra erro
                 if (msg.includes('conectar à API')) {
                     setErroAcao(msg);
                 } else {
@@ -194,7 +190,6 @@ function App() {
             throw e;
         }
     };
-    // após login, se havia ação pendente de assumir, tenta novamente automaticamente mantendo rastreabilidade
     React.useEffect(() => {
         if (autenticado && chamadoPendenteAcao && !carregandoAuth) {
             const c = chamadoPendenteAcao;
@@ -211,7 +206,6 @@ function App() {
         }
     };
     const encerrarChamado = async (chamado, servicoFeito, pendencia) => {
-        // assinatura antiga (legado) — delega para concluirChamado
         try { await ChamadosService.encerrarChamado(chamado, servicoFeito, pendencia); }
         catch (e) {
             console.error("Erro ao encerrar chamado: ", e);
@@ -222,7 +216,7 @@ function App() {
     const concluirChamado = async (chamado, dados) => {
         try {
             const res = await ChamadosService.concluirChamado(chamado, dados);
-            window.notifySuccess && window.notifySuccess(res?.tipo === 'parcial' ? 'Conclusão parcial registrada!' : 'Chamado concluído com sucesso!');
+            window.notifySuccess && window.notifySuccess(res?.tipo === 'parcial' ? 'Conclusão parcial registrada' : 'Chamado concluído com sucesso');
             return res;
         } catch (e) {
             console.error("Erro ao concluir: ", e);
@@ -238,39 +232,60 @@ function App() {
         <button
             onClick={() => setDarkMode(v => !v)}
             title={darkMode ? 'Modo claro' : 'Modo escuro'}
-            className="w-9 h-9 rounded-lg border flex items-center justify-center transition shrink-0 bg-white border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"
+            aria-label={darkMode ? 'Modo claro' : 'Modo escuro'}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
         >
             {darkMode ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
             ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
             )}
         </button>
     );
 
-    // Card reaproveitável para o novo splash / ambientes
-    const CardAmbiente = ({ icon, title, desc, onClick, cta, variant }) => (
-        <button
-            onClick={onClick}
-            className={`w-full text-left rounded-xl border p-5 flex flex-col gap-3 hover:shadow-sm transition group ${variant === 'primary' ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900 hover:bg-black dark:hover:bg-slate-100' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'}`}
-        >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${variant === 'primary' ? 'bg-white/15 dark:bg-slate-900/10 text-white dark:text-slate-900' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'}`}>
+    // Ambiente atual — sempre visível no header
+    const ambiente = ['pendencia', 'historico', 'dashboard', 'manutencao'].includes(telaAtual)
+        ? 'Manutenção'
+        : ['corretiva', 'acompanhamento', 'sucesso', 'solicitante'].includes(telaAtual)
+            ? 'Solicitante'
+            : null;
+
+    const pendentesCount = chamados.filter(c => !c.concluido).length;
+
+    // Linha de navegação operacional (sem card-em-card)
+    const NavRow = ({ icon, title, desc, badge, onClick, destaque }) => (
+        <button onClick={onClick} className="group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition hover:bg-slate-50 dark:hover:bg-white/[0.03] sm:px-5">
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition ${destaque ? 'bg-[#0E3263] text-white dark:bg-white dark:text-slate-900' : 'bg-slate-100 text-slate-500 dark:bg-white/[0.06] dark:text-slate-300'}`}>
                 {icon}
-            </div>
-            <div>
-                <h3 className={`text-base font-bold tracking-tight ${variant === 'primary' ? 'text-white dark:text-slate-900' : 'text-slate-900 dark:text-white'}`}>{title}</h3>
-                <p className={`text-xs font-medium mt-1 leading-relaxed ${variant === 'primary' ? 'text-white/80 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'}`}>{desc}</p>
-            </div>
-            <span className={`inline-flex items-center gap-1.5 text-xs font-bold mt-auto ${variant === 'primary' ? 'text-white dark:text-slate-900' : 'text-slate-700 dark:text-slate-200'}`}>
-                {cta} <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-2">
+                    <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{title}</span>
+                    {badge}
+                </span>
+                {desc && <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">{desc}</span>}
+            </span>
+            <svg className="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+    );
+
+    // Entrada de ambiente no splash — duas portas do mesmo produto
+    const EnvEntry = ({ icon, title, desc, cta, onClick, primario }) => (
+        <button onClick={onClick} className={`group flex w-full flex-col rounded-xl border p-5 text-left transition active:scale-[0.99] ${primario ? 'border-[#0E3263] bg-[#0E3263] text-white hover:bg-[#0A2447] dark:border-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100' : 'u-surface hover:border-slate-300 dark:hover:border-white/20'}`}>
+            <span className={`mb-8 flex h-9 w-9 items-center justify-center rounded-[10px] ${primario ? 'bg-white/15 text-white dark:bg-slate-900/10 dark:text-slate-900' : 'bg-slate-100 text-slate-600 dark:bg-white/[0.06] dark:text-slate-300'}`}>
+                {icon}
+            </span>
+            <span className={`text-[15px] font-bold tracking-tight ${primario ? '' : 'text-slate-900 dark:text-white'}`}>{title}</span>
+            <span className={`mt-1 text-[13px] leading-relaxed ${primario ? 'opacity-75' : 'text-slate-500 dark:text-slate-400'}`}>{desc}</span>
+            <span className={`mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold ${primario ? '' : 'text-[#0E3263] dark:text-white'}`}>
+                {cta}
+                <svg className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-6-6l6 6-6 6" /></svg>
             </span>
         </button>
     );
 
-    const pendentesCount = chamados.filter(c => !c.concluido).length;
-
     return (
-        <div className="min-h-screen flex flex-col antialiased overflow-x-hidden selection:bg-[#0E3263]/10 bg-[#F1F5F9] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#EDF0F5] text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-slate-950 dark:text-slate-100">
             <ToastContainer />
             {exibirLogin && (
                 <ModalLogin
@@ -279,28 +294,36 @@ function App() {
                 />
             )}
             {erroAcao && (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-white dark:bg-slate-900 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl shadow-xl border border-red-200 dark:border-red-900 text-xs sm:text-sm font-semibold max-w-[92vw] text-center fade-in flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
-                    {erroAcao}
+                <div className="toast-in fixed left-1/2 top-4 z-[60] flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full bg-slate-900 py-2.5 pl-4 pr-3 text-xs font-medium text-white shadow-xl dark:bg-white dark:text-slate-900">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"></span>
+                    <span className="break-words">{erroAcao}</span>
+                    <button onClick={() => setErroAcao('')} aria-label="Fechar" className="shrink-0 rounded-full p-1 hover:bg-white/15 dark:hover:bg-slate-900/10">✕</button>
                 </div>
             )}
 
-            <div className="h-1 bg-[#0E3263] dark:bg-slate-800 w-full shrink-0"></div>
-
-            {/* Header mínimo nas páginas internas — SEM logo (só back + dark toggle) */}
+            {/* Header discreto: marca + ambiente + usuário + dark */}
             {telaAtual !== 'splash' && (
-                <header className="w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
-                    <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-3">
-                        <button onClick={() => setTelaAtual('splash')} className="text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-                            Início
+                <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur-md dark:border-white/[0.07] dark:bg-slate-950/85">
+                    <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-3 sm:px-5">
+                        <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-center gap-2.5" title="Voltar ao início">
+                            <Logo variant="mark" />
+                            <span className="hidden flex-col leading-none min-[400px]:flex">
+                                <span className="text-[13px] font-extrabold italic tracking-tight text-[#0E3263] dark:text-white">UNILINK</span>
+                                {ambiente && <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">{ambiente}</span>}
+                            </span>
                         </button>
-                        <div className="flex items-center gap-2">
-                            {autenticado && meuPerfil && (
-                                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                        <button onClick={() => setTelaAtual('splash')} className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white">
+                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                            <span className="hidden sm:inline">Início</span>
+                        </button>
+                        <div className="ml-auto flex items-center gap-1.5">
+                            {autenticado && meuPerfil ? (
+                                <span className="mr-1 hidden items-center gap-1.5 rounded-full bg-emerald-500/10 py-1.5 pl-2.5 pr-3 text-xs font-medium text-emerald-700 md:inline-flex dark:text-emerald-300">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                     {meuPerfil.email}
                                 </span>
+                            ) : (
+                                <button onClick={solicitarLoginUnico} className="mr-1 hidden rounded-full px-3 py-1.5 text-xs font-semibold text-[#0E3263] hover:bg-[#0E3263]/5 md:block dark:text-slate-200 dark:hover:bg-white/10">Entrar</button>
                             )}
                             <ToggleDark />
                         </div>
@@ -308,152 +331,110 @@ function App() {
                 </header>
             )}
 
-            <main className="flex-1 w-full max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col items-center">
+            <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 py-4 sm:px-5 sm:py-6">
                 {telaAtual === 'splash' && (
-                    <div className="w-full flex flex-col items-center fade-in">
-                        <div className="absolute top-3 right-3"><ToggleDark /></div>
-                        <div className="w-full flex justify-center mt-2 sm:mt-4 mb-4 sm:mb-6">
-                            <Logo variant="full"/>
-                        </div>
+                    <div className="fade-in mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center py-6">
+                        <div className="absolute right-3 top-3"><ToggleDark /></div>
+                        <Logo variant="full" />
+                        <p className="u-eyebrow mt-5">Gestão de chamados de TI</p>
+                        <h1 className="mt-2 text-center text-[22px] font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-white">Selecione seu ambiente</h1>
+                        <p className="mt-1.5 text-center text-[13px] text-slate-500 dark:text-slate-400">Duas entradas, um só produto.</p>
 
-                        <div className="w-full max-w-[720px] bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
-                            <div className="text-center mb-5">
-                                <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Selecione o ambiente</h1>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                <CardAmbiente
-                                    icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-                                    title="Sou solicitante"
-                                    desc="Abrir ou acompanhar meu chamado sem login."
-                                    cta="Continuar"
-                                    onClick={() => setTelaAtual('solicitante')}
-                                />
-                                <CardAmbiente
-                                    variant="primary"
-                                    icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>}
-                                    title="Sou manutenção"
-                                    desc="Pendentes, histórico e dashboard (login único)."
-                                    cta={autenticado ? `Entrar • ${pendentesCount} pendentes` : "Entrar"}
-                                    onClick={() => setTelaAtual('manutencao')}
-                                />
-                            </div>
+                        <div className="mt-6 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+                            <EnvEntry
+                                icon={<svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+                                title="Solicitante"
+                                desc="Abra e acompanhe chamados, sem login."
+                                cta="Continuar"
+                                onClick={() => setTelaAtual('solicitante')}
+                            />
+                            <EnvEntry
+                                primario
+                                icon={<svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>}
+                                title="Manutenção"
+                                desc={autenticado ? `${pendentesCount} chamados pendentes aguardando.` : 'Gerencie chamados e atendimentos.'}
+                                cta="Continuar"
+                                onClick={() => setTelaAtual('manutencao')}
+                            />
                         </div>
                     </div>
                 )}
 
                 {telaAtual === 'solicitante' && (
-                    <div className="w-full max-w-[640px] bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:p-5 fade-in">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                            </div>
-                            <div>
-                                <h2 className="text-base font-bold text-slate-900 dark:text-white">Solicitante</h2>
-                            </div>
-                            <button onClick={() => setTelaAtual('splash')} className="ml-auto text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">Trocar ambiente</button>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3">
-                            <button onClick={() => setTelaAtual('corretiva')} className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-[#0E3263] dark:bg-white text-white dark:text-slate-900 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white">Abrir corretiva</p>
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Registrar nova solicitação</p>
-                                    </div>
-                                </div>
-                                <svg className="w-4 h-4 text-slate-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                            </button>
-                            <button onClick={() => abrirAcompanhamento()} className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition group">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg></div>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white">Acompanhar chamado</p>
-
-                                    </div>
-                                </div>
-                                <svg className="w-4 h-4 text-slate-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                            </button>
+                    <div className="fade-in mx-auto w-full max-w-[560px]">
+                        <PageHeader eyebrow="Solicitante" title="O que você precisa?" back={() => setTelaAtual('splash')} backLabel="Trocar ambiente" />
+                        <div className="u-surface divide-y u-divider overflow-hidden">
+                            <NavRow
+                                destaque
+                                title="Abrir chamado"
+                                desc="Registrar nova solicitação de corretiva"
+                                onClick={() => setTelaAtual('corretiva')}
+                                icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>}
+                            />
+                            <NavRow
+                                title="Acompanhar chamado"
+                                desc="Consultar pelo protocolo"
+                                onClick={() => abrirAcompanhamento()}
+                                icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>}
+                            />
                         </div>
                     </div>
                 )}
 
                 {telaAtual === 'manutencao' && (
-                        <div className="w-full max-w-[640px] bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-4 sm:p-5 fade-in">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-lg bg-[#0E3263] dark:bg-white text-white dark:text-slate-900 flex items-center justify-center">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
-                                </div>
-                                <div>
-                                    <h2 className="text-base font-bold text-slate-900 dark:text-white">Manutenção</h2>
-                                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Área restrita — login único</p>
-                                </div>
-                                <button onClick={() => setTelaAtual('splash')} className="ml-auto text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">Trocar ambiente</button>
+                    <div className="fade-in mx-auto w-full max-w-[560px]">
+                        <PageHeader eyebrow="Manutenção · área restrita" title="Operação" subtitle={autenticado && meuPerfil ? `${meuPerfil.email} • ${meuPerfil.papel}` : 'Faça login uma vez para liberar os módulos.'} back={() => setTelaAtual('splash')} backLabel="Trocar ambiente" />
+
+                        {!autenticado ? (
+                            <div className="u-surface mb-3 flex items-center justify-between gap-3 px-4 py-3.5">
+                                <p className="text-[13px] text-slate-500 dark:text-slate-400">Login único para pendentes, histórico e dashboard.</p>
+                                <button onClick={solicitarLoginUnico} className="btn-primary shrink-0 !py-2.5">Entrar</button>
                             </div>
-
-                            {!autenticado ? (
-                                <div className="mb-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center justify-between gap-3">
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white">Faça login</p>
-                                        <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Um login libera os 3 módulos.</p>
-                                    </div>
-                                    <button onClick={solicitarLoginUnico} className="shrink-0 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold px-4 py-2.5 rounded-lg">Entrar</button>
-                                </div>
-                            ) : !meuPerfil ? (
-                                <div className="mb-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-center justify-between gap-2">
-                                    <span className="text-xs font-semibold text-amber-800 dark:text-amber-300">Perfil não carregou — toque para recarregar</span>
-                                    <button onClick={() => window.location.reload()} className="text-xs font-bold bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 px-3 py-1.5 rounded-lg">Recarregar</button>
-                                </div>
-                            ) : (
-                                <div className="mb-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-lg px-3 py-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>{meuPerfil.email} • {meuPerfil.papel}</span>
-                                        <button onClick={handleSair} className="text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:underline">Sair</button>
-                                    </div>
-                                    <button onClick={() => setTelaAtual('redefinir')} className="mt-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 hover:underline">Alterar senha</button>
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-1 gap-3">
-                                <button onClick={solicitarAcessoChamados} className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition group">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.5a2.5 2.5 0 110 5H14m-4-5h-2a2 2 0 00-2 2v4a2 2 0 002 2h2m4-8v8m-4-8v8" /></svg></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Chamados pendentes <span className="ml-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] px-1.5 py-0.5 rounded-full">{pendentesCount}</span></p>
-
-                                        </div>
-                                    </div>
-                                    <svg className="w-4 h-4 text-slate-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                </button>
-                                <button onClick={solicitarAcessoHistorico} className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition group">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center"><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Histórico</p>
-                                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">Concluídos</p>
-                                        </div>
-                                    </div>
-                                    <svg className="w-4 h-4 text-slate-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                </button>
-                                <button onClick={solicitarAcessoDashboard} className="w-full text-left bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition group">
-                                    <div className="flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${autenticado ? 'bg-[#0E3263] dark:bg-white text-white dark:text-slate-900' : 'bg-white dark:bg-slate-700 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'}`}><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg></div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">Dashboard { !autenticado && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-full ml-1">login</span>}</p>
-                                            <p className="text-xs font-medium text-slate-700 dark:text-slate-300">{autenticado ? 'Indicadores por serviço' : 'Requer login'}</p>
-                                        </div>
-                                    </div>
-                                    <svg className="w-4 h-4 text-slate-600 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                </button>
+                        ) : !meuPerfil ? (
+                            <div className="u-surface mb-3 flex items-center justify-between gap-3 px-4 py-3.5">
+                                <p className="text-[13px] text-slate-500">Perfil não carregou.</p>
+                                <button onClick={() => window.location.reload()} className="btn-ghost shrink-0 !py-2">Recarregar</button>
                             </div>
+                        ) : (
+                            <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                                <LiveDot label={`${meuPerfil.email} • ${meuPerfil.papel}`} />
+                                <span className="flex items-center gap-3">
+                                    <button onClick={() => setTelaAtual('redefinir')} className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">Alterar senha</button>
+                                    <button onClick={handleSair} className="text-[11px] font-semibold text-slate-400 hover:text-red-600">Sair</button>
+                                </span>
+                            </div>
+                        )}
+
+                        <div className="u-surface divide-y u-divider overflow-hidden">
+                            <NavRow
+                                destaque
+                                title="Chamados pendentes"
+                                desc={pendentesCount === 0 ? 'Nada em aberto' : `${pendentesCount} em aberto`}
+                                onClick={solicitarAcessoChamados}
+                                badge={pendentesCount > 0 ? <span className="rounded-full bg-[#0E3263] px-2 py-0.5 text-[11px] font-bold text-white dark:bg-white dark:text-slate-900">{pendentesCount}</span> : null}
+                                icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.5a2.5 2.5 0 110 5H14m-4-5h-2a2 2 0 00-2 2v4a2 2 0 002 2h2m4-8v8m-4-8v8" /></svg>}
+                            />
+                            <NavRow
+                                title="Histórico"
+                                desc="Chamados concluídos"
+                                onClick={solicitarAcessoHistorico}
+                                icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                            />
+                            <NavRow
+                                title="Dashboard"
+                                desc={autenticado ? 'Indicadores da operação' : 'Requer login'}
+                                onClick={solicitarAcessoDashboard}
+                                badge={!autenticado ? <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">login</span> : null}
+                                icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg>}
+                            />
                         </div>
+                    </div>
                 )}
 
-                {/* Compat: mantém 'menu' antigo redirecionando para splash para não quebrar deep links */}
                 {telaAtual === 'menu' && (
-                    <div className="w-full max-w-[640px] bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 text-center">
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Esta área foi reorganizada.</p>
-                        <button onClick={() => setTelaAtual('splash')} className="mt-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-lg text-sm font-bold">Voltar ao início</button>
+                    <div className="u-surface mx-auto w-full max-w-[480px] p-6 text-center">
+                        <p className="text-sm text-slate-500">Esta área foi reorganizada.</p>
+                        <button onClick={() => setTelaAtual('splash')} className="btn-primary mt-3">Voltar ao início</button>
                     </div>
                 )}
 
@@ -490,6 +471,7 @@ function App() {
                     <TelaSucesso
                         chamado={chamadoRecemCriado}
                         voltarInicio={() => setTelaAtual('splash')}
+                        aoNovo={() => setTelaAtual('corretiva')}
                         aoAcompanhar={() => abrirAcompanhamento(chamadoRecemCriado?.protocolo)}
                     />
                 )}
@@ -501,8 +483,8 @@ function App() {
                 )}
             </main>
 
-            <footer className="py-3 text-center text-[11px] font-medium text-slate-700 dark:text-slate-300 shrink-0">
-                UNILINK Transportes Integrados Ltda. • Manutenção
+            <footer className="shrink-0 py-4 text-center text-[11px] font-medium text-slate-400 dark:text-slate-600">
+                UNILINK Transportes Integrados Ltda. · Manutenção
             </footer>
         </div>
     );

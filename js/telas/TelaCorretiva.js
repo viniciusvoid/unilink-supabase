@@ -1,5 +1,7 @@
 ﻿// ==========================================================
-// TELA: Nova Corretiva — formulário limpo, dark mode, contraste
+// TELA: Nova Corretiva — processo guiado por seções
+// Mesma lógica/validação de antes; apenas agrupamento visual:
+// Problema → Local → Equipamento → Prioridade → Evidências.
 // ==========================================================
 function TelaCorretiva({ aoSalvar, voltar }) {
     const [form, setForm] = React.useState({ unidade: 'MATRIZ', equipamento: '', servico: [], descricao: '', localizacao: '', prioridade: 'Média' });
@@ -43,86 +45,90 @@ function TelaCorretiva({ aoSalvar, voltar }) {
         catch (err) { window.notifyError && window.notifyError(err.message || 'Falha ao abrir chamado'); }
         finally { setEnviando(false); }
     };
+
+    const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente'];
+
     return (
-        <div className="w-full flex justify-center fade-in px-3 sm:px-4">
-            <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="h-1 bg-[#0E3263] dark:bg-slate-700 w-full"></div>
-                <div className="p-4 sm:p-6 md:p-7">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-                        <div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Nova corretiva</h2>
+        <div className="fade-in mx-auto w-full max-w-[640px]">
+            <PageHeader eyebrow="Solicitante" title="Abrir chamado" subtitle="Descreva o problema — o resto a manutenção resolve." back={voltar} backLabel="Voltar" />
 
+            <form onSubmit={handleSubmit} className="u-surface divide-y u-divider overflow-hidden">
+                {/* 1 · Problema */}
+                <section className="px-4 py-4 sm:px-5">
+                    <SectionTitle>Problema</SectionTitle>
+                    <label className="u-label">O que está acontecendo?</label>
+                    <textarea required maxLength="1000" rows="3" className="u-input resize-none uppercase placeholder:normal-case" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} placeholder="Descreva o problema encontrado…" />
+                    <div className="mt-3">
+                        <label className="u-label">Serviço necessário</label>
+                        <div className="flex flex-wrap gap-1.5">
+                            {['PINTURA', 'ELETRICA', 'SOLDA', 'MECANICA', 'BORRACHARIA', 'TRANSLADO'].map(srv => (
+                                <ServiceBadge key={srv} servico={srv} selected={form.servico.includes(srv)} onClick={() => toggleServico(srv)} />
+                            ))}
                         </div>
-                        <button onClick={voltar} className="text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2 rounded-lg transition inline-flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> Voltar
-                        </button>
                     </div>
+                </section>
 
-                    <div className="mb-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5 flex gap-1.5">
-                        {['MATRIZ','PECÉM'].map(u => (
-                            <button key={u} type="button" onClick={() => setForm({ ...form, unidade: u })} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition ${form.unidade===u ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'}`}>
+                {/* 2 · Local */}
+                <section className="px-4 py-4 sm:px-5">
+                    <SectionTitle>Local</SectionTitle>
+                    <div className="mb-3 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-white/[0.06]">
+                        {['MATRIZ', 'PECÉM'].map(u => (
+                            <button key={u} type="button" onClick={() => setForm({ ...form, unidade: u })} aria-pressed={form.unidade === u} className={`rounded-lg py-2 text-[13px] font-semibold transition ${form.unidade === u ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
                                 {u === 'MATRIZ' ? 'Matriz' : 'Pecém'}
                             </button>
                         ))}
                     </div>
+                    <label className="u-label">Onde?</label>
+                    <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value.toUpperCase() })} placeholder="Ex: pátio principal" />
+                </section>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Prioridade</label>
-                                <select className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none min-h-[44px]" value={form.prioridade} onChange={(e) => setForm({...form, prioridade: e.target.value})}>
-                                    <option value="Urgente">Urgente</option><option value="Alta">Alta</option><option value="Média">Média</option><option value="Baixa">Baixa</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Equipamento</label>
-                                <input type="text" required maxLength="120" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none placeholder:normal-case placeholder:text-slate-500 min-h-[44px]" value={form.equipamento} onChange={(e) => setForm({...form, equipamento: e.target.value.toUpperCase()})} placeholder="Ex: Caminhão 102" />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Serviço</label>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {['PINTURA', 'ELETRICA', 'SOLDA', 'MECANICA', 'BORRACHARIA', 'TRANSLADO'].map(srv => (
-                                    <ServiceBadge key={srv} servico={srv} selected={form.servico.includes(srv)} onClick={() => toggleServico(srv)} />
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Descrição</label>
-                            <textarea required maxLength="1000" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none placeholder:normal-case placeholder:text-slate-500" rows="3" value={form.descricao} onChange={(e) => setForm({...form, descricao: e.target.value.toUpperCase()})} placeholder="Descreva o problema encontrado..."></textarea>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Localização</label>
-                            <input type="text" required maxLength="120" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 focus:outline-none placeholder:normal-case placeholder:text-slate-500 min-h-[44px]" value={form.localizacao} onChange={(e) => setForm({...form, localizacao: e.target.value.toUpperCase()})} placeholder="Ex: Pátio principal" />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Fotos evidence <span className="normal-case font-normal text-slate-600 text-[11px]">({fotos.length}/5)</span></label>
-                            <CameraCapture
-                                onCapture={handleCaptureFoto}
-                                onSelectFiles={handleSelecionarFotos}
-                                maxFiles={5}
-                                currentCount={fotos.length}
-                            />
-                            {erroFoto && <p className="text-red-600 dark:text-red-400 text-xs font-semibold mt-2">{erroFoto}</p>}
-                            {fotos.length > 0 && (
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mt-3">
-                                    {fotos.map((f, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <img src={URL.createObjectURL(f)} alt={f.name} className="w-full h-24 sm:h-20 object-cover rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700" />
-                                            <button type="button" onClick={() => removerFoto(idx)} className="absolute -top-2 -right-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full w-7 h-7 sm:w-5 sm:h-5 flex items-center justify-center text-base sm:text-sm sm:text-xs shadow-md active:scale-95">×</button>
-                                            <p className="text-[9px] truncate text-slate-600 dark:text-slate-400 mt-1 hidden sm:block">{f.name}</p>
-                                        </div>
-                                    ))}
+                {/* 3 · Equipamento */}
+                <section className="px-4 py-4 sm:px-5">
+                    <SectionTitle>Equipamento</SectionTitle>
+                    <label className="u-label">Qual equipamento?</label>
+                    <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.equipamento} onChange={(e) => setForm({ ...form, equipamento: e.target.value.toUpperCase() })} placeholder="Ex: caminhão 102" />
+                </section>
+
+                {/* 4 · Prioridade */}
+                <section className="px-4 py-4 sm:px-5">
+                    <SectionTitle>Prioridade</SectionTitle>
+                    <div className="grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-white/[0.06]" role="radiogroup" aria-label="Prioridade">
+                        {PRIORIDADES.map(p => (
+                            <button key={p} type="button" role="radio" aria-checked={form.prioridade === p} onClick={() => setForm({ ...form, prioridade: p })} className={`rounded-lg py-2 text-[13px] font-semibold transition ${form.prioridade === p ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+                                {p}
+                            </button>
+                        ))}
+                    </div>
+                    {form.prioridade === 'Urgente' && <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">Urgente: operação parada ou risco imediato.</p>}
+                </section>
+
+                {/* 5 · Evidências */}
+                <section className="px-4 py-4 sm:px-5">
+                    <div className="mb-3 flex items-center justify-between">
+                        <h2 className="u-eyebrow">Evidências</h2>
+                        <span className="text-[11px] tabular-nums text-slate-400">{fotos.length}/5</span>
+                    </div>
+                    <CameraCapture onCapture={handleCaptureFoto} onSelectFiles={handleSelecionarFotos} maxFiles={5} currentCount={fotos.length} />
+                    {erroFoto && <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{erroFoto}</p>}
+                    {fotos.length > 0 && (
+                        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                            {fotos.map((f, idx) => (
+                                <div key={idx} className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5">
+                                    <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+                                    <button type="button" onClick={() => removerFoto(idx)} aria-label="Remover foto" className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-950/70 text-sm text-white backdrop-blur hover:bg-slate-950">×</button>
                                 </div>
-                            )}
+                            ))}
                         </div>
-                        <button type="submit" disabled={enviando} className="w-full bg-[#0E3263] dark:bg-white hover:bg-[#0A2447] dark:hover:bg-slate-100 disabled:opacity-60 text-white dark:text-slate-900 font-bold py-3.5 rounded-xl shadow-sm text-[15px] transition flex items-center justify-center gap-2 mt-2">
-                            <span>{enviando ? 'Enviando...' : 'Abrir chamado'}</span>
-                            {!enviando && <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>}
-                        </button>
-                    </form>
+                    )}
+                </section>
+
+                <div className="px-4 py-4 sm:px-5">
+                    <button type="submit" disabled={enviando} className="btn-primary w-full !py-3.5 !text-[15px]">
+                        {enviando ? 'Enviando…' : 'Abrir chamado'}
+                        {!enviando && <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>}
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }
