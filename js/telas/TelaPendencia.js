@@ -235,7 +235,6 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                     <React.Fragment>
                         {aoNovo && (
                             <button onClick={aoNovo} className="btn-primary">
-                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                                 Novo chamado
                             </button>
                         )}

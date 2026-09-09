@@ -7,7 +7,6 @@ function App() {
     const [chamados, setChamados] = React.useState([]);
     const [exibirLogin, setExibirLogin] = React.useState(false);
     const [destinoAposLogin, setDestinoAposLogin] = React.useState('pendencia');
-    const [erroAcao, setErroAcao] = React.useState('');
     const [chamadoRecemCriado, setChamadoRecemCriado] = React.useState(null);
     const [protocoloBusca, setProtocoloBusca] = React.useState('');
     const [meuPerfil, setMeuPerfil] = React.useState(null);
@@ -134,10 +133,7 @@ function App() {
             window.notifySuccess && window.notifySuccess('Protocolo ' + criado.protocolo + ' registrado.');
         } catch (e) {
             console.error("Erro ao adicionar chamado: ", e);
-            const msg = 'Não foi possível abrir o chamado. Verifique sua conexão e tente novamente.';
-            setErroAcao(msg);
-            window.notifyError && window.notifyError(msg + ' (' + e.message + ')');
-            setTimeout(() => setErroAcao(''), 4000);
+            window.notifyError && window.notifyError('Não foi possível abrir o chamado. Verifique sua conexão e tente novamente. (' + e.message + ')');
         }
     };
 
@@ -155,20 +151,15 @@ function App() {
         catch (e) {
             console.error("Erro ao assumir: ", e);
             const msg = e.message || 'Não foi possível assumir.';
-            window.notifyError && window.notifyError(msg);
-            if (msg.includes('Sessão') || msg.includes('expirada') || msg.includes('Token') || msg.includes('conectar à API')) {
+            if (msg.includes('Sessão') || msg.includes('expirada') || msg.includes('Token')) {
                 setChamadoPendenteAcao(chamado);
-                if (msg.includes('conectar à API')) {
-                    setErroAcao(msg);
-                } else {
-                    setDestinoAposLogin('pendencia');
-                    setExibirLogin(true);
-                    setErroAcao('Sessão expirada. Faça login para assumir.');
-                }
+                setDestinoAposLogin('pendencia');
+                setExibirLogin(true);
+                window.notifyWarning && window.notifyWarning('Sessão expirada. Faça login para assumir.');
             } else {
-                setErroAcao(msg);
+                window.notifyError && window.notifyError(msg);
+                if (msg.includes('conectar à API')) setChamadoPendenteAcao(chamado);
             }
-            setTimeout(() => setErroAcao(''), 5000);
             throw e;
         }
     };
@@ -183,16 +174,14 @@ function App() {
         try { await ChamadosService.toggleAtendimento(chamado); }
         catch (e) {
             console.error("Erro ao atualizar atendimento: ", e);
-            setErroAcao(e.message || 'Não foi possível atualizar. Faça login novamente.');
-            setTimeout(() => setErroAcao(''), 4000);
+            window.notifyError && window.notifyError(e.message || 'Não foi possível atualizar. Faça login novamente.');
         }
     };
     const encerrarChamado = async (chamado, servicoFeito, pendencia) => {
         try { await ChamadosService.encerrarChamado(chamado, servicoFeito, pendencia); }
         catch (e) {
             console.error("Erro ao encerrar chamado: ", e);
-            setErroAcao(e.message || 'Não foi possível encerrar. Faça login novamente.');
-            setTimeout(() => setErroAcao(''), 4000);
+            window.notifyError && window.notifyError(e.message || 'Não foi possível encerrar. Faça login novamente.');
         }
     };
     const concluirChamado = async (chamado, dados) => {
@@ -202,10 +191,7 @@ function App() {
             return res;
         } catch (e) {
             console.error("Erro ao concluir: ", e);
-            const msg = e.message || 'Não foi possível concluir.';
-            setErroAcao(msg);
-            window.notifyError && window.notifyError(msg);
-            setTimeout(() => setErroAcao(''), 4000);
+            window.notifyError && window.notifyError(e.message || 'Não foi possível concluir.');
             throw e;
         }
     };
@@ -254,6 +240,15 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
+    const emAtendimento = chamados
+        .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
+        .sort((a, b) => {
+            const ua = a.prioridade === 'Urgente';
+            const ub = b.prioridade === 'Urgente';
+            if (ua !== ub) return ua ? -1 : 1;
+            return calcularDiasDecorridos(b.dataAbertura) - calcularDiasDecorridos(a.dataAbertura);
+        })
+        .slice(0, 5);
 
     const opsAbertos = chamados.filter(c => !c.concluido);
     const opsEmAtend = opsAbertos.filter(c => c.status === 'EM_ATENDIMENTO' || c.emAtendimento);
@@ -293,20 +288,12 @@ function App() {
                     fechar={() => setExibirLogin(false)}
                 />
             )}
-            {erroAcao && (
-                <div className="toast-in fixed left-1/2 top-4 z-[60] flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-md border border-slate-200 bg-white py-2.5 pl-3.5 pr-2 text-[13px] text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"></span>
-                    <span className="break-words">{erroAcao}</span>
-                    <button onClick={() => setErroAcao('')} aria-label="Fechar" className="icon-btn shrink-0">✕</button>
-                </div>
-            )}
 
             {telaAtual !== 'splash' && (
                 <header className="sticky top-0 z-20 border-b border-slate-200 bg-white dark:border-[#1F2937] dark:bg-[#0B1220]">
                     <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center gap-3 px-4 sm:px-5">
                         <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-baseline gap-1.5" title="Início">
                             <span className="text-[15px] font-extrabold italic tracking-tight text-[#0E3263] dark:text-white">UNILINK</span>
-                            <span className="rounded border border-slate-300 px-1 py-px font-mono text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400">OPS</span>
                             {ambiente && <span className="whitespace-nowrap text-[13px] text-slate-400">/ {ambiente}</span>}
                         </button>
                         <div className="ml-auto flex items-center gap-1">
@@ -322,32 +309,10 @@ function App() {
                             <ToggleDark />
                         </div>
                     </div>
-                    {ambiente && (ambiente === 'Solicitante' || autenticado) && (
-                        <nav className="border-t border-slate-100 dark:border-slate-800">
-                            <div className="mx-auto flex w-full max-w-[1280px] items-center gap-1 overflow-x-auto px-4 sm:px-5">
-                                {NAV[ambiente].map(item => {
-                                    const ativo = telaAtual === item.k;
-                                    return (
-                                        <button
-                                            key={item.k}
-                                            onClick={() => irNav(item.k)}
-                                            className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-[13px] transition ${ativo ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
-                                        >
-                                            {item.icon}
-                                            {item.l}
-                                        </button>
-                                    );
-                                })}
-                                {ambiente === 'Manutenção' && pendentesCount > 0 && (
-                                    <span className="ml-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400">{pendentesCount}</span>
-                                )}
-                            </div>
-                        </nav>
-                    )}
                 </header>
             )}
 
-            <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-5 sm:px-5">
+            <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 pb-28 pt-5 sm:px-5">
                 {telaAtual === 'splash' && (
                     <div className="fade-in mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
@@ -420,6 +385,27 @@ function App() {
                                 </div>
                             ))}
                         </div>
+                        <div className="u-surface mb-4 px-4 py-3">
+                            <SectionTitle action={emAtendimento.length > 0 ? <span className="text-[11px] tabular-nums text-slate-400">{emAtendimento.length}</span> : null}>Em atendimento</SectionTitle>
+                            {emAtendimento.length === 0 ? (
+                                <p className="py-1 text-xs text-slate-500 dark:text-slate-400">Nenhum chamado em atendimento.</p>
+                            ) : (
+                                <ul className="divide-y u-divider">
+                                    {emAtendimento.map(c => (
+                                        <li key={c.idFirebase}>
+                                            <button onClick={() => setTelaAtual('pendencia')} className="flex w-full items-center gap-3 py-2 text-left">
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">{c.equipamento}</span>
+                                                    <ProtocoloTag codigo={c.protocolo} />
+                                                </span>
+                                                <PriorityBadge prioridade={c.prioridade} />
+                                                <span className="w-14 shrink-0 text-right"><TempoAberto dataAbertura={c.dataAbertura} /></span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                         <div className="u-surface divide-y u-divider overflow-hidden">
                             <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
@@ -464,10 +450,33 @@ function App() {
                 {telaAtual === 'redefinir' && (
                     <TelaRedefinirSenha
                         voltar={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); }}
-                        aoSucesso={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); setErroAcao('Senha atualizada.'); setTimeout(() => setErroAcao(''), 4000); }}
+                        aoSucesso={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); window.notifySuccess && window.notifySuccess('Senha atualizada.'); }}
                     />
                 )}
             </main>
+
+            {ambiente && (ambiente === 'Solicitante' || autenticado) && (
+                <nav className="print:hidden fixed inset-x-0 bottom-0 z-30 flex justify-center px-4" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+                    <div className="flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+                        {NAV[ambiente].map(item => {
+                            const ativo = telaAtual === item.k;
+                            return (
+                                <button
+                                    key={item.k}
+                                    onClick={() => irNav(item.k)}
+                                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[13px] transition ${ativo ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                >
+                                    {item.icon}
+                                    {item.l}
+                                    {ambiente === 'Manutenção' && item.k === 'pendencia' && pendentesCount > 0 && (
+                                        <span className="rounded-full bg-[#0E3263] px-1.5 text-[10px] font-medium tabular-nums text-white dark:bg-sky-400 dark:text-slate-950">{pendentesCount}</span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </nav>
+            )}
         </div>
     );
 }
