@@ -6,6 +6,7 @@ function TelaSucesso({ voltarInicio, chamado, aoAcompanhar, aoNovo }) {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>
             <h1 className="mt-3 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Chamado registrado</h1>
+            <span className="mx-auto mt-3 block h-0.5 w-10 rounded-full bg-[#0E3263] dark:bg-sky-400"></span>
 
             {chamado?.protocolo && (
                 <div className="u-surface mt-4 px-5 py-4 text-center">

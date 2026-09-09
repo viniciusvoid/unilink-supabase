@@ -27,12 +27,27 @@ function TelaHistorico({ chamados }) {
     const handleImprimirOS = (c) => imprimirOrdemServico(c);
     const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
     const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const agora = new Date();
+    const esteMes = baseHistorico.filter(c => {
+        try {
+            const dt = parseDataBR(c.dataAbertura);
+            return dt && dt.getMonth() === agora.getMonth() && dt.getFullYear() === agora.getFullYear();
+        } catch { return false; }
+    }).length;
+    const recorrentes = (() => {
+        const cont = {};
+        baseHistorico.forEach(c => {
+            const k = (c.equipamento || '-').toUpperCase();
+            cont[k] = (cont[k] || 0) + 1;
+        });
+        return Object.values(cont).filter(n => n > 1).length;
+    })();
 
     return (
         <div className="fade-in w-full">
             <PageHeader
                 title="Histórico"
-                meta={`${listaExibicao.length} registros`}
+                meta={`${baseHistorico.length} chamados • ${esteMes} este mês • ${recorrentes} recorrentes`}
                 actions={<DownloadPopover dados={[...encerrados, ...parciais]} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />}
             />
 

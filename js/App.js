@@ -260,7 +260,7 @@ function App() {
     const conteudoSolicitante = telaAtual === 'solicitante' ? 'corretiva' : telaAtual;
 
     return (
-        <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-100 text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-slate-950 dark:text-slate-100">
+        <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-slate-950 dark:text-slate-100">
             <ToastContainer />
             {exibirLogin && (
                 <ModalLogin
@@ -279,12 +279,9 @@ function App() {
             {telaAtual !== 'splash' && (
                 <header className="sticky top-0 z-20 border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950">
                     <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-3 px-3 sm:px-5">
-                        <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-center gap-2" title="Início">
-                            <Logo variant="mark" />
-                            <span className="whitespace-nowrap text-[13px] text-slate-500 dark:text-slate-400">
-                                <span className="font-semibold text-slate-900 dark:text-slate-100">UNILINK</span>
-                                {ambiente && <span> / {ambiente}</span>}
-                            </span>
+                        <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-baseline gap-1.5" title="Início">
+                            <span className="text-[15px] font-extrabold italic tracking-tight text-[#0E3263] dark:text-white">UNILINK</span>
+                            {ambiente && <span className="whitespace-nowrap text-[13px] text-slate-400">/ {ambiente}</span>}
                         </button>
                         <div className="ml-auto flex items-center gap-1">
                             {autenticado && meuPerfil && (
@@ -308,11 +305,10 @@ function App() {
                                         <button
                                             key={item.k}
                                             onClick={() => irNav(item.k)}
-                                            className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[13px] transition ${ativo ? 'font-medium text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                            className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-[13px] transition ${ativo ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                         >
                                             {item.icon}
                                             {item.l}
-                                            {ativo && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-[#0E3263] dark:bg-sky-400"></span>}
                                         </button>
                                     );
                                 })}
@@ -329,9 +325,8 @@ function App() {
                 {telaAtual === 'splash' && (
                     <div className="fade-in mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
-                        <div className="mb-6 flex items-center gap-2.5">
-                            <Logo variant="mark" />
-                            <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">UNILINK</span>
+                        <div className="mb-8 flex justify-center">
+                            <Logo variant="full" />
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
                             <button onClick={() => setTelaAtual('solicitante')} className="u-surface p-4 text-left transition hover:border-slate-300 dark:hover:border-slate-600">

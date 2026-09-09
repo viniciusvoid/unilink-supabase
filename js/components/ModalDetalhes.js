@@ -19,7 +19,6 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
 
     if (!chamado) return null;
     const tempo = tempoAbertoInfo(chamado.dataAbertura);
-    const critico = chamado.prioridade === 'Urgente' || (tempo && tempo.dias > 3);
 
     const Linha = ({ rotulo, valor }) => {
         if (!valor || valor === 'NENHUMA') return null;
@@ -32,14 +31,14 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
     };
 
     return (
-        <div className={`${critico ? '' : 'sheet-mobile '}fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 fade-in`} onClick={aoFechar}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-6 fade-in" onClick={aoFechar}>
             {imgAmpliada && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4" onClick={() => setImgAmpliada(null)}>
                     <img src={imgAmpliada} alt="Evidência" className="max-h-full max-w-full rounded-lg" onClick={(e) => e.stopPropagation()} />
                     <button onClick={() => setImgAmpliada(null)} aria-label="Fechar" className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20">✕</button>
                 </div>
             )}
-            <div className="sheet-panel flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b u-divider px-5 py-3">
                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhes do chamado</h3>
                     <button onClick={aoFechar} aria-label="Fechar" className="icon-btn">
@@ -66,7 +65,7 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
                             </div>
 
                             <div className="mt-5">
-                                <SectionTitle>Evidências</SectionTitle>
+                                <SectionTitle action={evidencias.length > 0 ? <span className="text-[11px] tabular-nums text-slate-400">{evidencias.length}</span> : null}>Evidências</SectionTitle>
                                 <EvidenceGallery fotos={evidencias} onExpand={setImgAmpliada} />
                             </div>
                         </div>

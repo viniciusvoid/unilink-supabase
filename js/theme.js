@@ -50,10 +50,10 @@ function ProtocoloTag({ codigo, copiar = true }) {
         } catch {}
     };
     return (
-        <span className="inline-flex items-center gap-1 font-mono text-xs font-medium tracking-wide text-slate-500 dark:text-slate-400">
+        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-px font-mono text-[11px] font-medium tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
             #{String(codigo).replace(/^#/, '')}
             {copiar && (
-                <button onClick={copiarFn} title="Copiar protocolo" aria-label="Copiar protocolo" className="icon-btn !min-w-0 !p-1">
+                <button onClick={copiarFn} title="Copiar protocolo" aria-label="Copiar protocolo" className="icon-btn !min-w-0 !p-0.5">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 </button>
             )}
@@ -86,11 +86,14 @@ function PageHeader({ title, meta, actions }) {
     );
 }
 
-// ---------- Título de seção ----------
+// ---------- Título de seção (com filete institucional) ----------
 function SectionTitle({ children, action }) {
     return (
         <div className="mb-2 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">{children}</h2>
+            <h2 className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                <span className="h-3.5 w-[3px] rounded-full bg-[#0E3263] dark:bg-sky-400"></span>
+                {children}
+            </h2>
             {action}
         </div>
     );
@@ -140,9 +143,10 @@ function TimelineView({ eventos = [] }) {
         return <p className="py-2 text-xs text-slate-500 dark:text-slate-400">Sem atividade registrada.</p>;
     }
     return (
-        <ol className="ml-1 space-y-3 border-l border-slate-200 pl-4 dark:border-slate-700">
+        <ol className="ml-1 space-y-3.5 border-l-2 border-slate-200 pl-5 dark:border-slate-700">
             {eventos.map((ev, idx) => (
-                <li key={ev.id || idx} className="min-w-0">
+                <li key={ev.id || idx} className="relative min-w-0">
+                    <span className={`absolute -left-[25px] top-1 h-2 w-2 rounded-full ${idx === 0 ? 'bg-[#0E3263] dark:bg-sky-400' : 'bg-white ring-2 ring-slate-300 dark:bg-slate-900 dark:ring-slate-600'}`}></span>
                     <div className="flex items-baseline gap-2">
                         <span className="w-9 shrink-0 font-mono text-xs text-slate-400 dark:text-slate-500" title={ev.criadoEm || ''}>{horaCurta(ev.criadoEm)}</span>
                         <p className="truncate text-sm text-slate-700 dark:text-slate-200">{EVENTO_LABEL[ev.tipoEvento] || ev.tipoEvento}</p>
