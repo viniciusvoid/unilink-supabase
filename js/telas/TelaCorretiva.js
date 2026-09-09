@@ -43,12 +43,12 @@ function TelaCorretiva({ aoSalvar }) {
         <div className="fade-in mx-auto w-full max-w-[620px]">
             <PageHeader title="Novo chamado" />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
+            <form onSubmit={handleSubmit} className="u-surface divide-y u-divider">
+                <div className="px-4 py-4 sm:px-5">
                     <label className="u-label">Descrição</label>
                     <textarea required maxLength="1000" rows="3" className="u-input resize-none uppercase placeholder:normal-case" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} />
                 </div>
-                <div>
+                <div className="px-4 py-4 sm:px-5">
                     <label className="u-label">Serviço</label>
                     <div className="flex flex-wrap gap-1.5">
                         {['PINTURA', 'ELETRICA', 'SOLDA', 'MECANICA', 'BORRACHARIA', 'TRANSLADO'].map(srv => (
@@ -56,7 +56,7 @@ function TelaCorretiva({ aoSalvar }) {
                         ))}
                     </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
                     <div>
                         <label className="u-label">Unidade</label>
                         <div className="grid h-9 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800">
@@ -72,7 +72,7 @@ function TelaCorretiva({ aoSalvar }) {
                         <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value.toUpperCase() })} />
                     </div>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
                     <div>
                         <label className="u-label">Equipamento</label>
                         <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.equipamento} onChange={(e) => setForm({ ...form, equipamento: e.target.value.toUpperCase() })} />
@@ -88,7 +88,7 @@ function TelaCorretiva({ aoSalvar }) {
                         </div>
                     </div>
                 </div>
-                <div>
+                <div className="px-4 py-4 sm:px-5">
                     <div className="mb-1.5 flex items-center justify-between">
                         <label className="u-label !mb-0">Fotos</label>
                         <span className="text-[11px] tabular-nums text-slate-400">{fotos.length}/5</span>
@@ -106,7 +106,7 @@ function TelaCorretiva({ aoSalvar }) {
                         </div>
                     )}
                 </div>
-                <div className="pt-1">
+                <div className="px-4 py-4 sm:px-5">
                     <button type="submit" disabled={enviando} className="btn-primary w-full !justify-center !text-sm disabled:opacity-60">
                         {enviando ? 'Enviando…' : 'Abrir chamado'}
                     </button>

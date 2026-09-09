@@ -1,4 +1,4 @@
-﻿// TELA: Dashboard — painel operacional compacto
+// TELA: Dashboard — painel operacional compacto
 function TelaDashboard({ chamados }) {
     const [filtro, setFiltro] = React.useState({ tipo: 'dias', valor: 30 });
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
@@ -59,10 +59,13 @@ function TelaDashboard({ chamados }) {
 
     const horaAtualizada = atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const Ind = ({ rotulo, valor }) => (
-        <div className="min-w-0 flex-1 px-2 py-3 text-center sm:px-4">
-            <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{rotulo}</div>
-            <div className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">{valor}</div>
+    const Ind = ({ rotulo, valor, icon }) => (
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-3 sm:px-4">
+            <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 min-[400px]:flex dark:bg-slate-800 dark:text-slate-400">{icon}</span>
+            <span className="min-w-0">
+                <span className="block text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{rotulo}</span>
+                <span className="mt-0.5 block text-2xl font-semibold tabular-nums leading-none tracking-tight text-slate-900 dark:text-slate-100">{valor}</span>
+            </span>
         </div>
     );
 
@@ -79,8 +82,14 @@ function TelaDashboard({ chamados }) {
                 actions={
                     <React.Fragment>
                         <LiveDot label={`Atualizado ${horaAtualizada}`} />
-                        <button onClick={atualizar} className="btn-ghost">Atualizar</button>
-                        <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="btn-ghost">PDF</button>
+                        <button onClick={atualizar} className="btn-ghost">
+                            <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            Atualizar
+                        </button>
+                        <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="btn-ghost">
+                            <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            PDF
+                        </button>
                     </React.Fragment>
                 }
             />
@@ -124,10 +133,10 @@ function TelaDashboard({ chamados }) {
 
             <section className="u-surface mb-5">
                 <div className="grid grid-cols-2 divide-x divide-slate-100 dark:divide-slate-700 sm:grid-cols-4">
-                    <Ind rotulo="Total" valor={resumo.total} />
-                    <Ind rotulo="Abertos" valor={resumo.abertos} />
-                    <Ind rotulo="Em atendimento" valor={resumo.emAtendimento} />
-                    <Ind rotulo="Concluídos" valor={resumo.encerrados} />
+                    <Ind rotulo="Total" valor={resumo.total} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>} />
+                    <Ind rotulo="Abertos" valor={resumo.abertos} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>} />
+                    <Ind rotulo="Em atendimento" valor={resumo.emAtendimento} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>} />
+                    <Ind rotulo="Concluídos" valor={resumo.encerrados} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>} />
                 </div>
                 <div className="flex flex-wrap gap-x-5 gap-y-1 border-t u-divider px-4 py-2 text-xs text-slate-500 dark:text-slate-400">
                     <span>Tempo médio <strong className="font-medium text-slate-700 dark:text-slate-200">{formatarHoras(resumo.tempoMedioResolucao)}</strong></span>
@@ -143,12 +152,12 @@ function TelaDashboard({ chamados }) {
                     {emAberto.length === 0 ? (
                         <p className="py-2 text-xs text-slate-500">Nenhum chamado em aberto no período.</p>
                     ) : (
-                        <ul className="divide-y u-divider border-y u-divider">
+                        <ul className="u-surface divide-y u-divider px-4">
                             {emAberto.map(c => (
                                 <li key={c.idFirebase}>
-                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2 text-left">
+                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2.5 text-left">
                                         <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-sm text-slate-700 dark:text-slate-200">{c.equipamento}</span>
+                                            <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">{c.equipamento}</span>
                                             <ProtocoloTag codigo={c.protocolo} />
                                         </span>
                                         <PriorityBadge prioridade={c.prioridade} />
@@ -165,10 +174,10 @@ function TelaDashboard({ chamados }) {
                     {recentes.length === 0 ? (
                         <p className="py-2 text-xs text-slate-500">Sem atividade no período.</p>
                     ) : (
-                        <ul className="divide-y u-divider border-y u-divider">
+                        <ul className="u-surface divide-y u-divider px-4">
                             {recentes.map(c => (
                                 <li key={c.idFirebase}>
-                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2 text-left">
+                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2.5 text-left">
                                         <span className="w-9 shrink-0 font-mono text-xs text-slate-400" title={c.dataAbertura}>{horaCurta(c.dataAbertura)}</span>
                                         <span className="min-w-0 flex-1 truncate text-sm text-slate-700 dark:text-slate-200">{c.equipamento}</span>
                                         <StatusBadge status={c.status} concluido={c.concluido} />
@@ -231,9 +240,9 @@ function TelaDashboard({ chamados }) {
                         {metricasServico.filter(m => m.recorrentes > 0).length === 0 ? (
                             <p className="py-2 text-xs text-slate-500">Nenhuma recorrência no período.</p>
                         ) : (
-                            <ul className="divide-y u-divider border-y u-divider">
+                            <ul className="u-surface divide-y u-divider px-4">
                                 {metricasServico.filter(m => m.recorrentes > 0).slice(0, 5).map(m => (
-                                    <li key={m.servico} className="flex items-center justify-between py-2">
+                                    <li key={m.servico} className="flex items-center justify-between py-2.5">
                                         <ServiceBadge servico={m.servico} />
                                         <span className="text-xs tabular-nums text-slate-500">{m.recorrentes} ×</span>
                                     </li>

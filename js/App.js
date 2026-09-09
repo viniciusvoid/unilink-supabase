@@ -233,13 +233,13 @@ function App() {
 
     const NAV = {
         'Solicitante': [
-            { k: 'corretiva', l: 'Novo' },
-            { k: 'acompanhamento', l: 'Acompanhar' }
+            { k: 'corretiva', l: 'Novo', icon: <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg> },
+            { k: 'acompanhamento', l: 'Acompanhar', icon: <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg> }
         ],
         'Manutenção': [
-            { k: 'pendencia', l: 'Chamados' },
-            { k: 'historico', l: 'Histórico' },
-            { k: 'dashboard', l: 'Dashboard' }
+            { k: 'pendencia', l: 'Chamados', icon: <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg> },
+            { k: 'historico', l: 'Histórico', icon: <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+            { k: 'dashboard', l: 'Dashboard', icon: <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg> }
         ]
     };
 
@@ -308,8 +308,9 @@ function App() {
                                         <button
                                             key={item.k}
                                             onClick={() => irNav(item.k)}
-                                            className={`relative whitespace-nowrap px-3 py-2.5 text-[13px] transition ${ativo ? 'font-medium text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                            className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 text-[13px] transition ${ativo ? 'font-medium text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                         >
+                                            {item.icon}
                                             {item.l}
                                             {ativo && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-[#0E3263] dark:bg-sky-400"></span>}
                                         </button>
@@ -326,23 +327,33 @@ function App() {
 
             <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-5 sm:px-5">
                 {telaAtual === 'splash' && (
-                    <div className="fade-in mx-auto w-full max-w-[420px] pt-10 sm:pt-16">
+                    <div className="fade-in mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
                         <div className="mb-6 flex items-center gap-2.5">
                             <Logo variant="mark" />
                             <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">UNILINK</span>
                         </div>
-                        <div className="u-surface divide-y u-divider overflow-hidden">
-                            <button onClick={() => setTelaAtual('solicitante')} className="flex w-full items-center justify-between px-4 py-3.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
-                                <span className="text-sm text-slate-700 dark:text-slate-200">Solicitante</span>
-                                <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                            </button>
-                            <button onClick={irManutencao} className="flex w-full items-center justify-between px-4 py-3.5 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
-                                <span className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                                    Manutenção
-                                    {pendentesCount > 0 && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-500 dark:bg-slate-800 dark:text-slate-400">{pendentesCount}</span>}
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <button onClick={() => setTelaAtual('solicitante')} className="u-surface p-4 text-left transition hover:border-slate-300 dark:hover:border-slate-600">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                                    <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </span>
-                                <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                <span className="mt-3 flex items-center justify-between text-sm font-medium text-slate-800 dark:text-slate-100">
+                                    Solicitante
+                                    <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                </span>
+                            </button>
+                            <button onClick={irManutencao} className="u-surface border-[#0E3263]/30 p-4 text-left transition hover:border-[#0E3263]/60 dark:border-sky-400/20 dark:hover:border-sky-400/40">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300">
+                                    <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>
+                                </span>
+                                <span className="mt-3 flex items-center justify-between text-sm font-medium text-slate-800 dark:text-slate-100">
+                                    <span className="flex items-center gap-2">
+                                        Manutenção
+                                        {pendentesCount > 0 && <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span>}
+                                    </span>
+                                    <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                </span>
                             </button>
                         </div>
                     </div>

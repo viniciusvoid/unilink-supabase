@@ -44,7 +44,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
                     <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{chamado.equipamento}</h2>
                     <div className="mt-2"><StatusBadge status={chamado.status} concluido={chamado.concluido} /></div>
 
-                    <dl className="mt-4 divide-y u-divider border-y u-divider">
+                    <dl className="u-surface mt-4 divide-y u-divider px-4">
                         <div className="flex gap-3 py-2">
                             <dt className="w-28 shrink-0 text-xs text-slate-500 dark:text-slate-400">Problema</dt>
                             <dd className="min-w-0 flex-1 text-sm text-slate-700 dark:text-slate-200">{chamado.descricao || '-'}</dd>

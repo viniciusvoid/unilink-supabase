@@ -48,7 +48,10 @@ function ModalLogin({ aoAutenticar, fechar }) {
         <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 fade-in" onClick={fechar}>
             <div className="sheet-panel w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{modo === 'recuperar' ? 'Recuperar senha' : 'Acesso'}</h3>
+                    <div className="flex items-center gap-2.5">
+                        <Logo variant="mark" />
+                        <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{modo === 'recuperar' ? 'Recuperar senha' : 'Acesso'}</h3>
+                    </div>
                     <button type="button" onClick={fechar} aria-label="Fechar" className="icon-btn">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>

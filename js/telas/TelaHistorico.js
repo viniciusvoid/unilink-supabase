@@ -1,4 +1,4 @@
-﻿// TELA: Histórico — pesquisa e consulta
+// TELA: Histórico — pesquisa e consulta
 function TelaHistorico({ chamados }) {
     const [busca, setBusca] = React.useState('');
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
@@ -62,7 +62,7 @@ function TelaHistorico({ chamados }) {
                     <option value="MES_ATUAL">Mês atual</option>
                 </select>
                 {(filtrosAtivos > 0 || busca) && (
-                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:hover:text-slate-200">Limpar</button>
+                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-[#0E3263] underline underline-offset-2 hover:text-[#0A2447] dark:text-sky-300 dark:hover:text-sky-200">Limpar</button>
                 )}
             </div>
 
@@ -70,7 +70,7 @@ function TelaHistorico({ chamados }) {
                 <div className="u-surface"><EmptyState action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
             ) : (
                 <React.Fragment>
-                    <ul className="divide-y u-divider border-y u-divider md:hidden">
+                    <ul className="u-surface divide-y u-divider px-4 md:hidden">
                         {listaExibicaoPaginada.map(c => (
                             <li key={c.idFirebase}>
                                 <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">

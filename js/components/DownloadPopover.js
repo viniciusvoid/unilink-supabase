@@ -36,6 +36,7 @@ function DownloadPopover({ dados, unidadeFiltro, statusFiltro, dataFiltro, busca
     return (
         <div className="relative" ref={ref}>
             <button onClick={() => setAberto(v => !v)} aria-expanded={aberto} className="btn-ghost">
+                <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v11m0 0l-3.5-3.5M12 15l3.5-3.5M4 19h16" /></svg>
                 Exportar
                 <svg className={`w-3 h-3 opacity-60 transition ${aberto ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
             </button>
