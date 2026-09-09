@@ -40,7 +40,7 @@
         }
 
         html, body {
-            background-color: #F8FAFC;
+            background-color: #F4F6F8;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -49,7 +49,7 @@
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
         }
-        html.dark, html.dark body { background-color: #020617; }
+        html.dark, html.dark body { background-color: #0B1220; }
 
         svg {
             shape-rendering: geometricPrecision;
@@ -99,14 +99,14 @@
         /* ----- Primitivos ----- */
         .u-surface {
             background: #fff;
-            border: 1px solid #E2E8F0;
+            border: 1px solid #D9DEE5;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
         }
-        html.dark .u-surface { background: #0F172A; border-color: #334155; box-shadow: none; }
+        html.dark .u-surface { background: #111827; border-color: #1F2937; box-shadow: none; }
 
         .u-divider { border-color: #F1F5F9; }
-        html.dark .u-divider { border-color: #334155; }
+        html.dark .u-divider { border-color: #1F2937; }
 
         .u-label {
             display: block; font-size: 13px; font-weight: 500;
@@ -116,14 +116,14 @@
 
         .u-input {
             width: 100%; border-radius: 6px; padding: 8px 12px;
-            background: #fff; border: 1px solid #CBD5E1;
-            color: #0F172A; font-size: 14px; transition: border-color .15s, box-shadow .15s;
+            background: #fff; border: 1px solid #D9DEE5;
+            color: #17202A; font-size: 14px; transition: border-color .15s, box-shadow .15s;
             height: 36px;
         }
         textarea.u-input { height: auto; }
-        .u-input::placeholder { color: #94A3B8; text-transform: none; }
+        .u-input::placeholder { color: #667085; text-transform: none; }
         .u-input:focus { outline: none; border-color: #0E3263; box-shadow: 0 0 0 3px rgba(14,50,99,.10); }
-        html.dark .u-input { background: #1E293B; border-color: #334155; color: #F1F5F9; }
+        html.dark .u-input { background: #172033; border-color: #1F2937; color: #F1F5F9; }
         html.dark .u-input:focus { border-color: #38BDF8; box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
 
         select.u-input { appearance: auto; }
@@ -157,8 +157,8 @@
             min-height: 36px; white-space: nowrap;
         }
         .btn-ghost:hover { background: #F8FAFC; color: #0F172A; }
-        html.dark .btn-ghost { background: transparent; border-color: #334155; color: #CBD5E1; }
-        html.dark .btn-ghost:hover { background: #1E293B; color: #fff; }
+        html.dark .btn-ghost { background: transparent; border-color: #1F2937; color: #CBD5E1; }
+        html.dark .btn-ghost:hover { background: #172033; color: #fff; }
 
         .btn-danger {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -184,7 +184,7 @@
         }
         .btn-page:disabled { opacity: .4; }
         .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
-        html.dark .btn-page { background: transparent; border-color: #334155; color: #CBD5E1; }
+        html.dark .btn-page { background: transparent; border-color: #1F2937; color: #CBD5E1; }
         html.dark .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
 
         /* Botão de ícone inline (copiar, fechar, remover) — nunca estica */
@@ -200,16 +200,16 @@
         .u-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .u-table thead th {
             text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .05em;
-            text-transform: uppercase; color: #64748B; padding: 8px 12px;
-            border-bottom: 1px solid #E2E8F0; white-space: nowrap;
+            text-transform: uppercase; color: #667085; padding: 8px 12px;
+            border-bottom: 1px solid #D9DEE5; white-space: nowrap;
         }
-        html.dark .u-table thead th { color: #94A3B8; border-color: #334155; }
+        html.dark .u-table thead th { color: #94A3B8; border-color: #1F2937; }
         .u-table tbody td { padding: 10px 12px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
-        html.dark .u-table tbody td { border-color: #1E293B; }
+        html.dark .u-table tbody td { border-color: #172033; }
         .u-table tbody tr:last-child td { border-bottom: none; }
         .u-table tbody tr { transition: background .12s; }
-        .u-table tbody tr:hover { background: #F8FAFC; }
-        html.dark .u-table tbody tr:hover { background: #141d33; }
+        .u-table tbody tr:hover { background: #E8F0F8; }
+        html.dark .u-table tbody tr:hover { background: #172033; }
 
         /* Modal: bottom-sheet no mobile */
         @media (max-width: 640px) {

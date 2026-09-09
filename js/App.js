@@ -255,6 +255,19 @@ function App() {
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
 
+    const opsAbertos = chamados.filter(c => !c.concluido);
+    const opsEmAtend = opsAbertos.filter(c => c.status === 'EM_ATENDIMENTO' || c.emAtendimento);
+    const opsUrg = opsAbertos.filter(c => c.prioridade === 'Urgente');
+    const opsHoje = chamados.filter(c => {
+        try {
+            if (typeof parseDataBR !== 'function') return false;
+            const dt = parseDataBR(c.dataAbertura);
+            const h = new Date();
+            return dt && dt.getFullYear() === h.getFullYear() && dt.getMonth() === h.getMonth() && dt.getDate() === h.getDate();
+        } catch { return false; }
+    });
+    const recentesSol = obterProtocolosRecentes();
+
     const EnvRow = ({ icon, label, badge, onClick, destaque }) => (
         <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${destaque ? 'bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{icon}</span>
@@ -272,7 +285,7 @@ function App() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-slate-950 dark:text-slate-100">
+        <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#F4F6F8] text-slate-900 antialiased selection:bg-[#0E3263]/10 dark:bg-[#0B1220] dark:text-slate-100">
             <ToastContainer />
             {exibirLogin && (
                 <ModalLogin
@@ -289,10 +302,11 @@ function App() {
             )}
 
             {telaAtual !== 'splash' && (
-                <header className="sticky top-0 z-20 border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950">
-                    <div className="mx-auto flex h-12 w-full max-w-6xl items-center gap-3 px-3 sm:px-5">
+                <header className="sticky top-0 z-20 border-b border-slate-200 bg-white dark:border-[#1F2937] dark:bg-[#0B1220]">
+                    <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center gap-3 px-4 sm:px-5">
                         <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-baseline gap-1.5" title="Início">
                             <span className="text-[15px] font-extrabold italic tracking-tight text-[#0E3263] dark:text-white">UNILINK</span>
+                            <span className="rounded border border-slate-300 px-1 py-px font-mono text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400">OPS</span>
                             {ambiente && <span className="whitespace-nowrap text-[13px] text-slate-400">/ {ambiente}</span>}
                         </button>
                         <div className="ml-auto flex items-center gap-1">
@@ -310,7 +324,7 @@ function App() {
                     </div>
                     {ambiente && (ambiente === 'Solicitante' || autenticado) && (
                         <nav className="border-t border-slate-100 dark:border-slate-800">
-                            <div className="mx-auto flex w-full max-w-6xl items-center gap-1 overflow-x-auto px-3 sm:px-5">
+                            <div className="mx-auto flex w-full max-w-[1280px] items-center gap-1 overflow-x-auto px-4 sm:px-5">
                                 {NAV[ambiente].map(item => {
                                     const ativo = telaAtual === item.k;
                                     return (
@@ -333,7 +347,7 @@ function App() {
                 </header>
             )}
 
-            <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-5 sm:px-5">
+            <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-5 sm:px-5">
                 {telaAtual === 'splash' && (
                     <div className="fade-in mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
@@ -378,7 +392,7 @@ function App() {
                         <PageHeader title="Solicitante" />
                         <div className="u-surface divide-y u-divider overflow-hidden">
                             <EnvRow destaque label="Novo chamado" onClick={() => setTelaAtual('corretiva')} icon={ICONS.plus} />
-                            <EnvRow label="Acompanhar chamado" onClick={() => abrirAcompanhamento()} icon={ICONS.search} />
+                            <EnvRow label="Acompanhar chamado" badge={recentesSol.length > 0 ? <span className="font-mono text-[11px] text-slate-400">#{String(recentesSol[0]).replace(/^#/, '')}</span> : null} onClick={() => abrirAcompanhamento()} icon={ICONS.search} />
                         </div>
                     </div>
                 )}
@@ -393,6 +407,19 @@ function App() {
                             meta={meuPerfil ? `${meuPerfil.email} • ${meuPerfil.papel}` : null}
                             actions={<button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>}
                         />
+                        <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider">
+                            {[
+                                ['Abertos', opsAbertos.length, false],
+                                ['Em atendimento', opsEmAtend.length, false],
+                                ['Urgentes', opsUrg.length, opsUrg.length > 0],
+                                ['Hoje', opsHoje.length, false]
+                            ].map(([rotulo, valor, alerta]) => (
+                                <div key={rotulo} className="px-3 py-2.5 text-center">
+                                    <div className={`text-xl font-semibold tabular-nums leading-none ${alerta ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{valor}</div>
+                                    <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{rotulo}</div>
+                                </div>
+                            ))}
+                        </div>
                         <div className="u-surface divide-y u-divider overflow-hidden">
                             <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
@@ -417,6 +444,7 @@ function App() {
                         concluir={concluirChamado}
                         encerrar={encerrarChamado}
                         toggleAtendimento={toggleAtendimento}
+                        aoNovo={() => setTelaAtual('corretiva')}
                     />
                 )}
                 {telaAtual === 'historico' && (

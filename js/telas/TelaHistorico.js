@@ -8,6 +8,7 @@ function TelaHistorico({ chamados }) {
     const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
 
     const [detalhes, setDetalhes] = React.useState(null);
+    const [visao, setVisao] = React.useState('lista'); // lista | timeline
     const itensPorPagina = 10;
     const encerrados = chamados.filter(c => c.concluido);
     const parciais = chamados.filter(c => c.status === 'AGUARDANDO_USUARIO');
@@ -27,6 +28,7 @@ function TelaHistorico({ chamados }) {
     const handleImprimirOS = (c) => imprimirOrdemServico(c);
     const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
     const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const atividade = React.useMemo(() => atividadeRecente(listaExibicao, 30), [listaExibicao]);
     const agora = new Date();
     const esteMes = baseHistorico.filter(c => {
         try {
@@ -53,6 +55,13 @@ function TelaHistorico({ chamados }) {
 
             <div className="mb-3 flex gap-2">
                 <input type="text" placeholder="Buscar protocolo, equipamento ou descrição..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
+                <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="tablist" aria-label="Visualização">
+                    {[['lista', 'Lista'], ['timeline', 'Timeline']].map(([v, l]) => (
+                        <button key={v} type="button" role="tab" aria-selected={visao === v} onClick={() => setVisao(v)} className={`rounded px-2.5 text-xs transition ${visao === v ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+                            {l}
+                        </button>
+                    ))}
+                </div>
                 <button onClick={() => setMostrarFiltros(v => !v)} className="btn-ghost shrink-0 sm:hidden">
                     Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
                 </button>
@@ -81,8 +90,31 @@ function TelaHistorico({ chamados }) {
                 )}
             </div>
 
-            {listaExibicaoPaginada.length === 0 ? (
-                <div className="u-surface"><EmptyState action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
+            {visao === 'timeline' ? (
+                <div className="u-surface px-4 py-3 sm:px-5">
+                    {atividade.length === 0 ? (
+                        <p className="py-2 text-xs text-slate-500">Sem atividade para os filtros atuais.</p>
+                    ) : (
+                        <ol className="ml-1 space-y-3.5 border-l-2 border-slate-200 py-1 pl-5 dark:border-slate-700">
+                            {atividade.map((a, idx) => {
+                                const dt = new Date(a.ts);
+                                const hh = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                                return (
+                                    <li key={a.id} className="relative">
+                                        <span className={`absolute -left-[25px] top-1 h-2 w-2 rounded-full ${idx === 0 ? 'bg-[#0E3263] dark:bg-sky-400' : 'bg-white ring-2 ring-slate-300 dark:bg-slate-900 dark:ring-slate-600'}`}></span>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="w-9 shrink-0 font-mono text-xs text-slate-400" title={dt.toLocaleString('pt-BR')}>{hh}</span>
+                                            <ProtocoloTag codigo={a.protocolo} />
+                                            <span className="min-w-0 flex-1 truncate text-sm text-slate-700 dark:text-slate-200">{a.texto}</span>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ol>
+                    )}
+                </div>
+            ) : listaExibicaoPaginada.length === 0 ? (
+                <div className="u-surface"><EmptyState numero="0" title="Nenhum chamado encontrado." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
             ) : (
                 <React.Fragment>
                     <ul className="u-surface divide-y u-divider px-4 md:hidden">
@@ -136,8 +168,8 @@ function TelaHistorico({ chamados }) {
                 </React.Fragment>
             )}
 
-            {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={() => setDetalhes(null)} aoImprimir={handleImprimirOS} />}
-            <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />
+            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={handleImprimirOS} />}
+            {visao === 'lista' && <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />}
         </div>
     );
 }

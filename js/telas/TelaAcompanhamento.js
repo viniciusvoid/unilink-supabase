@@ -13,6 +13,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
             const encontrado = await ChamadosService.buscarPorProtocolo(protocoloBusca);
             if (!encontrado) { setErro('Protocolo não encontrado.'); return; }
             setChamado(encontrado);
+            salvarProtocoloRecente(encontrado.protocolo);
             const [ev, fotos] = await Promise.all([ChamadosService.listarEventos(encontrado.idFirebase), ChamadosService.listarEvidencias(encontrado.idFirebase)]);
             setEventos(ev); setEvidencias(fotos);
         } catch (e) {

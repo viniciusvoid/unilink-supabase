@@ -1,5 +1,5 @@
 // TELA: Chamados — operação de triagem
-function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
+function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
     const assumirFn = assumir || encerrar && encerrar.assumir || (() => {});
     const concluirFn = concluir || encerrar;
 
@@ -7,6 +7,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
     const [prioridadeFiltro, setPrioridadeFiltro] = React.useState('TODOS');
+    const [servicoFiltro, setServicoFiltro] = React.useState('TODOS');
     const [dataFiltro, setDataFiltro] = React.useState('TODOS');
     const [ordenarPorPrioridade, setOrdenarPorPrioridade] = React.useState(true);
     const [paginaAtual, setPaginaAtual] = React.useState(1);
@@ -17,7 +18,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
     const [observacoes, setObservacoes] = React.useState('');
     const [itensSelecionados, setItensSelecionados] = React.useState([]);
     const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
-    const itensPorPagina = 8;
+    const itensPorPagina = 10;
     const pendentes = chamados.filter(c => !c.concluido);
     const idsConhecidos = React.useRef(new Set());
     const primeiroCarregamento = React.useRef(true);
@@ -30,7 +31,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
             idsConhecidos.current = idsAtuais;
         }
     }, [chamados]);
-    React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, prioridadeFiltro, dataFiltro, ordenarPorPrioridade]);
+    React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, prioridadeFiltro, servicoFiltro, dataFiltro, ordenarPorPrioridade]);
     const [fotosResolucao, setFotosResolucao] = React.useState([]);
     const [erroFotoResolucao, setErroFotoResolucao] = React.useState('');
     const [enviandoFinalizacao, setEnviandoFinalizacao] = React.useState(false);
@@ -128,7 +129,8 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
         const atendeUnidade = unidadeFiltro === 'TODOS' || (c.unidade || 'MATRIZ') === unidadeFiltro;
         const atendeStatus = statusFiltro === 'TODOS' || (c.status || 'ABERTO') === statusFiltro;
         const atendePrioridade = prioridadeFiltro === 'TODOS' || c.prioridade === prioridadeFiltro;
-        return atendeBusca && atendeUnidade && atendeStatus && atendePrioridade;
+        const atendeServico = servicoFiltro === 'TODOS' || String(c.servico || '').toUpperCase().split(',').map(s => s.trim()).includes(servicoFiltro);
+        return atendeBusca && atendeUnidade && atendeStatus && atendePrioridade && atendeServico;
     });
     if (dataFiltro !== 'TODOS') {
         listaExibicao = filtrarChamadosPorData(listaExibicao, dataFiltro);
@@ -141,8 +143,9 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
     });
     const totalPaginas = Math.ceil(listaExibicao.length / itensPorPagina);
     const listaExibicaoPaginada = listaExibicao.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
-    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (prioridadeFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
-    const limparFiltros = () => { setStatusFiltro('TODOS'); setPrioridadeFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (prioridadeFiltro !== 'TODOS' ? 1 : 0) + (servicoFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
+    const limparFiltros = () => { setStatusFiltro('TODOS'); setPrioridadeFiltro('TODOS'); setServicoFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const emAtendCount = pendentes.filter(c => c.status === 'EM_ATENDIMENTO' || c.emAtendimento).length;
 
     const acao = (c) => {
         if (podeAssumir(c)) {
@@ -227,9 +230,15 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
 
             <PageHeader
                 title="Chamados"
-                meta={`${pendentes.length} em aberto`}
+                meta={`${pendentes.length} registros · ${listaExibicao.length} filtrados · ${emAtendCount} em atendimento`}
                 actions={
                     <React.Fragment>
+                        {aoNovo && (
+                            <button onClick={aoNovo} className="btn-primary">
+                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Novo chamado
+                            </button>
+                        )}
                         <DownloadPopover dados={pendentes} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
                         <button onClick={() => setOrdenarPorPrioridade(v => !v)} className="btn-ghost" title="Ordenação">
                             {ordenarPorPrioridade ? 'Prioridade' : 'Recentes'}
@@ -264,6 +273,15 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
                     <option value="Média">Média</option>
                     <option value="Baixa">Baixa</option>
                 </select>
+                <select value={servicoFiltro} onChange={e => setServicoFiltro(e.target.value)} aria-label="Serviço" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Serviço: todos</option>
+                    <option value="PINTURA">Pintura</option>
+                    <option value="ELETRICA">Elétrica</option>
+                    <option value="SOLDA">Solda</option>
+                    <option value="MECANICA">Mecânica</option>
+                    <option value="BORRACHARIA">Borracharia</option>
+                    <option value="TRANSLADO">Translado</option>
+                </select>
                 <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[160px]">
                     <option value="TODOS">Período: todo</option>
                     <option value="HOJE">Hoje</option>
@@ -278,7 +296,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
             </div>
 
             {listaExibicaoPaginada.length === 0 ? (
-                <div className="u-surface"><EmptyState action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
+                <div className="u-surface"><EmptyState numero="0" title="Nenhum chamado encontrado." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
             ) : (
                 <React.Fragment>
                     <ul className="u-surface divide-y u-divider px-4 md:hidden">
@@ -339,7 +357,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
                 </React.Fragment>
             )}
 
-            {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
+            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} aoAssumir={(c) => handleAssumir(c)} aoConcluir={(c) => { setDetalhes(null); handleIniciarEncerramento(c); }} />}
             <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />
         </div>
     );

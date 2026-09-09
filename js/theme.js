@@ -100,13 +100,69 @@ function SectionTitle({ children, action }) {
 }
 
 // ---------- Estado vazio ----------
-function EmptyState({ title = 'Nenhum resultado.', action = null }) {
+function EmptyState({ title = 'Nenhum resultado.', numero = null, action = null }) {
     return (
         <div className="px-6 py-10 text-center">
-            <p className="text-sm text-slate-700 dark:text-slate-300">{title}</p>
+            {numero !== null && <p className="font-mono text-4xl text-slate-200 dark:text-slate-700">{numero}</p>}
+            <p className={`text-sm text-slate-700 dark:text-slate-300 ${numero !== null ? 'mt-2' : ''}`}>{title}</p>
             {action && <div className="mt-3">{action}</div>}
         </div>
     );
+}
+
+// ---------- Data curta operacional: Hoje · 16:38 / 09/09 · 16:38 ----------
+function dataCurta(dataStr) {
+    try {
+        if (typeof parseDataBR !== 'function') return dataStr || '-';
+        const dt = parseDataBR(dataStr);
+        if (!dt) return '-';
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        const hoje = new Date();
+        const mesmoDia = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        if (mesmoDia(dt, hoje)) return `Hoje · ${hh}:${mm}`;
+        const ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+        if (mesmoDia(dt, ontem)) return `Ontem · ${hh}:${mm}`;
+        const dd = String(dt.getDate()).padStart(2, '0');
+        const mo = String(dt.getMonth() + 1).padStart(2, '0');
+        return `${dd}/${mo} · ${hh}:${mm}`;
+    } catch { return '-'; }
+}
+
+// ---------- Atividade operacional global (abertura/atendimento/encerramento) ----------
+function atividadeRecente(chamados, limite = 8) {
+    const itens = [];
+    try {
+        (chamados || []).forEach(c => {
+            const push = (campo, texto) => {
+                if (typeof parseDataBR !== 'function') return;
+                const dt = parseDataBR(c[campo]);
+                if (!dt) return;
+                itens.push({ ts: dt.getTime(), protocolo: c.protocolo, texto, id: `${c.idFirebase}-${campo}` });
+            };
+            push('dataAbertura', 'Novo chamado');
+            push('atribuidoEm', 'Atendimento iniciado');
+            push('dataEncerramento', 'Chamado concluído');
+        });
+    } catch {}
+    return itens.sort((a, b) => b.ts - a.ts).slice(0, limite);
+}
+
+// ---------- Protocolos recentes do solicitante (localStorage) ----------
+function obterProtocolosRecentes() {
+    try {
+        const raw = localStorage.getItem('unilink_protocolos_recentes');
+        const arr = JSON.parse(raw || '[]');
+        return Array.isArray(arr) ? arr.filter(Boolean).slice(0, 3) : [];
+    } catch { return []; }
+}
+
+function salvarProtocoloRecente(protocolo) {
+    try {
+        if (!protocolo) return;
+        const atual = obterProtocolosRecentes().filter(p => p !== protocolo);
+        localStorage.setItem('unilink_protocolos_recentes', JSON.stringify([protocolo, ...atual].slice(0, 3)));
+    } catch {}
 }
 
 // ---------- Skeleton ----------
@@ -158,27 +214,62 @@ function TimelineView({ eventos = [] }) {
     );
 }
 
-// ---------- Galeria simples ----------
+// ---------- Galeria simples (miniaturas + ampliada com navegação) ----------
+function GaleriaAmpliada({ fotos = [], indice = 0, aoMudar, aoFechar }) {
+    const total = fotos.length;
+    const atual = fotos[Math.min(Math.max(indice, 0), Math.max(total - 1, 0))];
+    const url = typeof atual === 'string' ? atual : atual?.url;
+    const nome = (atual && atual.nomeArquivo) || '';
+    React.useEffect(() => {
+        const nav = (e) => {
+            if (e.key === 'Escape' && aoFechar) aoFechar();
+            if (e.key === 'ArrowRight' && aoMudar) aoMudar((indice + 1) % total);
+            if (e.key === 'ArrowLeft' && aoMudar) aoMudar((indice - 1 + total) % total);
+        };
+        document.addEventListener('keydown', nav);
+        return () => document.removeEventListener('keydown', nav);
+    }, [indice, total]);
+    if (!url) return null;
+    return (
+        <div className="fixed inset-0 z-[80] flex flex-col bg-slate-950/90 fade-in" onClick={aoFechar}>
+            <div className="flex items-center justify-between px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                <button onClick={aoFechar} aria-label="Voltar" className="flex h-9 w-9 items-center justify-center rounded-md text-white hover:bg-white/10">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <span className="font-mono text-xs text-white/80">Imagem {indice + 1} de {total}</span>
+                <button onClick={aoFechar} aria-label="Fechar" className="flex h-9 w-9 items-center justify-center rounded-md text-white hover:bg-white/10">✕</button>
+            </div>
+            <div className="relative flex flex-1 items-center justify-center overflow-hidden px-12 pb-4" onClick={(e) => e.stopPropagation()}>
+                {total > 1 && (
+                    <React.Fragment>
+                        <button onClick={() => aoMudar((indice - 1 + total) % total)} aria-label="Anterior" className="absolute left-2 flex h-9 w-9 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20">‹</button>
+                        <button onClick={() => aoMudar((indice + 1) % total)} aria-label="Próxima" className="absolute right-2 flex h-9 w-9 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20">›</button>
+                    </React.Fragment>
+                )}
+                <img src={url} alt={nome || `Evidência ${indice + 1}`} className="max-h-full max-w-full rounded-lg object-contain" />
+            </div>
+            {nome && <p className="truncate px-4 pb-4 text-center text-xs text-white/60" onClick={(e) => e.stopPropagation()}>{nome}</p>}
+        </div>
+    );
+}
+
 function EvidenceGallery({ fotos = [], onExpand }) {
-    const [ampliada, setAmpliada] = React.useState(null);
-    const abrir = (url) => { if (onExpand) onExpand(url); else setAmpliada(url); };
+    const [indice, setIndice] = React.useState(null);
+    const abrir = (i) => { if (onExpand) onExpand(i); else setIndice(i); };
     if (fotos.length === 0) {
         return <p className="py-1 text-xs text-slate-500 dark:text-slate-400">Sem evidências.</p>;
     }
     return (
         <React.Fragment>
-            {(!onExpand && ampliada) && (
-                <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/80 p-4 fade-in" onClick={() => setAmpliada(null)}>
-                    <img src={ampliada} alt="Evidência ampliada" className="max-h-full max-w-full rounded-lg" onClick={(e) => e.stopPropagation()} />
-                    <button onClick={() => setAmpliada(null)} aria-label="Fechar" className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20">✕</button>
-                </div>
+            {(!onExpand && indice !== null) && (
+                <GaleriaAmpliada fotos={fotos} indice={indice} aoMudar={setIndice} aoFechar={() => setIndice(null)} />
             )}
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
                 {fotos.map((f, i) => {
                     const url = typeof f === 'string' ? f : f.url;
                     const nome = (f && f.nomeArquivo) || `Evidência ${i + 1}`;
                     return (
-                        <button key={(f && f.id) || i} onClick={() => abrir(url)} title={nome} className="aspect-square overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                        <button key={(f && f.id) || i} onClick={() => abrir(i)} title={nome} className="aspect-square overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                             <img src={url} alt={nome} loading="lazy" className="h-full w-full object-cover hover:opacity-85" />
                         </button>
                     );
