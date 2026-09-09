@@ -23,9 +23,11 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
 
     if (!chamado) return null;
     const tempo = tempoAbertoInfo(chamado.dataAbertura);
+    // Crítico (Urgente ou +3 dias): sempre centralizado, até no mobile (sem bottom-sheet)
+    const critico = chamado.prioridade === 'Urgente' || (tempo && tempo.dias > 3);
 
     return (
-        <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-[2px] sm:p-4 fade-in" onClick={aoFechar}>
+        <div className={`${critico ? '' : 'sheet-mobile '}fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-[2px] sm:p-4 fade-in`} onClick={aoFechar}>
             {imgAmpliada && (
                 <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4" onClick={() => setImgAmpliada(null)}>
                     <img src={imgAmpliada} alt="Evidência" className="max-h-full max-w-full rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
