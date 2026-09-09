@@ -87,8 +87,10 @@
             -webkit-tap-highlight-color: transparent;
         }
         @media (max-width: 640px) {
-            button { min-height: 44px; }
+            /* 44px só em ações principais — botões inline/compactos ficam de fora */
+            button:not(.btn-page):not(.icon-btn) { min-height: 44px; }
             input, select, textarea { font-size: 16px !important; }
+            .btn-page { min-height: 32px; }
         }
         img, video { max-width: 100%; height: auto; }
 
@@ -183,6 +185,15 @@
         .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
         html.dark .btn-page { background: #1E293B; border-color: rgba(255,255,255,.1); color: #CBD5E1; }
         html.dark .btn-page-ativo { background: #F1F5F9 !important; border-color: #F1F5F9 !important; color: #0F172A !important; }
+
+        /* Botão de ícone inline (copiar, fechar, remover) — nunca estica */
+        .icon-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 28px; min-height: 28px; padding: 6px; border-radius: 8px;
+            color: #94A3B8; transition: background .15s, color .15s; flex-shrink: 0;
+        }
+        .icon-btn:hover { background: rgba(148,163,184,.18); color: #475569; }
+        html.dark .icon-btn:hover { color: #E2E8F0; }
 
         /* Tabela operacional */
         .u-table { width: 100%; border-collapse: collapse; font-size: 13px; }

@@ -41,7 +41,7 @@ function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
                             Voltar
                         </button>
                         <ProtocoloTag codigo={chamado.protocolo} />
-                        <button onClick={aoFechar} aria-label="Fechar" className="hidden rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-white/10 sm:block">
+                        <button onClick={aoFechar} aria-label="Fechar" className="icon-btn hidden sm:inline-flex">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>

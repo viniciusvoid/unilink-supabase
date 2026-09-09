@@ -186,7 +186,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
                                     <h3 className="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">Concluir chamado</h3>
                                     <p className="mt-0.5 text-xs text-slate-500">{chamadoEmEncerramento.equipamento} • {chamadoEmEncerramento.unidade}</p>
                                 </div>
-                                <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10">✕</button>
+                                <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="icon-btn">✕</button>
                             </div>
                             <ProtocoloTag codigo={chamadoEmEncerramento.protocolo} />
                         </div>
@@ -232,7 +232,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
                                         {fotosResolucao.map((f, idx) => (
                                             <div key={idx} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5">
                                                 <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
-                                                <button type="button" onClick={() => setFotosResolucao(prev => prev.filter((_, i) => i !== idx))} aria-label="Remover" className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-950/70 text-sm text-white">×</button>
+                                                <button type="button" onClick={() => setFotosResolucao(prev => prev.filter((_, i) => i !== idx))} aria-label="Remover" className="icon-btn absolute right-1 top-1 !rounded-full !bg-slate-950/70 !p-0 !text-white">×</button>
                                             </div>
                                         ))}
                                     </div>
@@ -317,9 +317,9 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
                                     <StatusBadge status={c.status} concluido={c.concluido} />
                                 </div>
                                 {c.atribuidoParaNome && <p className="mt-1.5 text-[11px] text-slate-400">{c.atribuidoParaNome}</p>}
-                                <div className="mt-2.5 flex items-center justify-between gap-2">
+                                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
                                     <TempoAberto dataAbertura={c.dataAbertura} />
-                                    <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                    <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex-none" onClick={(e) => e.stopPropagation()}>
                                         <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="btn-ghost !px-2.5 !py-2">
                                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                                         </button>

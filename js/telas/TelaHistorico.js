@@ -89,12 +89,12 @@ function TelaHistorico({ chamados, voltar }) {
                                 <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">{formatarApenasData(c.dataEncerramento)}</span>
                             </div>
                             <p className="mt-1 truncate text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">{c.equipamento}</p>
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                                <span className="flex items-center gap-1.5">
+                            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+                                <span className="flex min-w-0 flex-wrap items-center gap-1.5">
                                     <PriorityBadge prioridade={c.prioridade} />
                                     <StatusBadge status={c.status} concluido={c.concluido} />
                                 </span>
-                                <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost !px-2.5 !py-2 text-[11px]">Imprimir OS</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost shrink-0 !px-2.5 !py-2 text-[11px]">Imprimir OS</button>
                             </div>
                         </div>
                     ))}

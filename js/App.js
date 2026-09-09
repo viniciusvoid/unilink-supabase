@@ -297,7 +297,7 @@ function App() {
                 <div className="toast-in fixed left-1/2 top-4 z-[60] flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full bg-slate-900 py-2.5 pl-4 pr-3 text-xs font-medium text-white shadow-xl dark:bg-white dark:text-slate-900">
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500"></span>
                     <span className="break-words">{erroAcao}</span>
-                    <button onClick={() => setErroAcao('')} aria-label="Fechar" className="shrink-0 rounded-full p-1 hover:bg-white/15 dark:hover:bg-slate-900/10">✕</button>
+                    <button onClick={() => setErroAcao('')} aria-label="Fechar" className="icon-btn shrink-0 !rounded-full !text-current">✕</button>
                 </div>
             )}
 

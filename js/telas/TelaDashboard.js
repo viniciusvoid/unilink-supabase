@@ -71,9 +71,9 @@ function TelaDashboard({ chamados, voltar }) {
     const horaAtualizada = atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const StatDestaque = ({ valor, rotulo, tom = '', sub }) => (
-        <div className="min-w-0 flex-1 px-4 py-4 text-center sm:px-6">
-            <div className={`text-[26px] font-extrabold tabular-nums leading-none tracking-tight ${tom}`}>{valor}</div>
-            <div className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">{rotulo}</div>
+        <div className="min-w-0 flex-1 px-1.5 py-3.5 text-center sm:px-6 sm:py-4">
+            <div className={`text-[22px] sm:text-[26px] font-extrabold tabular-nums leading-none tracking-tight ${tom}`}>{valor}</div>
+            <div className="mt-1.5 text-[11px] font-medium leading-tight text-slate-500 dark:text-slate-400">{rotulo}</div>
             {sub && <div className="mt-0.5 text-[11px] text-slate-400">{sub}</div>}
         </div>
     );

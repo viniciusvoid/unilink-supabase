@@ -115,7 +115,7 @@ function TelaCorretiva({ aoSalvar, voltar }) {
                             {fotos.map((f, idx) => (
                                 <div key={idx} className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5">
                                     <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
-                                    <button type="button" onClick={() => removerFoto(idx)} aria-label="Remover foto" className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-950/70 text-sm text-white backdrop-blur hover:bg-slate-950">×</button>
+                                    <button type="button" onClick={() => removerFoto(idx)} aria-label="Remover foto" className="icon-btn absolute right-1 top-1 !rounded-full !bg-slate-950/70 !p-0 !text-white backdrop-blur hover:!bg-slate-950">×</button>
                                 </div>
                             ))}
                         </div>
