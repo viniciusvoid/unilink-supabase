@@ -56,23 +56,17 @@
             text-rendering: optimizeLegibility;
         }
 
-        /* Entrada de página: rápida e discreta */
-        .fade-in { animation: fadeUp 0.22s ease-out both; }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Micro-feedback de dado atualizado */
-        .flash-update { animation: flashUpdate 0.9s ease-out; }
-        @keyframes flashUpdate {
-            0% { background-color: rgba(16, 185, 129, 0.14); }
-            100% { background-color: transparent; }
+        /* Entrada de página: fade curto */
+        .fade-in { animation: fadeIn 0.15s ease-out both; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         /* Toast compacto */
-        .toast-in { animation: toastIn 0.18s ease-out both; }
+        .toast-in { animation: toastIn 0.15s ease-out both; }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-6px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         /* Skeleton */
         .u-skeleton {
@@ -103,74 +97,69 @@
         html.dark :focus-visible { outline-color: #93c5fd; }
 
         /* ----- Primitivos ----- */
-        .u-eyebrow {
-            font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
-            text-transform: uppercase; color: #64748B;
-        }
-        html.dark .u-eyebrow { color: #94A3B8; }
-
         .u-surface {
             background: #fff;
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            border-radius: 12px;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
         }
-        html.dark .u-surface { background: #0F172A; border-color: rgba(255,255,255,0.08); }
+        html.dark .u-surface { background: #0F172A; border-color: #334155; }
 
-        .u-divider { border-color: #EEF2F7; }
-        html.dark .u-divider { border-color: rgba(255,255,255,0.07); }
+        .u-divider { border-color: #F1F5F9; }
+        html.dark .u-divider { border-color: #334155; }
 
         .u-label {
-            display: block; font-size: 12px; font-weight: 600;
+            display: block; font-size: 13px; font-weight: 500;
             color: #475569; margin-bottom: 6px;
         }
         html.dark .u-label { color: #CBD5E1; }
 
         .u-input {
-            width: 100%; border-radius: 10px; padding: 10px 12px;
-            background: #fff; border: 1px solid #E2E8F0;
+            width: 100%; border-radius: 6px; padding: 8px 12px;
+            background: #fff; border: 1px solid #CBD5E1;
             color: #0F172A; font-size: 14px; transition: border-color .15s, box-shadow .15s;
+            height: 36px;
         }
+        textarea.u-input { height: auto; }
         .u-input::placeholder { color: #94A3B8; text-transform: none; }
-        .u-input:focus { outline: none; border-color: #0E3263; box-shadow: 0 0 0 3px rgba(14,50,99,.12); }
-        html.dark .u-input { background: #1E293B; border-color: rgba(255,255,255,.1); color: #F1F5F9; }
-        html.dark .u-input:focus { border-color: #60A5FA; box-shadow: 0 0 0 3px rgba(96,165,250,.15); }
+        .u-input:focus { outline: none; border-color: #0E3263; box-shadow: 0 0 0 3px rgba(14,50,99,.10); }
+        html.dark .u-input { background: #1E293B; border-color: #334155; color: #F1F5F9; }
+        html.dark .u-input:focus { border-color: #38BDF8; box-shadow: 0 0 0 3px rgba(56,189,248,.12); }
 
         select.u-input { appearance: auto; }
 
-        /* Botões: hierarquia única */
+        /* Botões: hierarquia única, 36px */
         .btn-primary {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: #0E3263; color: #fff; font-weight: 600; font-size: 13px;
-            padding: 10px 16px; border-radius: 10px; transition: background .15s, transform .05s;
+            background: #0E3263; color: #fff; font-weight: 500; font-size: 13px;
+            padding: 8px 14px; border-radius: 6px; transition: background .15s;
+            min-height: 36px; white-space: nowrap;
         }
         .btn-primary:hover { background: #0A2447; }
-        .btn-primary:active { transform: scale(0.98); }
         .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
-        html.dark .btn-primary { background: #F1F5F9; color: #0F172A; }
-        html.dark .btn-primary:hover { background: #E2E8F0; }
 
         .btn-ghost {
             display: inline-flex; align-items: center; gap: 6px;
-            font-size: 12px; font-weight: 600; color: #475569;
-            padding: 9px 14px; border-radius: 10px;
-            background: #fff; border: 1px solid #E2E8F0; transition: background .15s;
-            white-space: nowrap;
+            font-size: 13px; font-weight: 500; color: #475569;
+            padding: 8px 14px; border-radius: 6px;
+            background: #fff; border: 1px solid #CBD5E1; transition: background .15s;
+            min-height: 36px; white-space: nowrap;
         }
         .btn-ghost:hover { background: #F8FAFC; color: #0F172A; }
-        html.dark .btn-ghost { background: #1E293B; border-color: rgba(255,255,255,.1); color: #CBD5E1; }
-        html.dark .btn-ghost:hover { background: #334155; color: #fff; }
+        html.dark .btn-ghost { background: transparent; border-color: #334155; color: #CBD5E1; }
+        html.dark .btn-ghost:hover { background: #1E293B; color: #fff; }
 
         .btn-danger {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: #DC2626; color: #fff; font-weight: 600; font-size: 13px;
-            padding: 10px 16px; border-radius: 10px;
+            background: #DC2626; color: #fff; font-weight: 500; font-size: 13px;
+            padding: 8px 14px; border-radius: 6px; min-height: 36px;
         }
         .btn-danger:hover { background: #B91C1C; }
 
         .btn-success {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: #059669; color: #fff; font-weight: 600; font-size: 13px;
-            padding: 10px 16px; border-radius: 10px; transition: background .15s;
+            background: #059669; color: #fff; font-weight: 500; font-size: 13px;
+            padding: 8px 14px; border-radius: 6px; transition: background .15s;
+            min-height: 36px; white-space: nowrap;
         }
         .btn-success:hover { background: #047857; }
         .btn-success:disabled, .btn-danger:disabled { opacity: .55; cursor: not-allowed; }
@@ -183,8 +172,8 @@
         }
         .btn-page:disabled { opacity: .4; }
         .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
-        html.dark .btn-page { background: #1E293B; border-color: rgba(255,255,255,.1); color: #CBD5E1; }
-        html.dark .btn-page-ativo { background: #F1F5F9 !important; border-color: #F1F5F9 !important; color: #0F172A !important; }
+        html.dark .btn-page { background: transparent; border-color: #334155; color: #CBD5E1; }
+        html.dark .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
 
         /* Botão de ícone inline (copiar, fechar, remover) — nunca estica */
         .icon-btn {
@@ -198,18 +187,17 @@
         /* Tabela operacional */
         .u-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .u-table thead th {
-            text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .06em;
-            text-transform: uppercase; color: #64748B; padding: 10px 14px;
-            border-bottom: 1px solid #EEF2F7; background: #F8FAFC; white-space: nowrap;
-            position: sticky; top: 0; z-index: 1;
+            text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .05em;
+            text-transform: uppercase; color: #64748B; padding: 8px 12px;
+            border-bottom: 1px solid #E2E8F0; white-space: nowrap;
         }
-        html.dark .u-table thead th { color: #94A3B8; background: #0B1220; border-color: rgba(255,255,255,.07); }
-        .u-table tbody td { padding: 12px 14px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
-        html.dark .u-table tbody td { border-color: rgba(255,255,255,.06); }
+        html.dark .u-table thead th { color: #94A3B8; border-color: #334155; }
+        .u-table tbody td { padding: 10px 12px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+        html.dark .u-table tbody td { border-color: #1E293B; }
         .u-table tbody tr:last-child td { border-bottom: none; }
         .u-table tbody tr { transition: background .12s; }
         .u-table tbody tr:hover { background: #F8FAFC; }
-        html.dark .u-table tbody tr:hover { background: rgba(255,255,255,.03); }
+        html.dark .u-table tbody tr:hover { background: #141d33; }
 
         /* Modal: bottom-sheet no mobile */
         @media (max-width: 640px) {
@@ -218,14 +206,9 @@
                 padding: 0 !important;
             }
             .sheet-mobile > div.sheet-panel {
-                border-radius: 16px 16px 0 0 !important;
+                border-radius: 12px 12px 0 0 !important;
                 max-height: 92dvh !important;
-                animation: sheetUp .22s ease-out both;
             }
-        }
-        @keyframes sheetUp {
-            from { opacity: .6; transform: translateY(24px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         @media print {
@@ -272,7 +255,6 @@
     <script type="text/babel" charset="utf-8" src="js/components/DownloadPopover.js"></script>
 
     <script type="text/babel" charset="utf-8" src="js/telas/TelaSucesso.js"></script>
-    <script type="text/babel" charset="utf-8" src="js/telas/TelaMenu.js"></script>
     <script type="text/babel" charset="utf-8" src="js/telas/TelaCorretiva.js"></script>
     <script type="text/babel" charset="utf-8" src="js/telas/TelaPendencia.js"></script>
     <script type="text/babel" charset="utf-8" src="js/telas/TelaHistorico.js"></script>

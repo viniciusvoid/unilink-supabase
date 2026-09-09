@@ -41,7 +41,7 @@ function PieChart({ data, colors }) {
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }}></span>
                             <span className="font-medium text-slate-600 dark:text-slate-300 truncate">{String(s.label).replace(/_/g, ' ').toLowerCase()}</span>
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white shrink-0 tabular-nums">{s.value} <span className="font-medium text-slate-400">{s.percent}%</span></span>
+                        <span className="font-medium text-slate-700 dark:text-slate-200 shrink-0 tabular-nums">{s.value} <span className="font-normal text-slate-500">{s.percent}%</span></span>
                     </div>
                 ))}
             </div>

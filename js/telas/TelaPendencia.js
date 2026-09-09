@@ -1,16 +1,12 @@
-﻿// ==========================================================
-// TELA: Chamados Pendentes — visão operacional de triagem
-// Fluxo preservado: Assumir -> Em Atendimento -> Concluir.
-// Redesenho: linhas operacionais com tempo em destaque,
-// badges discretos e planilha refinada no desktop.
-// ==========================================================
-function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
+﻿// TELA: Chamados — operação de triagem
+function TelaPendencia({ chamados, assumir, concluir, encerrar }) {
     const assumirFn = assumir || encerrar && encerrar.assumir || (() => {});
     const concluirFn = concluir || encerrar;
 
     const [busca, setBusca] = React.useState('');
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
+    const [prioridadeFiltro, setPrioridadeFiltro] = React.useState('TODOS');
     const [dataFiltro, setDataFiltro] = React.useState('TODOS');
     const [ordenarPorPrioridade, setOrdenarPorPrioridade] = React.useState(true);
     const [paginaAtual, setPaginaAtual] = React.useState(1);
@@ -21,7 +17,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     const [observacoes, setObservacoes] = React.useState('');
     const [itensSelecionados, setItensSelecionados] = React.useState([]);
     const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
-    const itensPorPagina = 6;
+    const itensPorPagina = 8;
     const pendentes = chamados.filter(c => !c.concluido);
     const idsConhecidos = React.useRef(new Set());
     const primeiroCarregamento = React.useRef(true);
@@ -34,7 +30,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
             idsConhecidos.current = idsAtuais;
         }
     }, [chamados]);
-    React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, dataFiltro, ordenarPorPrioridade]);
+    React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, prioridadeFiltro, dataFiltro, ordenarPorPrioridade]);
     const [fotosResolucao, setFotosResolucao] = React.useState([]);
     const [erroFotoResolucao, setErroFotoResolucao] = React.useState('');
     const [enviandoFinalizacao, setEnviandoFinalizacao] = React.useState(false);
@@ -47,9 +43,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     const aguardando = (c) => c.status === 'AGUARDANDO_USUARIO';
 
     const handleAssumir = async (chamado) => {
-        console.log('Assumir chamado:', chamado.idFirebase, chamado.protocolo, chamado.status);
         if (!chamado.idFirebase || chamado.idFirebase.length < 10) {
-            console.error('idFirebase inválido:', chamado);
             window.notifyError && window.notifyError('ID do chamado inválido. Recarregue a página.');
             return;
         }
@@ -69,7 +63,7 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
 
     const handleIniciarEncerramento = (chamado) => {
         if (!emAtendimento(chamado) && !aguardando(chamado)) {
-            window.notifyWarning && window.notifyWarning('Assuma o chamado primeiro para concluir');
+            window.notifyWarning && window.notifyWarning('Assuma o chamado antes de concluir.');
             return;
         }
         const itens = getItens(chamado);
@@ -85,23 +79,20 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     };
     const handleSelecionarFotoResolucao = (files) => {
         const arquivos = Array.from(files || []); setErroFotoResolucao(''); const validos = [];
-        let houveErro = false;
         for (const arq of arquivos) {
             const ext = (arq.name.split('.').pop() || '').toLowerCase();
-            if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) { setErroFotoResolucao(`"${arq.name}" formato não permitido.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" ignorado: formato inválido`); houveErro = true; continue; }
-            if (arq.size > 8 * 1024 * 1024) { setErroFotoResolucao(`"${arq.name}" excede 8MB.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" excede 8MB`); houveErro = true; continue; }
+            if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext)) { setErroFotoResolucao(`"${arq.name}" formato não permitido.`); continue; }
+            if (arq.size > 8 * 1024 * 1024) { setErroFotoResolucao(`"${arq.name}" excede 8MB.`); continue; }
             validos.push(arq);
         }
-        if (validos.length) window.notifySuccess && window.notifySuccess(`${validos.length} foto(s) adicionada(s)`);
-        else if (houveErro) window.notifyError && window.notifyError('Nenhuma foto válida');
-        if (fotosResolucao.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos — excedentes ignorados');
+        if (fotosResolucao.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos.');
         setFotosResolucao(prev => [...prev, ...validos].slice(0, 5));
     };
     const handleCaptureResolucao = (file) => handleSelecionarFotoResolucao([file]);
     const handleConfirmarFinalizacao = async (e) => {
         e.preventDefault(); if (!chamadoEmEncerramento) return;
-        if (itensSelecionados.length === 0) { window.notifyWarning && window.notifyWarning('Selecione ao menos um item concluído'); return; }
-        if (!servicoFeito.trim()) { window.notifyWarning && window.notifyWarning('Descreva o serviço executado'); return; }
+        if (itensSelecionados.length === 0) { window.notifyWarning && window.notifyWarning('Selecione ao menos um item concluído.'); return; }
+        if (!servicoFeito.trim()) { window.notifyWarning && window.notifyWarning('Descreva o serviço executado.'); return; }
         setEnviandoFinalizacao(true);
         try {
             if (typeof concluirFn === 'function') {
@@ -123,20 +114,21 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
                 catch (e) { console.error(e); window.notifyWarning && window.notifyWarning('Foto não enviada: ' + e.message); }
             }
             setChamadoEmEncerramento(null); setFotosResolucao([]);
-            window.notifySuccess && window.notifySuccess('Chamado atualizado com sucesso');
+            window.notifySuccess && window.notifySuccess('Chamado atualizado.');
         } catch (err) {
-            window.notifyError && window.notifyError(err.message || 'Falha ao concluir');
+            window.notifyError && window.notifyError(err.message || 'Falha ao concluir.');
             if (window.UnilinkLogger) window.UnilinkLogger.error('handleConfirmarFinalizacao', err);
         }
         finally { setEnviandoFinalizacao(false); }
     };
 
     let listaExibicao = pendentes.filter(c => {
-        const atendeEquipamento = c.equipamento && c.equipamento.toLowerCase().includes(busca.toLowerCase());
-        const unidadeDoChamado = c.unidade || 'MATRIZ';
-        const atendeUnidade = unidadeFiltro === 'TODOS' || unidadeDoChamado === unidadeFiltro;
-        const atendeStatus = statusFiltro === 'TODOS' || (c.status || (c.concluido ? 'FECHADO' : 'ABERTO')) === statusFiltro;
-        return atendeEquipamento && atendeUnidade && atendeStatus;
+        const q = busca.toLowerCase();
+        const atendeBusca = !q || (c.equipamento && c.equipamento.toLowerCase().includes(q)) || (c.descricao && c.descricao.toLowerCase().includes(q)) || (c.protocolo && c.protocolo.toLowerCase().includes(q));
+        const atendeUnidade = unidadeFiltro === 'TODOS' || (c.unidade || 'MATRIZ') === unidadeFiltro;
+        const atendeStatus = statusFiltro === 'TODOS' || (c.status || 'ABERTO') === statusFiltro;
+        const atendePrioridade = prioridadeFiltro === 'TODOS' || c.prioridade === prioridadeFiltro;
+        return atendeBusca && atendeUnidade && atendeStatus && atendePrioridade;
     });
     if (dataFiltro !== 'TODOS') {
         listaExibicao = filtrarChamadosPorData(listaExibicao, dataFiltro);
@@ -149,17 +141,15 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     });
     const totalPaginas = Math.ceil(listaExibicao.length / itensPorPagina);
     const listaExibicaoPaginada = listaExibicao.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
-    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
-    const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
-    const isCritico = (c) => c.prioridade === 'Urgente' || calcularDiasDecorridos(c.dataAbertura) > 3;
+    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (prioridadeFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
+    const limparFiltros = () => { setStatusFiltro('TODOS'); setPrioridadeFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
 
-    const acaoPrincipal = (c, mobile) => {
-        const cls = mobile ? 'flex-1 py-2.5 text-[13px]' : 'px-3 py-1.5 text-xs';
+    const acao = (c) => {
         if (podeAssumir(c)) {
-            return <button onClick={(e) => { e.stopPropagation(); handleAssumir(c); }} disabled={assumindoId === c.idFirebase} className={`btn-primary shrink-0 ${cls} disabled:opacity-60`}>{assumindoId === c.idFirebase ? 'Assumindo…' : 'Assumir'}</button>;
+            return <button onClick={(e) => { e.stopPropagation(); handleAssumir(c); }} disabled={assumindoId === c.idFirebase} className="btn-primary !min-h-[32px] !px-3 !py-1.5 !text-xs disabled:opacity-60">{assumindoId === c.idFirebase ? 'Assumindo…' : 'Assumir'}</button>;
         }
         if (emAtendimento(c) || aguardando(c)) {
-            return <button onClick={(e) => { e.stopPropagation(); handleIniciarEncerramento(c); }} className={`btn-success shrink-0 ${cls}`}>Concluir</button>;
+            return <button onClick={(e) => { e.stopPropagation(); handleIniciarEncerramento(c); }} className="btn-success !min-h-[32px] !px-3 !py-1.5 !text-xs">Concluir</button>;
         }
         return <StatusBadge status={c.status} concluido={c.concluido} />;
     };
@@ -167,70 +157,58 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
     return (
         <div className="fade-in w-full">
             {notificacaoAtiva && (
-                <div className="toast-in fixed left-1/2 top-4 z-50 flex w-[92vw] max-w-sm -translate-x-1/2 items-center gap-2.5 rounded-xl bg-slate-900 py-3 pl-4 pr-3 text-white shadow-xl dark:bg-white dark:text-slate-900 sm:left-auto sm:right-5 sm:translate-x-0">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
-                    <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-semibold">Novo chamado recebido</span>
-                        <span className="block truncate text-xs opacity-70">{notificacaoAtiva.equipamento} • {notificacaoAtiva.servico}</span>
-                    </span>
+                <div className="toast-in fixed left-1/2 top-4 z-50 w-[92vw] max-w-sm -translate-x-1/2 rounded-md border border-slate-200 bg-white px-3.5 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:left-auto sm:right-5 sm:translate-x-0">
+                    <p className="text-[13px] text-slate-700 dark:text-slate-200">Novo chamado: {notificacaoAtiva.equipamento}</p>
+                    <p className="truncate text-xs text-slate-500">{notificacaoAtiva.servico}</p>
                 </div>
             )}
 
-            {/* Modal de conclusão — bottom-sheet no mobile */}
             {chamadoEmEncerramento && (
-                <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 backdrop-blur-[2px] sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
-                    <div className="sheet-panel flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-xl bg-white dark:bg-slate-900 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-                        <div className="border-b u-divider px-5 py-4">
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <h3 className="text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">Concluir chamado</h3>
-                                    <p className="mt-0.5 text-xs text-slate-500">{chamadoEmEncerramento.equipamento} • {chamadoEmEncerramento.unidade}</p>
-                                </div>
-                                <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="icon-btn">✕</button>
-                            </div>
-                            <ProtocoloTag codigo={chamadoEmEncerramento.protocolo} />
+                <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
+                    <div className="sheet-panel flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between border-b u-divider px-5 py-3">
+                            <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Concluir chamado</h3>
+                            <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="icon-btn">✕</button>
                         </div>
                         <form onSubmit={handleConfirmarFinalizacao} className="space-y-4 overflow-y-auto px-5 py-4">
                             <div>
-                                <p className="u-label">Itens concluídos *</p>
-                                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                                <p className="u-label">Itens</p>
+                                <div className="space-y-1.5">
                                     {getItens(chamadoEmEncerramento).map(item => {
                                         const checked = itensSelecionados.includes(item);
                                         const jaFeito = (chamadoEmEncerramento.itensConcluidos || []).includes(item);
                                         return (
-                                            <label key={item} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition ${checked ? 'border-emerald-500/50 bg-emerald-500/[0.07]' : 'border-slate-200 dark:border-white/10'} ${jaFeito ? 'opacity-50' : ''}`}>
+                                            <label key={item} className={`flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 ${checked ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-700'} ${jaFeito ? 'opacity-50' : ''}`}>
                                                 <input type="checkbox" checked={checked} disabled={jaFeito} onChange={() => toggleItem(item)} className="h-4 w-4 accent-emerald-600" />
-                                                <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{item}</span>
-                                                {jaFeito && <span className="ml-auto rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold text-white dark:bg-white dark:text-slate-900">feito</span>}
+                                                <span className="text-sm text-slate-700 dark:text-slate-200">{item}</span>
                                             </label>
                                         );
                                     })}
                                 </div>
-                                <p className="mt-1.5 text-[11px] text-slate-400">{itensSelecionados.length} de {getItens(chamadoEmEncerramento).length} selecionados • parcial mantém pendente, total encerra</p>
                             </div>
                             <div>
-                                <label className="u-label">Serviço executado *</label>
-                                <textarea required rows="3" maxLength="1000" placeholder="Descreva o que foi feito…" className="u-input resize-none uppercase placeholder:normal-case" value={servicoFeito} onChange={(e) => setServicoFeito(e.target.value.toUpperCase())} />
+                                <label className="u-label">Serviço executado</label>
+                                <textarea required rows="3" maxLength="1000" className="u-input resize-none uppercase placeholder:normal-case" value={servicoFeito} onChange={(e) => setServicoFeito(e.target.value.toUpperCase())} />
                             </div>
                             <div>
                                 <label className="u-label">Observações</label>
-                                <textarea rows="2" maxLength="1000" placeholder="Peça pendente, orientação ao solicitante…" className="u-input resize-none placeholder:normal-case" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+                                <textarea rows="2" maxLength="1000" className="u-input resize-none" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
                             </div>
                             <div>
-                                <label className="u-label">Pendência <span className="font-normal text-slate-400">(se parcial, o que falta)</span></label>
-                                <textarea rows="2" maxLength="1000" placeholder="Ex: aguardando peça X…" className="u-input resize-none uppercase placeholder:normal-case" value={pendencia} onChange={(e) => setPendencia(e.target.value.toUpperCase())} />
+                                <label className="u-label">Pendência</label>
+                                <textarea rows="2" maxLength="1000" className="u-input resize-none uppercase placeholder:normal-case" value={pendencia} onChange={(e) => setPendencia(e.target.value.toUpperCase())} />
                             </div>
                             <div>
                                 <div className="mb-2 flex items-center justify-between">
-                                    <label className="u-label !mb-0">Evidências</label>
+                                    <label className="u-label !mb-0">Fotos</label>
                                     <span className="text-[11px] tabular-nums text-slate-400">{fotosResolucao.length}/5</span>
                                 </div>
                                 <CameraCapture onCapture={handleCaptureResolucao} onSelectFiles={handleSelecionarFotoResolucao} maxFiles={5} currentCount={fotosResolucao.length} />
-                                {erroFotoResolucao && <p className="mt-2 text-xs font-medium text-red-600">{erroFotoResolucao}</p>}
+                                {erroFotoResolucao && <p className="mt-1.5 text-xs text-red-600">{erroFotoResolucao}</p>}
                                 {fotosResolucao.length > 0 && (
-                                    <div className="mt-2 grid grid-cols-4 gap-2">
+                                    <div className="mt-2 grid grid-cols-5 gap-2">
                                         {fotosResolucao.map((f, idx) => (
-                                            <div key={idx} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5">
+                                            <div key={idx} className="relative aspect-square overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
                                                 <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
                                                 <button type="button" onClick={() => setFotosResolucao(prev => prev.filter((_, i) => i !== idx))} aria-label="Remover" className="icon-btn absolute right-1 top-1 !rounded-full !bg-slate-950/70 !p-0 !text-white">×</button>
                                             </div>
@@ -238,9 +216,9 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex gap-2 pb-1 pt-1">
-                                <button type="button" onClick={() => setChamadoEmEncerramento(null)} className="btn-ghost flex-1 !justify-center">Cancelar</button>
-                                <button type="submit" disabled={enviandoFinalizacao} className="btn-success flex-1 !justify-center disabled:opacity-60">{enviandoFinalizacao ? 'Salvando…' : itensSelecionados.length < getItens(chamadoEmEncerramento).length ? 'Concluir parcial' : 'Concluir total'}</button>
+                            <div className="flex justify-end gap-2 pt-1">
+                                <button type="button" onClick={() => setChamadoEmEncerramento(null)} className="btn-ghost">Cancelar</button>
+                                <button type="submit" disabled={enviandoFinalizacao} className="btn-success disabled:opacity-60">{enviandoFinalizacao ? 'Salvando…' : 'Salvar'}</button>
                             </div>
                         </form>
                     </div>
@@ -248,119 +226,117 @@ function TelaPendencia({ chamados, voltar, encerrar, assumir, concluir }) {
             )}
 
             <PageHeader
-                eyebrow="Manutenção"
-                title="Chamados pendentes"
-                subtitle={`${pendentes.length} em aberto · ${listaExibicao.length} na triagem`}
-                live
-                back={voltar}
-                backLabel="Menu"
+                title="Chamados"
+                meta={`${pendentes.length} em aberto`}
                 actions={
                     <React.Fragment>
                         <DownloadPopover dados={pendentes} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
-                        <button onClick={() => setOrdenarPorPrioridade(v => !v)} className="btn-ghost" title="Alternar ordenação">
+                        <button onClick={() => setOrdenarPorPrioridade(v => !v)} className="btn-ghost" title="Ordenação">
                             {ordenarPorPrioridade ? 'Prioridade' : 'Recentes'}
                         </button>
                     </React.Fragment>
                 }
             />
 
-            {/* Pesquisa + filtros */}
             <div className="mb-3 flex gap-2">
-                <div className="relative flex-1">
-                    <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-                    <input type="text" placeholder="Pesquisar chamado…" aria-label="Pesquisar" className="u-input !pl-9" value={busca} onChange={(e) => setBusca(e.target.value.toUpperCase())} />
-                </div>
-                <button onClick={() => setMostrarFiltros(v => !v)} className={`btn-ghost shrink-0 sm:hidden ${mostrarFiltros ? '!bg-slate-900 !text-white dark:!bg-white dark:!text-slate-900' : ''}`}>
+                <input type="text" placeholder="Buscar chamados..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
+                <button onClick={() => setMostrarFiltros(v => !v)} className="btn-ghost shrink-0 sm:hidden">
                     Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
                 </button>
             </div>
-            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} mb-4 flex-col gap-2 sm:flex sm:flex-row`}>
-                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[170px]">
-                    <option value="TODOS">Filial ▾ · Todas</option>
+            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} mb-4 flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap`}>
+                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
+                    <option value="TODOS">Filial: todas</option>
                     <option value="MATRIZ">Matriz</option>
                     <option value="PECÉM">Pecém</option>
                 </select>
-                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[190px]">
-                    <option value="TODOS">Status ▾ · Todos</option>
+                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[170px]">
+                    <option value="TODOS">Status: todos</option>
                     <option value="ABERTO">Aberto</option>
                     <option value="EM_ATENDIMENTO">Em atendimento</option>
                     <option value="AGUARDANDO_USUARIO">Parcial</option>
                     <option value="ATRIBUIDO">Atribuído</option>
                 </select>
-                <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[190px]">
-                    <option value="TODOS">Período ▾ · Todo</option>
+                <select value={prioridadeFiltro} onChange={e => setPrioridadeFiltro(e.target.value)} aria-label="Prioridade" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Prioridade: todas</option>
+                    <option value="Urgente">Urgente</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Média">Média</option>
+                    <option value="Baixa">Baixa</option>
+                </select>
+                <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Período: todo</option>
                     <option value="HOJE">Hoje</option>
-                    <option value="7d">Últimos 7 dias</option>
-                    <option value="30d">Últimos 30 dias</option>
+                    <option value="7d">7 dias</option>
+                    <option value="30d">30 dias</option>
                     <option value="MES_ATUAL">Mês atual</option>
                     <option value="MES_ANTERIOR">Mês anterior</option>
                 </select>
                 {(filtrosAtivos > 0 || busca) && (
-                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:hover:text-white">Limpar</button>
+                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:hover:text-slate-200">Limpar</button>
                 )}
             </div>
 
-            {/* Lista operacional (mobile) */}
             {listaExibicaoPaginada.length === 0 ? (
-                <div className="u-surface"><EmptyState hint="Tente alterar os filtros ou o período." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
+                <div className="u-surface"><EmptyState action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
             ) : (
-                <div className="u-surface divide-y u-divider overflow-hidden md:hidden">
-                    {listaExibicaoPaginada.map(c => (
-                        <div key={c.idFirebase} onClick={() => setDetalhes(c)} className="flex cursor-pointer gap-3 px-4 py-3.5 transition hover:bg-slate-50 dark:hover:bg-white/[0.02]">
-                            {isCritico(c) && <span className="w-1 shrink-0 self-stretch rounded-full bg-red-500/80"></span>}
-                            <div className="min-w-0 flex-1">
-                                <ProtocoloTag codigo={c.protocolo} />
-                                <p className="mt-0.5 truncate text-[15px] font-bold tracking-tight text-slate-900 dark:text-white">{c.equipamento}</p>
-                                <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{c.descricao}</p>
-                                <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                    <PriorityBadge prioridade={c.prioridade} />
-                                    <StatusBadge status={c.status} concluido={c.concluido} />
-                                </div>
-                                {c.atribuidoParaNome && <p className="mt-1.5 text-[11px] text-slate-400">{c.atribuidoParaNome}</p>}
-                                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
-                                    <TempoAberto dataAbertura={c.dataAbertura} />
-                                    <span className="flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:flex-none" onClick={(e) => e.stopPropagation()}>
-                                        <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="btn-ghost !px-2.5 !py-2">
-                                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                        </button>
-                                        {acaoPrincipal(c, true)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Tabela (desktop) */}
-            {listaExibicaoPaginada.length > 0 && (
-                <div className="u-surface hidden overflow-x-auto md:block">
-                    <table className="u-table">
-                        <thead><tr><th>Chamado</th><th>Prioridade</th><th>Status</th><th>Responsável</th><th className="!text-right">Tempo aberto</th><th className="!text-center">Ação</th></tr></thead>
-                        <tbody>
-                            {listaExibicaoPaginada.map(c => (
-                                <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
-                                    <td>
-                                        <p className="font-semibold text-slate-900 dark:text-white">{c.equipamento}</p>
-                                        <span className="mt-0.5 flex items-center gap-2"><ProtocoloTag codigo={c.protocolo} /> <span className="text-[11px] text-slate-400">{c.unidade || 'MATRIZ'}</span></span>
-                                    </td>
-                                    <td><PriorityBadge prioridade={c.prioridade} /></td>
-                                    <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
-                                    <td className="max-w-[160px] truncate text-[13px] text-slate-500">{c.atribuidoParaNome || '—'}</td>
-                                    <td className="text-right"><TempoAberto dataAbertura={c.dataAbertura} /></td>
-                                    <td className="!text-center" onClick={(e) => e.stopPropagation()}>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            {acaoPrincipal(c, false)}
-                                            <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="btn-ghost !px-2.5 !py-1.5">
-                                                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                            </button>
+                <React.Fragment>
+                    <ul className="divide-y u-divider border-y u-divider md:hidden">
+                        {listaExibicaoPaginada.map(c => (
+                            <li key={c.idFirebase}>
+                                <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <ProtocoloTag codigo={c.protocolo} />
+                                        <StatusBadge status={c.status} concluido={c.concluido} />
+                                    </div>
+                                    <p className="mt-0.5 truncate text-sm font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
+                                    <p className="truncate text-xs text-slate-500">{c.descricao}</p>
+                                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+                                        <span className="flex items-center gap-2 text-xs text-slate-500">
+                                            <PriorityBadge prioridade={c.prioridade} />
+                                            <ServiceBadge servico={c.servico} />
+                                            <TempoAberto dataAbertura={c.dataAbertura} />
                                         </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                        <span onClick={(e) => e.stopPropagation()}>{acao(c)}</span>
+                                    </div>
+                                    {c.atribuidoParaNome && <p className="mt-1 text-[11px] text-slate-400">{c.atribuidoParaNome}</p>}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="u-surface hidden overflow-x-auto md:block">
+                        <table className="u-table">
+                            <thead><tr><th>Protocolo</th><th>Descrição</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Responsável</th><th>Abertura</th><th>Tempo</th><th>Status</th><th className="!text-right">Ações</th></tr></thead>
+                            <tbody>
+                                {listaExibicaoPaginada.map(c => (
+                                    <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
+                                        <td><ProtocoloTag codigo={c.protocolo} /></td>
+                                        <td className="min-w-[200px] max-w-[320px]">
+                                            <p className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
+                                            <p className="truncate text-xs text-slate-500">{c.descricao}</p>
+                                        </td>
+                                        <td className="whitespace-nowrap text-[13px] text-slate-600 dark:text-slate-400">{c.unidade || 'MATRIZ'}</td>
+                                        <td><ServiceBadge servico={c.servico} /></td>
+                                        <td><PriorityBadge prioridade={c.prioridade} /></td>
+                                        <td className="max-w-[140px] truncate text-[13px] text-slate-600 dark:text-slate-400">{c.atribuidoParaNome || '—'}</td>
+                                        <td><DateBadge dataStr={c.dataAbertura} /></td>
+                                        <td><TempoAberto dataAbertura={c.dataAbertura} /></td>
+                                        <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
+                                        <td className="!text-right" onClick={(e) => e.stopPropagation()}>
+                                            <span className="inline-flex items-center gap-1.5">
+                                                {acao(c)}
+                                                <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                </button>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </React.Fragment>
             )}
 
             {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
