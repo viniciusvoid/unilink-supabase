@@ -1,4 +1,4 @@
-// TELA: Dashboard — composição operacional UNILINK OPS
+// TELA: Dashboard — composição operacional UNILINK
 function TelaDashboard({ chamados }) {
     const [filtro, setFiltro] = React.useState({ tipo: 'dias', valor: 30 });
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');

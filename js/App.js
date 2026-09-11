@@ -1,4 +1,4 @@
-﻿// ==========================================================
+// ==========================================================
 // APP: UNILINK — lógica preservada; navegação corporativa
 // (breadcrumb + menu por ambiente, sem telas de apresentação).
 // ==========================================================
@@ -253,10 +253,10 @@ function App() {
         })
         .slice(0, 5);
 
-    const opsAbertos = chamados.filter(c => !c.concluido);
-    const opsEmAtend = opsAbertos.filter(c => c.status === 'EM_ATENDIMENTO' || c.emAtendimento);
-    const opsUrg = opsAbertos.filter(c => c.prioridade === 'Urgente');
-    const opsHoje = chamados.filter(c => {
+    const abertosOp = chamados.filter(c => !c.concluido);
+    const emAtendOp = abertosOp.filter(c => c.status === 'EM_ATENDIMENTO' || c.emAtendimento);
+    const urgOp = abertosOp.filter(c => c.prioridade === 'Urgente');
+    const hojeOp = chamados.filter(c => {
         try {
             if (typeof parseDataBR !== 'function') return false;
             const dt = parseDataBR(c.dataAbertura);
@@ -363,7 +363,7 @@ function App() {
                                 <span className="pulse-ring absolute inline-flex h-full w-full rounded-full bg-[#1B7A4D]"></span>
                                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#1B7A4D]"></span>
                             </span>
-                            {opsAbertos.length} abertos, {opsEmAtend.length} em atendimento
+                            {abertosOp.length} abertos, {emAtendOp.length} em atendimento
                         </div>
                     </div>
                     </div>
@@ -415,10 +415,10 @@ function App() {
                         <div className="grid items-start gap-4 lg:grid-cols-2">
                         <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider lg:col-start-1 lg:mb-0">
                             {[
-                                ['Abertos', opsAbertos.length, false],
-                                ['Em atendimento', opsEmAtend.length, false],
-                                ['Urgentes', opsUrg.length, opsUrg.length > 0],
-                                ['Hoje', opsHoje.length, false]
+                                ['Abertos', abertosOp.length, false],
+                                ['Em atendimento', emAtendOp.length, false],
+                                ['Urgentes', urgOp.length, urgOp.length > 0],
+                                ['Hoje', hojeOp.length, false]
                             ].map(([rotulo, valor, alerta]) => (
                                 <div key={rotulo} className="px-3 py-2.5 text-center">
                                     <div className={`text-xl font-semibold tabular-nums leading-none ${alerta ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{valor}</div>
