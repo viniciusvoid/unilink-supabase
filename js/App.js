@@ -240,7 +240,8 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const showDock = ambiente && (ambiente === 'Solicitante' || autenticado);
+    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard'];
+    const showDock = telasConteudo.includes(telaAtual) && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
         .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
         .sort((a, b) => {
@@ -472,6 +473,15 @@ function App() {
             {showDock && (
                 <nav className="print:hidden fixed inset-x-0 bottom-0 z-30 flex justify-center px-4" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
                     <div className="flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+                        <button
+                            onClick={() => setTelaAtual('splash')}
+                            title="Voltar ao início"
+                            aria-label="Voltar ao início"
+                            className="flex items-center justify-center rounded-xl px-3 py-2 text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10" /></svg>
+                        </button>
+                        <span className="mx-0.5 h-5 w-px bg-slate-200 dark:bg-slate-700"></span>
                         {NAV[ambiente].map(item => {
                             const ativo = telaAtual === item.k;
                             return (
