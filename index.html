@@ -90,55 +90,29 @@
             70% { transform: scale(2.8); opacity: 0; }
             100% { transform: scale(2.8); opacity: 0; }
         }
-        /* Identidade de fundo UNILINK — monograma + barras de protocolo */
+        /* Parede de marca UNILINK — inscricao em deriva */
         .page-art, .splash-art { position: relative; isolation: isolate; }
         .page-art::before, .splash-art::before {
-            content: "U"; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            display: flex; align-items: center; justify-content: flex-end;
-            padding-right: 1vmin;
-            font-family: Inter, Arial, sans-serif; font-style: italic; font-weight: 900;
-            font-size: 52vmin; line-height: 1; color: transparent;
-            -webkit-text-stroke: 2px rgba(14, 50, 99, 0.09);
-            animation: markDrift 20s ease-in-out infinite alternate;
+            content: ""; position: fixed; inset: -120px; z-index: -1; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='260'%3E%3Ctext x='16' y='118' font-family='Arial, sans-serif' font-size='84' font-weight='900' font-style='italic' fill='none' stroke='%230E3263' stroke-opacity='0.1'%3EUNILINK%3C/text%3E%3Ctext x='330' y='208' font-family='Arial, sans-serif' font-size='38' font-weight='900' font-style='italic' fill='%230E3263' fill-opacity='0.06'%3EUNILINK%3C/text%3E%3Ctext x='36' y='196' font-family='Arial, sans-serif' font-size='19' font-weight='700' letter-spacing='6' fill='%230E3263' fill-opacity='0.09'%3EOPS / MTN%3C/text%3E%3C/svg%3E");
+            background-size: 560px 260px;
+            mask-image: radial-gradient(120% 90% at 30% 20%, black 30%, transparent 75%);
+            -webkit-mask-image: radial-gradient(120% 90% at 30% 20%, black 30%, transparent 75%);
+            animation: wordDrift 36s ease-in-out infinite alternate;
         }
         .page-art::after, .splash-art::after {
             content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            background: linear-gradient(90deg,
-                transparent 0 6%, rgba(14, 50, 99, 0.05) 6% 7%, transparent 7% 13%,
-                rgba(14, 50, 99, 0.035) 13% 16%, transparent 16% 24%,
-                rgba(14, 50, 99, 0.055) 24% 25%, transparent 25% 33%,
-                rgba(14, 50, 99, 0.03) 33% 37%, transparent 37% 45%,
-                rgba(14, 50, 99, 0.05) 45% 46%, transparent 46% 58%,
-                rgba(14, 50, 99, 0.035) 58% 61%, transparent 61% 70%,
-                rgba(14, 50, 99, 0.055) 70% 71%, transparent 71% 82%,
-                rgba(14, 50, 99, 0.03) 82% 86%, transparent 86% 93%,
-                rgba(14, 50, 99, 0.05) 93% 94%, transparent 94% 100%);
-            mask-image: linear-gradient(to bottom, transparent, black 18% 82%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 18% 82%, transparent);
-            animation: barsDrift 26s ease-in-out infinite alternate;
+            background: radial-gradient(640px 380px at 50% 0%, rgba(14, 50, 99, 0.07), transparent 70%);
         }
-        @keyframes markDrift {
-            from { transform: translate3d(0, -8px, 0); }
-            to { transform: translate3d(0, 10px, 0); }
-        }
-        @keyframes barsDrift {
-            from { transform: translate3d(-14px, 0, 0); }
-            to { transform: translate3d(14px, 0, 0); }
+        @keyframes wordDrift {
+            from { transform: translate3d(-40px, -20px, 0); }
+            to { transform: translate3d(40px, 24px, 0); }
         }
         html.dark .page-art::before, html.dark .splash-art::before {
-            -webkit-text-stroke: 2px rgba(56, 189, 248, 0.10);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='260'%3E%3Ctext x='16' y='118' font-family='Arial, sans-serif' font-size='84' font-weight='900' font-style='italic' fill='none' stroke='%2338BDF8' stroke-opacity='0.13'%3EUNILINK%3C/text%3E%3Ctext x='330' y='208' font-family='Arial, sans-serif' font-size='38' font-weight='900' font-style='italic' fill='%2338BDF8' fill-opacity='0.08'%3EUNILINK%3C/text%3E%3Ctext x='36' y='196' font-family='Arial, sans-serif' font-size='19' font-weight='700' letter-spacing='6' fill='%2338BDF8' fill-opacity='0.1'%3EOPS / MTN%3C/text%3E%3C/svg%3E");
         }
         html.dark .page-art::after, html.dark .splash-art::after {
-            background: linear-gradient(90deg,
-                transparent 0 6%, rgba(148, 163, 184, 0.05) 6% 7%, transparent 7% 13%,
-                rgba(148, 163, 184, 0.035) 13% 16%, transparent 16% 24%,
-                rgba(148, 163, 184, 0.055) 24% 25%, transparent 25% 33%,
-                rgba(148, 163, 184, 0.03) 33% 37%, transparent 37% 45%,
-                rgba(148, 163, 184, 0.05) 45% 46%, transparent 46% 58%,
-                rgba(148, 163, 184, 0.035) 58% 61%, transparent 61% 70%,
-                rgba(148, 163, 184, 0.055) 70% 71%, transparent 71% 82%,
-                rgba(148, 163, 184, 0.03) 82% 86%, transparent 86% 93%,
-                rgba(148, 163, 184, 0.05) 93% 94%, transparent 94% 100%);
+            background: radial-gradient(640px 380px at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
         }
         .env-card { transition: transform 0.18s ease-out, border-color 0.15s, box-shadow 0.18s ease-out; }
         .env-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14, 50, 99, 0.10); }
