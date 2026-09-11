@@ -240,6 +240,7 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
+    const showDock = ambiente && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
         .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
         .sort((a, b) => {
@@ -312,9 +313,9 @@ function App() {
                 </header>
             )}
 
-            <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pb-28 pt-5 sm:px-5">
+            <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-5 sm:px-5 ${showDock ? 'pb-28' : 'pb-6'}`}>
                 {telaAtual === 'splash' && (
-                    <div className="splash-art mx-auto my-auto w-full max-w-[640px] py-6">
+                    <div className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col justify-center py-6">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
                         <div className="anim-rise d1 mb-8 flex justify-center">
                             <Logo variant="full" />
@@ -468,7 +469,7 @@ function App() {
                 )}
             </main>
 
-            {ambiente && (ambiente === 'Solicitante' || autenticado) && (
+            {showDock && (
                 <nav className="print:hidden fixed inset-x-0 bottom-0 z-30 flex justify-center px-4" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
                     <div className="flex items-center gap-0.5 rounded-2xl border border-slate-200 bg-white/95 px-1.5 py-1.5 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
                         {NAV[ambiente].map(item => {
