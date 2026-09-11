@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>UNILINK - Manuten��o</title>
+    <title>UNILINK - Manutenção</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
     <style>
-        /* ===== UNILINK � linguagem visual (SaaS operacional) ===== */
+        /* ===== UNILINK · linguagem visual (SaaS operacional) ===== */
         * {
             box-sizing: border-box;
             font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -57,7 +57,7 @@
             text-rendering: optimizeLegibility;
         }
 
-        /* Entrada: fade curto, s� em resposta a a��o (modal, dropdown, toast) */
+        /* Entrada: fade curto, só em resposta a ação (modal, dropdown, toast) */
         .fade-in { animation: fadeIn 0.15s ease-out both; }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -90,7 +90,7 @@
             70% { transform: scale(2.8); opacity: 0; }
             100% { transform: scale(2.8); opacity: 0; }
         }
-        /* Textura da splash � azul com degrad� + quadriculado */
+        /* Textura da splash — azul com degradê + quadriculado */
         .page-art, .splash-art { position: relative; isolation: isolate; }
         .page-art::before, .splash-art::before {
             content: ""; position: fixed; inset: -12%; z-index: -1; pointer-events: none;
@@ -158,7 +158,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         @media (max-width: 640px) {
-            /* 44px s� em a��es principais � bot�es inline/compactos ficam de fora */
+            /* 44px só em ações principais — botões inline/compactos ficam de fora */
             button:not(.btn-page):not(.icon-btn) { min-height: 44px; }
             input, select, textarea { font-size: 16px !important; }
             .btn-page { min-height: 32px; }
@@ -205,7 +205,7 @@
 
         select.u-input { appearance: auto; }
 
-        /* Bot�es: hierarquia �nica, 36px */
+        /* Botões: hierarquia única, 36px */
         .btn-primary {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             background: #0E3263; color: #fff; font-weight: 600; font-size: 13px;
@@ -271,7 +271,7 @@
         html.dark .btn-page { background: transparent; border-color: #1F2937; color: #CBD5E1; }
         html.dark .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
 
-        /* Bot�o de �cone inline (copiar, fechar, remover) � nunca estica */
+        /* Botão de ícone inline (copiar, fechar, remover) — nunca estica */
         .icon-btn {
             display: inline-flex; align-items: center; justify-content: center;
             min-width: 28px; min-height: 28px; padding: 6px; border-radius: 8px;
@@ -319,14 +319,14 @@
 
     <!--
         Ordem de carregamento importa:
-        1) supabase-js (script acima) � precisa estar pronto antes do supabaseConfig.js
-        2) Config/servi�os (Supabase client + camada de dados)
-        3) Fun��es utilit�rias
-        4) Componentes reutiliz�veis (badges, logo, modal)
+        1) supabase-js (script acima) — precisa estar pronto antes do supabaseConfig.js
+        2) Config/serviços (Supabase client + camada de dados)
+        3) Funções utilitárias
+        4) Componentes reutilizáveis (badges, logo, modal)
         5) Telas (usam os componentes acima)
         6) App.js (usa todas as telas e monta a raiz React)
     -->
-    <!-- FRONT branch: API em servi�o separado -->
+    <!-- FRONT branch: API em serviço separado -->
     <script>
       if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
         window.API_BASE_URL = window.API_BASE_URL || "https://clever-expression-production-8bf5.up.railway.app";
