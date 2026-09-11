@@ -167,8 +167,8 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
             )}
 
             {chamadoEmEncerramento && (
-                <div className="sheet-mobile fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
-                    <div className="sheet-panel flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
+                    <div className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between border-b u-divider px-5 py-3">
                             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Concluir chamado</h3>
                             <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="icon-btn">✕</button>
@@ -246,13 +246,13 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                 }
             />
 
-            <div className="mb-3 flex gap-2">
+            <div className="u-surface mb-2 flex gap-2 p-2">
                 <input type="text" placeholder="Buscar chamados..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
                 <button onClick={() => setMostrarFiltros(v => !v)} className="btn-ghost shrink-0 sm:hidden">
                     Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
                 </button>
             </div>
-            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} mb-4 flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap`}>
+            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} u-surface mb-4 flex-col gap-2 p-2 sm:flex sm:flex-row sm:flex-wrap`}>
                 <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
                     <option value="TODOS">Filial: todas</option>
                     <option value="MATRIZ">Matriz</option>

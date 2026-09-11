@@ -1,7 +1,7 @@
 ﻿// TELA: Sucesso — confirmação objetiva
 function TelaSucesso({ voltarInicio, chamado, aoAcompanhar, aoNovo }) {
     return (
-        <div className="mx-auto w-full max-w-[400px] pt-10">
+        <div className="mx-auto my-auto w-full max-w-[400px] py-6">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1B7A4D]/10 text-[#1B7A4D] dark:text-emerald-400">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>

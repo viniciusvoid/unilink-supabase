@@ -53,7 +53,7 @@ function TelaHistorico({ chamados }) {
                 actions={<DownloadPopover dados={[...encerrados, ...parciais]} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />}
             />
 
-            <div className="mb-3 flex gap-2">
+            <div className="u-surface mb-2 flex gap-2 p-2">
                 <input type="text" placeholder="Buscar protocolo, equipamento ou descrição..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
                 <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="tablist" aria-label="Visualização">
                     {[['lista', 'Lista'], ['timeline', 'Timeline']].map(([v, l]) => (
@@ -66,7 +66,7 @@ function TelaHistorico({ chamados }) {
                     Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
                 </button>
             </div>
-            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} mb-4 flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap`}>
+            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} u-surface mb-4 flex-col gap-2 p-2 sm:flex sm:flex-row sm:flex-wrap`}>
                 <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
                     <option value="TODOS">Filial: todas</option>
                     <option value="MATRIZ">Matriz</option>
