@@ -56,7 +56,7 @@ function ModalLogin({ aoAutenticar, fechar }) {
 
                 {modo === 'login' ? (
                     <form onSubmit={handleLogin} className="space-y-3">
-                        {erro && <p className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700 dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
+                        {erro && <p className="rounded-md bg-[#B3261E]/10 px-3 py-2 text-[13px] text-[#B3261E] dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
                         <div>
                             <label className="u-label">Usuário</label>
                             <input type="text" required autoComplete="username" className="u-input" value={usuario} onChange={(e) => setUsuario(e.target.value)} />
@@ -75,8 +75,8 @@ function ModalLogin({ aoAutenticar, fechar }) {
                     </form>
                 ) : (
                     <form onSubmit={handleRecuperar} className="space-y-3">
-                        {erro && <p className="rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700 dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
-                        {msgRecuperar && <p className="rounded-md bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{msgRecuperar}</p>}
+                        {erro && <p className="rounded-md bg-[#B3261E]/10 px-3 py-2 text-[13px] text-[#B3261E] dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
+                        {msgRecuperar && <p className="rounded-md bg-[#1B7A4D]/10 px-3 py-2 text-[13px] text-[#1B7A4D] dark:bg-emerald-500/10 dark:text-emerald-300">{msgRecuperar}</p>}
                         <div>
                             <label className="u-label">E-mail</label>
                             <input type="text" required autoComplete="email" className="u-input" value={emailRecuperar} onChange={(e) => setEmailRecuperar(e.target.value)} />

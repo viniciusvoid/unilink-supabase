@@ -314,7 +314,7 @@ function App() {
 
             <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 pb-28 pt-5 sm:px-5">
                 {telaAtual === 'splash' && (
-                    <div className="fade-in mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
+                    <div className="mx-auto w-full max-w-[560px] pt-10 sm:pt-16">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
                         <div className="mb-8 flex justify-center">
                             <Logo variant="full" />
@@ -353,7 +353,7 @@ function App() {
                 )}
 
                 {telaAtual === 'solicitante' && (
-                    <div className="fade-in mx-auto w-full max-w-[480px] pt-4">
+                    <div className="mx-auto w-full max-w-[480px] pt-4">
                         <PageHeader title="Solicitante" />
                         <div className="u-surface divide-y u-divider overflow-hidden">
                             <EnvRow destaque label="Novo chamado" onClick={() => setTelaAtual('corretiva')} icon={ICONS.plus} />
@@ -366,10 +366,10 @@ function App() {
                     <TelaAcompanhamento protocoloInicial={protocoloBusca} />
                 )}
                 {telaAtual === 'manutencao' && autenticado && (
-                    <div className="fade-in mx-auto w-full max-w-[480px] pt-4">
+                    <div className="mx-auto w-full max-w-[480px] pt-4">
                         <PageHeader
                             title="Manutenção"
-                            meta={meuPerfil ? `${meuPerfil.email} • ${meuPerfil.papel}` : null}
+                            meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
                             actions={<button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>}
                         />
                         <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider">
@@ -380,8 +380,8 @@ function App() {
                                 ['Hoje', opsHoje.length, false]
                             ].map(([rotulo, valor, alerta]) => (
                                 <div key={rotulo} className="px-3 py-2.5 text-center">
-                                    <div className={`text-xl font-semibold tabular-nums leading-none ${alerta ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{valor}</div>
-                                    <div className="mt-1 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{rotulo}</div>
+                                    <div className={`text-xl font-semibold tabular-nums leading-none ${alerta ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{valor}</div>
+                                    <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{rotulo}</div>
                                 </div>
                             ))}
                         </div>
@@ -415,7 +415,7 @@ function App() {
                     </div>
                 )}
                 {telaAtual === 'manutencao' && !autenticado && (
-                    <div className="fade-in mx-auto w-full max-w-[420px] pt-10">
+                    <div className="mx-auto w-full max-w-[420px] pt-10">
                         <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Manutenção</h1>
                         <div className="u-surface mt-3 flex items-center justify-between gap-3 px-4 py-3">
                             <p className="text-sm text-slate-500 dark:text-slate-400">Acesso restrito.</p>

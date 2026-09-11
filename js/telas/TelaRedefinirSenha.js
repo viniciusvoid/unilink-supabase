@@ -24,10 +24,10 @@ function TelaRedefinirSenha({ voltar, aoSucesso }) {
     };
 
     return (
-        <div className="fade-in mx-auto w-full max-w-[400px] pt-6">
+        <div className="mx-auto w-full max-w-[400px] pt-6">
             <PageHeader title="Redefinir senha" />
-            {erro && <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-[13px] text-red-700 dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
-            {ok && <p className="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-[13px] text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">{ok}</p>}
+            {erro && <p className="mb-3 rounded-md bg-[#B3261E]/10 px-3 py-2 text-[13px] text-[#B3261E] dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
+            {ok && <p className="mb-3 rounded-md bg-[#1B7A4D]/10 px-3 py-2 text-[13px] text-[#1B7A4D] dark:bg-emerald-500/10 dark:text-emerald-300">{ok}</p>}
             <form onSubmit={handleRedefinir} className="space-y-3">
                 <div>
                     <label className="u-label">Nova senha</label>

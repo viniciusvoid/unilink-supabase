@@ -19,12 +19,12 @@ const STATUS_LABEL = {
 
 const STATUS_STYLE = {
     ABERTO: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
-    EM_ANALISE: 'bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300',
+    EM_ANALISE: 'bg-sky-50 text-[#2563A8] dark:bg-sky-500/10 dark:text-sky-300',
     ATRIBUIDO: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300',
-    EM_ATENDIMENTO: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-    AGUARDANDO_USUARIO: 'bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300',
-    RESOLVIDO: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
-    FECHADO: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+    EM_ATENDIMENTO: 'bg-[#B9770E]/10 text-[#B9770E] dark:bg-[#B9770E]/15 dark:text-amber-300',
+    AGUARDANDO_USUARIO: 'bg-[#B9770E]/10 text-[#B9770E] dark:bg-[#B9770E]/15 dark:text-amber-300',
+    RESOLVIDO: 'bg-[#1B7A4D]/10 text-[#1B7A4D] dark:bg-emerald-500/10 dark:text-emerald-300',
+    FECHADO: 'bg-[#1B7A4D]/10 text-[#1B7A4D] dark:bg-emerald-500/10 dark:text-emerald-300'
 };
 
 function StatusBadge({ status, concluido }) {
@@ -50,7 +50,7 @@ function ProtocoloTag({ codigo, copiar = true }) {
         } catch {}
     };
     return (
-        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-px font-mono text-[11px] font-medium tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        <span className="inline-flex items-center gap-1 rounded bg-[#0E3263]/[0.06] px-1.5 py-px font-mono text-[11px] font-medium tracking-wide text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">
             #{String(codigo).replace(/^#/, '')}
             {copiar && (
                 <button onClick={copiarFn} title="Copiar protocolo" aria-label="Copiar protocolo" className="icon-btn !min-w-0 !p-0.5">
@@ -65,7 +65,7 @@ function ProtocoloTag({ codigo, copiar = true }) {
 function LiveDot({ label = 'Atualizado agora' }) {
     return (
         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A4D]"></span>
             {label}
         </span>
     );
@@ -299,7 +299,7 @@ function tempoAbertoInfo(dataAberturaStr) {
 function TempoAberto({ dataAbertura }) {
     const info = tempoAbertoInfo(dataAbertura);
     return (
-        <span title={dataAbertura || ''} className={`text-xs tabular-nums ${info.critico ? 'font-medium text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}`}>
+        <span title={dataAbertura || ''} className={`text-xs tabular-nums ${info.critico ? 'font-medium text-[#B3261E] dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}`}>
             {info.texto}
         </span>
     );

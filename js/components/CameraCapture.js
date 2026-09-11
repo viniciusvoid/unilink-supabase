@@ -119,7 +119,7 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
                 disabled={isDisabled}
             />
             <canvas ref={canvasRef} className="hidden" />
-            {error && <p className="text-xs text-red-600 dark:text-red-400 font-medium mt-2">{error}</p>}
+            {error && <p className="text-xs text-[#B3261E] dark:text-red-400 font-medium mt-2">{error}</p>}
             <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-1.5 sm:hidden">Toque em Câmera para foto instantânea ou Galeria para arquivo</p>
 
             {showCamera && (

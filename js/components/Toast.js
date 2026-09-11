@@ -20,10 +20,10 @@ function ToastContainer() {
     }, [addToast]);
 
     const dot = {
-        success: "bg-emerald-500",
-        error: "bg-red-500",
-        warning: "bg-amber-500",
-        info: "bg-sky-500"
+        success: "bg-[#1B7A4D]",
+        error: "bg-[#B3261E]",
+        warning: "bg-[#B9770E]",
+        info: "bg-[#2563A8]"
     };
 
     return (

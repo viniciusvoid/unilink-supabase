@@ -46,10 +46,10 @@ function TelaHistorico({ chamados }) {
     })();
 
     return (
-        <div className="fade-in w-full">
+        <div className="w-full">
             <PageHeader
                 title="Histórico"
-                meta={`${baseHistorico.length} chamados • ${esteMes} este mês • ${recorrentes} recorrentes`}
+                meta={`${baseHistorico.length} chamados, ${esteMes} este mês, ${recorrentes} recorrentes`}
                 actions={<DownloadPopover dados={[...encerrados, ...parciais]} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />}
             />
 
@@ -153,7 +153,7 @@ function TelaHistorico({ chamados }) {
                                         <td><ServiceBadge servico={c.servico} /></td>
                                         <td><PriorityBadge prioridade={c.prioridade} /></td>
                                         <td className="whitespace-nowrap text-xs tabular-nums text-slate-500">{formatarApenasData(c.dataAbertura)}</td>
-                                        <td className="whitespace-nowrap text-xs font-medium tabular-nums text-emerald-600 dark:text-emerald-400">{formatarApenasData(c.dataEncerramento)}</td>
+                                        <td className="whitespace-nowrap text-xs font-medium tabular-nums text-[#1B7A4D] dark:text-emerald-400">{formatarApenasData(c.dataEncerramento)}</td>
                                         <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
                                         <td className="!text-right" onClick={(e) => e.stopPropagation()}>
                                             <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">

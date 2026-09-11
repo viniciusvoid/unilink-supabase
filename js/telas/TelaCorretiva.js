@@ -39,11 +39,11 @@ function TelaCorretiva({ aoSalvar }) {
 
     const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente'];
     const Grupo = ({ titulo, children }) => (
-        <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{titulo}</p>
+        <p className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">{titulo}</p>
     );
 
     return (
-        <div className="fade-in mx-auto w-full max-w-[880px]">
+        <div className="mx-auto w-full max-w-[880px]">
             <PageHeader title="Novo chamado" />
 
             <form onSubmit={handleSubmit} className="u-surface overflow-hidden">
@@ -58,7 +58,7 @@ function TelaCorretiva({ aoSalvar }) {
                                 <span className="text-[11px] tabular-nums text-slate-400">{fotos.length}/5</span>
                             </div>
                             <CameraCapture onCapture={handleCaptureFoto} onSelectFiles={handleSelecionarFotos} maxFiles={5} currentCount={fotos.length} />
-                            {erroFoto && <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{erroFoto}</p>}
+                            {erroFoto && <p className="mt-1.5 text-xs text-[#B3261E] dark:text-red-400">{erroFoto}</p>}
                             {fotos.length > 0 && (
                                 <div className="mt-2 grid grid-cols-4 gap-2">
                                     {fotos.map((f, idx) => (

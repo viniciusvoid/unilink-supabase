@@ -41,6 +41,7 @@
 
         html, body {
             background-color: #F4F6F8;
+            color: #1B2430;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -56,11 +57,14 @@
             text-rendering: optimizeLegibility;
         }
 
-        /* Entrada de página: fade curto */
+        /* Entrada: fade curto, só em resposta a ação (modal, dropdown, toast) */
         .fade-in { animation: fadeIn 0.15s ease-out both; }
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
         /* Toast compacto */
         .toast-in { animation: toastIn 0.15s ease-out both; }
@@ -110,7 +114,7 @@
 
         .u-label {
             display: block; font-size: 13px; font-weight: 500;
-            color: #475569; margin-bottom: 6px;
+            color: #5B6472; margin-bottom: 6px;
         }
         html.dark .u-label { color: #CBD5E1; }
 
@@ -162,18 +166,18 @@
 
         .btn-danger {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: #DC2626; color: #fff; font-weight: 500; font-size: 13px;
+            background: #B3261E; color: #fff; font-weight: 500; font-size: 13px;
             padding: 8px 14px; border-radius: 6px; min-height: 36px;
         }
-        .btn-danger:hover { background: #B91C1C; }
+        .btn-danger:hover { background: #8F1D17; }
 
         .btn-success {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: #059669; color: #fff; font-weight: 500; font-size: 13px;
+            background: #1B7A4D; color: #fff; font-weight: 500; font-size: 13px;
             padding: 8px 14px; border-radius: 6px; transition: background .15s;
             min-height: 36px; white-space: nowrap;
         }
-        .btn-success:hover { background: #047857; }
+        .btn-success:hover { background: #14532C; }
         .btn-success:disabled, .btn-danger:disabled { opacity: .55; cursor: not-allowed; }
 
         .btn-page {
@@ -200,7 +204,7 @@
         .u-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .u-table thead th {
             text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .05em;
-            text-transform: uppercase; color: #667085; padding: 8px 12px;
+            text-transform: uppercase; color: #5B6472; padding: 8px 12px;
             border-bottom: 1px solid #D9DEE5; white-space: nowrap;
         }
         html.dark .u-table thead th { color: #94A3B8; border-color: #1F2937; }

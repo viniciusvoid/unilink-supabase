@@ -53,7 +53,6 @@ function TelaDashboard({ chamados }) {
     const emAtend = chamadosFiltrados.filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento));
     const emAtendAlta = emAtend.filter(c => c.prioridade === 'Urgente' || c.prioridade === 'Alta').length;
     const conclHoje = chamadosFiltrados.filter(c => c.concluido && mesmoDia(c.dataEncerramento, hoje)).length;
-    constaguardando = chamadosFiltrados.filter(c => !c.concluido && (c.status === 'AGUARDANDO_USUARIO' || c.status === 'ATRIBUIDO')).length;
 
     const deltaTempo = (() => {
         const cur = resumo.tempoMedioResolucao;
@@ -124,7 +123,7 @@ function TelaDashboard({ chamados }) {
             <div className="flex items-center gap-2">
                 <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 min-[400px]:flex dark:bg-slate-800 dark:text-slate-400">{icon}</span>
                 <span className="min-w-0">
-                    <span className="block truncate text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{rotulo}</span>
+                    <span className="block truncate text-[13px] text-slate-500 dark:text-slate-400">{rotulo}</span>
                     <span className="mt-0.5 block text-2xl font-semibold tabular-nums leading-none tracking-tight text-slate-900 dark:text-slate-100">{valor}</span>
                 </span>
             </div>
@@ -133,12 +132,12 @@ function TelaDashboard({ chamados }) {
     );
 
     return (
-        <div className="fade-in w-full">
+        <div className="w-full">
             {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
 
             <PageHeader
                 title="Operação"
-                meta={`${dataCabecalho} · ${horaCabecalho} · ${periodoLabel}`}
+                meta={`${dataCabecalho}, ${horaCabecalho}, ${periodoLabel}`}
                 actions={
                     <React.Fragment>
                         <LiveDot label={`Atualizado ${horaAtualizada}`} />
@@ -191,13 +190,13 @@ function TelaDashboard({ chamados }) {
                 <div className="grid grid-cols-3 divide-x divide-slate-100 dark:divide-slate-700">
                     <Ind rotulo="Chamados" valor={resumo.total} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>} extra={abertosHoje > 0 ? <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">+{abertosHoje} hoje</span> : null} />
                     <Ind rotulo="Em atendimento" valor={emAtend.length} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>} extra={emAtendAlta > 0 ? <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{emAtendAlta} alta prioridade</span> : null} />
-                    <Ind rotulo="Tempo médio" valor={formatarHoras(resumo.tempoMedioResolucao)} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} extra={deltaTempo ? <span className={`text-xs tabular-nums ${deltaTempo.melhorou ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{deltaTempo.melhorou ? '↓' : '↑'} {deltaTempo.pct}%</span> : null} />
+                    <Ind rotulo="Tempo médio" valor={formatarHoras(resumo.tempoMedioResolucao)} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} extra={deltaTempo ? <span className={`text-xs tabular-nums ${deltaTempo.melhorou ? 'text-[#1B7A4D] dark:text-emerald-400' : 'text-[#B3261E] dark:text-red-400'}`}>{deltaTempo.melhorou ? '↓' : '↑'} {deltaTempo.pct}%</span> : null} />
                 </div>
                 <div className="flex flex-wrap gap-x-5 gap-y-1 border-t u-divider px-4 py-2 text-xs text-slate-500 dark:text-slate-400">
                     <span>Abertos <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.abertos}</strong></span>
                     <span>Concluídos <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.encerrados}{conclHoje > 0 ? ` (+${conclHoje} hoje)` : ''}</strong></span>
                     <span>Taxa de resolução <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.taxaResolucao}%</strong></span>
-                    <span>Atrasados <strong className={`font-medium ${resumo.atrasados ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{resumo.atrasados}</strong></span>
+                    <span>Atrasados <strong className={`font-medium ${resumo.atrasados ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{resumo.atrasados}</strong></span>
                 </div>
             </section>
 
@@ -220,7 +219,7 @@ function TelaDashboard({ chamados }) {
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <section className="u-surface p-4 sm:p-5">
                     <SectionTitle>Status</SectionTitle>
-                    <PieChart data={distStatus} colors={{ ABERTO: '#94a3b8', EM_ANALISE: '#0ea5e9', ATRIBUIDO: '#6366f1', EM_ATENDIMENTO: '#f59e0b', AGUARDANDO_USUARIO: '#f97316', RESOLVIDO: '#10b981', FECHADO: '#059669' }} />
+                    <PieChart data={distStatus} colors={{ ABERTO: '#94a3b8', EM_ANALISE: '#2563A8', ATRIBUIDO: '#6366f1', EM_ATENDIMENTO: '#B9770E', AGUARDANDO_USUARIO: '#CA8A04', RESOLVIDO: '#2E9E63', FECHADO: '#1B7A4D' }} />
                 </section>
                 <section className="u-surface p-4 sm:p-5">
                     <SectionTitle>Serviços</SectionTitle>
@@ -312,7 +311,7 @@ function TelaDashboard({ chamados }) {
                                                 {r.trend === null || r.trend === 0 ? (
                                                     <span className="text-slate-300 dark:text-slate-600">→</span>
                                                 ) : (
-                                                    <span className={r.trend > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}>{r.trend > 0 ? '↑' : '↓'}</span>
+                                                    <span className={r.trend > 0 ? 'text-[#B3261E] dark:text-red-400' : 'text-[#1B7A4D] dark:text-emerald-400'}>{r.trend > 0 ? '↑' : '↓'}</span>
                                                 )}
                                             </td>
                                         </tr>

@@ -67,7 +67,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
             <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="border-b u-divider px-5 pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Detalhes do chamado</h3>
+                        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhes do chamado</h3>
                         <button onClick={aoFechar} aria-label="Fechar" className="icon-btn">
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
@@ -81,8 +81,8 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                     <div className="mt-3 flex gap-1 border-t u-divider pt-2">
                         {[
                             ['geral', 'Geral'],
-                            ['atividade', `Atividade${eventos.length > 0 ? ` · ${eventos.length}` : ''}`],
-                            ['evidencias', `Evidências${evidencias.length > 0 ? ` · ${evidencias.length}` : ''}`]
+                            ['atividade', `Atividade${eventos.length > 0 ? ` (${eventos.length})` : ''}`],
+                            ['evidencias', `Evidências${evidencias.length > 0 ? ` (${evidencias.length})` : ''}`]
                         ].map(([k, l]) => (
                             <button key={k} onClick={() => setAba(k)} className={`rounded-md px-3 py-1.5 text-[13px] transition ${aba === k ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>{l}</button>
                         ))}
@@ -103,8 +103,8 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                                     </div>
                                 )}
                                 {equipStats && (
-                                    <div className="mt-4 rounded-md bg-slate-50 p-3.5 dark:bg-slate-800/60">
-                                        <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">Equipamento</p>
+                                    <div className="mt-4 rounded-md border-l-2 border-[#0E3263] bg-slate-50 p-3.5 dark:border-sky-400 dark:bg-slate-800/60">
+                                        <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Equipamento</p>
                                         <div className="grid grid-cols-3 gap-2 text-center">
                                             <div>
                                                 <p className="text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-100">{equipStats.total}</p>
@@ -115,7 +115,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                                                 <p className="text-[11px] text-slate-500">Último</p>
                                             </div>
                                             <div>
-                                                <p className={`text-lg font-semibold ${equipStats.nivel === 'Alta' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{equipStats.nivel}</p>
+                                                <p className={`text-lg font-semibold ${equipStats.nivel === 'Alta' ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{equipStats.nivel}</p>
                                                 <p className="text-[11px] text-slate-500">Recorrência</p>
                                             </div>
                                         </div>

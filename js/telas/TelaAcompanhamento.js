@@ -37,7 +37,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
     const ultimaAtualizacao = eventos.length > 0 ? eventos[eventos.length - 1].criadoEm : (chamado?.dataAbertura || '-');
 
     return (
-        <div className="fade-in mx-auto w-full max-w-[560px]">
+        <div className="mx-auto w-full max-w-[560px]">
             <PageHeader title="Acompanhar" />
 
             <form onSubmit={handleSubmit} className="mb-5 flex gap-2">
@@ -86,7 +86,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
                         </div>
                         <div className="flex gap-3 py-2">
                             <dt className="w-28 shrink-0 text-xs text-slate-500 dark:text-slate-400">Localização</dt>
-                            <dd className="min-w-0 flex-1 text-sm text-slate-700 dark:text-slate-200">{[chamado.localizacao, chamado.unidade].filter(Boolean).join(' • ') || '-'}</dd>
+                            <dd className="min-w-0 flex-1 text-sm text-slate-700 dark:text-slate-200">{[chamado.localizacao, chamado.unidade].filter(Boolean).join(', ') || '-'}</dd>
                         </div>
                         <div className="flex gap-3 py-2">
                             <dt className="w-28 shrink-0 text-xs text-slate-500 dark:text-slate-400">Aberto em</dt>

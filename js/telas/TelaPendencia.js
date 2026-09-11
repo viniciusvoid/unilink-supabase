@@ -158,7 +158,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
     };
 
     return (
-        <div className="fade-in w-full">
+        <div className="w-full">
             {notificacaoAtiva && (
                 <div className="toast-in fixed left-1/2 top-4 z-50 w-[92vw] max-w-sm -translate-x-1/2 rounded-md border border-slate-200 bg-white px-3.5 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:left-auto sm:right-5 sm:translate-x-0">
                     <p className="text-[13px] text-slate-700 dark:text-slate-200">Novo chamado: {notificacaoAtiva.equipamento}</p>
@@ -181,8 +181,8 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                                         const checked = itensSelecionados.includes(item);
                                         const jaFeito = (chamadoEmEncerramento.itensConcluidos || []).includes(item);
                                         return (
-                                            <label key={item} className={`flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 ${checked ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-700'} ${jaFeito ? 'opacity-50' : ''}`}>
-                                                <input type="checkbox" checked={checked} disabled={jaFeito} onChange={() => toggleItem(item)} className="h-4 w-4 accent-emerald-600" />
+                                            <label key={item} className={`flex cursor-pointer items-center gap-2.5 rounded-md border px-3 py-2 ${checked ? 'border-[#1B7A4D] bg-[#1B7A4D]/[0.06] dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-700'} ${jaFeito ? 'opacity-50' : ''}`}>
+                                                <input type="checkbox" checked={checked} disabled={jaFeito} onChange={() => toggleItem(item)} className="h-4 w-4 accent-[#1B7A4D]" />
                                                 <span className="text-sm text-slate-700 dark:text-slate-200">{item}</span>
                                             </label>
                                         );
@@ -207,7 +207,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                                     <span className="text-[11px] tabular-nums text-slate-400">{fotosResolucao.length}/5</span>
                                 </div>
                                 <CameraCapture onCapture={handleCaptureResolucao} onSelectFiles={handleSelecionarFotoResolucao} maxFiles={5} currentCount={fotosResolucao.length} />
-                                {erroFotoResolucao && <p className="mt-1.5 text-xs text-red-600">{erroFotoResolucao}</p>}
+                                {erroFotoResolucao && <p className="mt-1.5 text-xs text-[#B3261E] dark:text-red-400">{erroFotoResolucao}</p>}
                                 {fotosResolucao.length > 0 && (
                                     <div className="mt-2 grid grid-cols-5 gap-2">
                                         {fotosResolucao.map((f, idx) => (
@@ -230,7 +230,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
 
             <PageHeader
                 title="Chamados"
-                meta={`${pendentes.length} registros · ${listaExibicao.length} filtrados · ${emAtendCount} em atendimento`}
+                meta={`${pendentes.length} registros, ${listaExibicao.length} filtrados, ${emAtendCount} em atendimento`}
                 actions={
                     <React.Fragment>
                         {aoNovo && (
