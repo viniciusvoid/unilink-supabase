@@ -8,6 +8,7 @@ function App() {
     const [exibirLogin, setExibirLogin] = React.useState(false);
     const [destinoAposLogin, setDestinoAposLogin] = React.useState('pendencia');
     const [chamadoRecemCriado, setChamadoRecemCriado] = React.useState(null);
+    const [detalheRapido, setDetalheRapido] = React.useState(null);
     const [protocoloBusca, setProtocoloBusca] = React.useState('');
     const [meuPerfil, setMeuPerfil] = React.useState(null);
     const [autenticado, setAutenticado] = React.useState(false);
@@ -303,6 +304,14 @@ function App() {
                     fechar={() => setExibirLogin(false)}
                 />
             )}
+            {detalheRapido && (
+                <ModalDetalhes
+                    chamado={detalheRapido}
+                    chamados={chamados}
+                    aoFechar={() => setDetalheRapido(null)}
+                    aoImprimir={(c) => imprimirOrdemServico(c)}
+                />
+            )}
 
             {telaAtual !== 'splash' && (
                 <header className="sticky top-0 z-20 border-b border-slate-200 bg-white dark:border-[#1F2937] dark:bg-[#0B1220]">
@@ -422,7 +431,7 @@ function App() {
                                 <ul className="divide-y u-divider">
                                     {emAtendimento.map(c => (
                                         <li key={c.idFirebase}>
-                                            <button onClick={() => setTelaAtual('pendencia')} className="flex w-full items-center gap-3 py-2 text-left">
+                                            <button onClick={() => setDetalheRapido(c)} className="flex w-full items-center gap-3 py-2 text-left">
                                                 <span className="min-w-0 flex-1">
                                                     <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">{c.equipamento}</span>
                                                     <ProtocoloTag codigo={c.protocolo} />
