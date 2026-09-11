@@ -43,7 +43,7 @@ function TelaCorretiva({ aoSalvar }) {
     );
 
     return (
-        <div className="mx-auto w-full max-w-[880px]">
+        <div className="mx-auto w-full max-w-[1024px]">
             <PageHeader title="Novo chamado" />
 
             <form onSubmit={handleSubmit} className="u-surface overflow-hidden">

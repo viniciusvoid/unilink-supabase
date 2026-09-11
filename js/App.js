@@ -264,8 +264,8 @@ function App() {
     const recentesSol = obterProtocolosRecentes();
 
     const EnvRow = ({ icon, label, badge, onClick, destaque }) => (
-        <button onClick={onClick} className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800">
-            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${destaque ? 'bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{icon}</span>
+        <button onClick={onClick} className="u-surface flex w-full items-center gap-3 p-4 text-left transition hover:border-slate-300 dark:hover:border-slate-600">
+            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${destaque ? 'bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{icon}</span>
             <span className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-100">{label}</span>
             {badge}
             <svg className="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
@@ -353,9 +353,9 @@ function App() {
                 )}
 
                 {telaAtual === 'solicitante' && (
-                    <div className="mx-auto w-full max-w-[480px] pt-4">
+                    <div className="mx-auto my-auto w-full max-w-[720px] py-6">
                         <PageHeader title="Solicitante" />
-                        <div className="u-surface divide-y u-divider overflow-hidden">
+                        <div className="grid gap-3 sm:grid-cols-2">
                             <EnvRow destaque label="Novo chamado" onClick={() => setTelaAtual('corretiva')} icon={ICONS.plus} />
                             <EnvRow label="Acompanhar chamado" badge={recentesSol.length > 0 ? <span className="font-mono text-[11px] text-slate-400">#{String(recentesSol[0]).replace(/^#/, '')}</span> : null} onClick={() => abrirAcompanhamento()} icon={ICONS.search} />
                         </div>
@@ -366,13 +366,14 @@ function App() {
                     <TelaAcompanhamento protocoloInicial={protocoloBusca} />
                 )}
                 {telaAtual === 'manutencao' && autenticado && (
-                    <div className="mx-auto w-full max-w-[480px] pt-4">
+                    <div className="mx-auto w-full max-w-[960px] py-6">
                         <PageHeader
                             title="Manutenção"
                             meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
                             actions={<button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>}
                         />
-                        <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider">
+                        <div className="grid items-start gap-4 lg:grid-cols-2">
+                        <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider lg:col-start-1 lg:mb-0">
                             {[
                                 ['Abertos', opsAbertos.length, false],
                                 ['Em atendimento', opsEmAtend.length, false],
@@ -385,7 +386,7 @@ function App() {
                                 </div>
                             ))}
                         </div>
-                        <div className="u-surface mb-4 px-4 py-3">
+                        <div className="u-surface mb-4 px-4 py-3 lg:col-start-2 lg:row-start-1 lg:row-span-3 lg:mb-0">
                             <SectionTitle action={emAtendimento.length > 0 ? <span className="text-[11px] tabular-nums text-slate-400">{emAtendimento.length}</span> : null}>Em atendimento</SectionTitle>
                             {emAtendimento.length === 0 ? (
                                 <p className="py-1 text-xs text-slate-500 dark:text-slate-400">Nenhum chamado em atendimento.</p>
@@ -406,12 +407,13 @@ function App() {
                                 </ul>
                             )}
                         </div>
-                        <div className="u-surface divide-y u-divider overflow-hidden">
+                        <div className="grid gap-3 lg:col-start-1">
                             <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
                             <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
                         </div>
-                        <button onClick={() => setTelaAtual('redefinir')} className="mt-3 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">Alterar senha</button>
+                        <button onClick={() => setTelaAtual('redefinir')} className="justify-self-start text-xs text-slate-400 hover:text-slate-600 lg:col-start-1 dark:hover:text-slate-200">Alterar senha</button>
+                        </div>
                     </div>
                 )}
                 {telaAtual === 'manutencao' && !autenticado && (

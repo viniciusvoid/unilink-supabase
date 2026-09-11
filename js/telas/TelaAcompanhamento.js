@@ -37,7 +37,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
     const ultimaAtualizacao = eventos.length > 0 ? eventos[eventos.length - 1].criadoEm : (chamado?.dataAbertura || '-');
 
     return (
-        <div className="mx-auto w-full max-w-[560px]">
+        <div className="mx-auto w-full max-w-[960px]">
             <PageHeader title="Acompanhar" />
 
             <form onSubmit={handleSubmit} className="mb-5 flex gap-2">
@@ -49,12 +49,13 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
             {erro && !carregando && <p className="py-6 text-center text-sm text-slate-500">{erro}</p>}
 
             {chamado && !carregando && (
-                <div>
+                <div className="grid items-start gap-5 lg:grid-cols-2">
+                    <div className="min-w-0">
                     <ProtocoloTag codigo={chamado.protocolo} />
                     <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{chamado.equipamento}</h2>
                     <div className="mt-2"><StatusBadge status={chamado.status} concluido={chamado.concluido} /></div>
 
-                    <div className="mt-3">
+                    <div className="mt-4">
                         <SectionTitle>Status</SectionTitle>
                         <div className="flex items-center">
                             {ETAPAS_ACOMP.map((label, idx) => {
@@ -105,8 +106,10 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
                             <dd className="min-w-0 flex-1 text-sm tabular-nums text-slate-700 dark:text-slate-200">{ultimaAtualizacao}</dd>
                         </div>
                     </dl>
+                    </div>
 
-                    <div className="mt-5">
+                    <div className="min-w-0">
+                    <div>
                         <SectionTitle>Atividade</SectionTitle>
                         <TimelineView eventos={eventos} />
                     </div>
@@ -117,6 +120,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
                             <EvidenceGallery fotos={evidencias} />
                         </div>
                     )}
+                    </div>
                 </div>
             )}
         </div>
