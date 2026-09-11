@@ -101,8 +101,16 @@
             animation: wordDrift 36s ease-in-out infinite alternate;
         }
         .page-art::after, .splash-art::after {
-            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-            background: radial-gradient(90vmin 54vmin at 50% 0%, rgba(14, 50, 99, 0.07), transparent 70%);
+            content: ""; position: fixed; inset: -8vmin; z-index: -1; pointer-events: none;
+            background:
+                radial-gradient(58vmin 40vmin at 10% 4%, rgba(14, 50, 99, 0.10), transparent 70%),
+                radial-gradient(50vmin 36vmin at 90% 16%, rgba(45, 212, 191, 0.08), transparent 70%),
+                radial-gradient(68vmin 44vmin at 72% 88%, rgba(99, 102, 241, 0.06), transparent 70%);
+            animation: aurora 30s ease-in-out infinite alternate;
+        }
+        @keyframes aurora {
+            from { transform: translate3d(-2vmin, -1vmin, 0) scale(1); }
+            to { transform: translate3d(2vmin, 1.5vmin, 0) scale(1.05); }
         }
         @keyframes wordDrift {
             from { transform: translate3d(-5vmin, -2.5vmin, 0); }
@@ -112,7 +120,10 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='260'%3E%3Ctext x='16' y='118' font-family='Arial, sans-serif' font-size='84' font-weight='900' font-style='italic' fill='none' stroke='%2338BDF8' stroke-opacity='0.13'%3EUNILINK%3C/text%3E%3Ctext x='330' y='208' font-family='Arial, sans-serif' font-size='38' font-weight='900' font-style='italic' fill='%2338BDF8' fill-opacity='0.08'%3EUNILINK%3C/text%3E%3Ctext x='36' y='196' font-family='Arial, sans-serif' font-size='19' font-weight='700' letter-spacing='6' fill='%2338BDF8' fill-opacity='0.1'%3EOPS / MTN%3C/text%3E%3C/svg%3E");
         }
         html.dark .page-art::after, html.dark .splash-art::after {
-            background: radial-gradient(90vmin 54vmin at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
+            background:
+                radial-gradient(58vmin 40vmin at 10% 4%, rgba(56, 189, 248, 0.10), transparent 70%),
+                radial-gradient(50vmin 36vmin at 90% 16%, rgba(45, 212, 191, 0.08), transparent 70%),
+                radial-gradient(68vmin 44vmin at 72% 88%, rgba(129, 140, 248, 0.08), transparent 70%);
         }
         .env-card { transition: transform 0.18s ease-out, border-color 0.15s, box-shadow 0.18s ease-out; }
         .env-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14, 50, 99, 0.10); }
