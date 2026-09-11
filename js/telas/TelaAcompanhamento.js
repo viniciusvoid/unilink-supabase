@@ -37,7 +37,7 @@ function TelaAcompanhamento({ protocoloInicial = '' }) {
     const ultimaAtualizacao = eventos.length > 0 ? eventos[eventos.length - 1].criadoEm : (chamado?.dataAbertura || '-');
 
     return (
-        <div className="mx-auto w-full max-w-[960px]">
+        <div className="page-art mx-auto w-full max-w-[960px]">
             <PageHeader title="Acompanhar" />
 
             <form onSubmit={handleSubmit} className="mb-5 flex gap-2">

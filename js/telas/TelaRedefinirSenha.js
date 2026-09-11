@@ -24,7 +24,7 @@ function TelaRedefinirSenha({ voltar, aoSucesso }) {
     };
 
     return (
-        <div className="mx-auto w-full max-w-[400px] pt-6">
+        <div className="page-art mx-auto w-full max-w-[400px] pt-6">
             <PageHeader title="Redefinir senha" />
             {erro && <p className="mb-3 rounded-md bg-[#B3261E]/10 px-3 py-2 text-[13px] text-[#B3261E] dark:bg-red-500/10 dark:text-red-300">{erro}</p>}
             {ok && <p className="mb-3 rounded-md bg-[#1B7A4D]/10 px-3 py-2 text-[13px] text-[#1B7A4D] dark:bg-emerald-500/10 dark:text-emerald-300">{ok}</p>}

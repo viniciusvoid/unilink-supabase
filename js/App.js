@@ -377,7 +377,7 @@ function App() {
                 )}
 
                 {telaAtual === 'solicitante' && (
-                    <div className="mx-auto my-auto w-full max-w-[720px] py-6">
+                    <div className="page-art mx-auto my-auto w-full max-w-[720px] py-6">
                         <PageHeader
                             title="Solicitante"
                             actions={
@@ -398,7 +398,7 @@ function App() {
                     <TelaAcompanhamento protocoloInicial={protocoloBusca} />
                 )}
                 {telaAtual === 'manutencao' && autenticado && (
-                    <div className="mx-auto my-auto w-full max-w-[960px] py-6">
+                    <div className="page-art mx-auto my-auto w-full max-w-[960px] py-6">
                         <PageHeader
                             title="Manutenção"
                             meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
@@ -457,7 +457,7 @@ function App() {
                     </div>
                 )}
                 {telaAtual === 'manutencao' && !autenticado && (
-                    <div className="mx-auto my-auto w-full max-w-[420px] py-6">
+                    <div className="page-art mx-auto my-auto w-full max-w-[420px] py-6">
                         <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Manutenção</h1>
                         <div className="u-surface mt-3 flex items-center justify-between gap-3 px-4 py-3">
                             <p className="text-sm text-slate-500 dark:text-slate-400">Acesso restrito.</p>
