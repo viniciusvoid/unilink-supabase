@@ -90,66 +90,43 @@
             70% { transform: scale(2.8); opacity: 0; }
             100% { transform: scale(2.8); opacity: 0; }
         }
-        /* Textura viva da splash (maré própria, contínua e sutil) */
+        /* Mar visto de cima — tons de água + correntes em deriva contínua */
         .splash-art { position: relative; isolation: isolate; }
         .splash-art::before {
-            content: ""; position: fixed; inset: -12%; z-index: -1; pointer-events: none;
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
             background:
-                radial-gradient(560px 340px at 22% 14%, rgba(14, 50, 99, 0.13), transparent 70%),
-                radial-gradient(620px 380px at 80% 26%, rgba(14, 50, 99, 0.08), transparent 70%);
-            mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
-            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
-            animation: waveFlow 18s ease-in-out infinite alternate;
+                radial-gradient(760px 480px at 18% 8%, rgba(125, 211, 252, 0.20), transparent 70%),
+                radial-gradient(680px 460px at 84% 30%, rgba(153, 246, 228, 0.16), transparent 70%),
+                radial-gradient(900px 620px at 55% 60%, rgba(14, 50, 99, 0.06), transparent 70%);
+            animation: seaSway 26s ease-in-out infinite alternate;
         }
         .splash-art::after {
-            content: ""; position: fixed; inset: -140px; z-index: -1; pointer-events: none;
-            background:
-                linear-gradient(rgba(14, 50, 99, 0.055) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(14, 50, 99, 0.055) 1px, transparent 1px);
-            background-size: 28px 28px;
-            mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
-            -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
-            animation: gridDrift 16s ease-in-out infinite alternate;
+            content: ""; position: fixed; inset: -160px; z-index: -1; pointer-events: none;
+            opacity: 0.55;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.02' numOctaves='2' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23w)'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 9px);
+            animation: seaDrift 44s ease-in-out infinite alternate;
         }
-        @keyframes waveFlow {
-            from { transform: translate3d(-2.5%, -2%, 0); }
-            to { transform: translate3d(2.5%, 2.5%, 0); }
+        @keyframes seaSway {
+            from { transform: translate3d(-2%, -1%, 0); }
+            to { transform: translate3d(2%, 2%, 0); }
         }
-        @keyframes gridDrift {
+        @keyframes seaDrift {
             from { transform: translate3d(0, 0, 0); }
-            to { transform: translate3d(-28px, 14px, 0); }
+            to { transform: translate3d(70px, 36px, 0); }
         }
         html.dark .splash-art::before {
             background:
-                radial-gradient(560px 340px at 22% 14%, rgba(56, 189, 248, 0.14), transparent 70%),
-                radial-gradient(620px 380px at 80% 26%, rgba(56, 189, 248, 0.08), transparent 70%);
-            mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
-            -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
+                radial-gradient(760px 480px at 18% 8%, rgba(8, 145, 178, 0.20), transparent 70%),
+                radial-gradient(680px 460px at 84% 30%, rgba(30, 64, 175, 0.25), transparent 70%),
+                radial-gradient(900px 620px at 55% 60%, rgba(2, 132, 199, 0.10), transparent 70%);
         }
         html.dark .splash-art::after {
-            background:
-                linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px);
-            background-size: 28px 28px;
-            mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
-            -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
-        }
-        /* Ondas da splash — movimento visível e contínuo */
-        .wave-layer {
-            position: absolute; left: 0; right: 0; bottom: -12px; height: 130px;
-            z-index: -1; overflow: hidden; pointer-events: none;
-            mask-image: linear-gradient(to top, black 60%, transparent);
-            -webkit-mask-image: linear-gradient(to top, black 60%, transparent);
-        }
-        .wave-track {
-            position: absolute; inset: 0; display: flex; width: 200%;
-            animation: waveSlide 14s linear infinite;
-        }
-        .wave-track.lenta { animation-duration: 24s; }
-        .wave-track svg { width: 50%; height: 100%; flex-shrink: 0; }
-        @keyframes waveSlide {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
+            opacity: 0.35;
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.02' numOctaves='2' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23w)'/%3E%3C/svg%3E"),
+                repeating-linear-gradient(115deg, rgba(148, 163, 184, 0.06) 0 2px, transparent 2px 9px);
         }
         .env-card { transition: transform 0.18s ease-out, border-color 0.15s, box-shadow 0.18s ease-out; }
         .env-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14, 50, 99, 0.10); }

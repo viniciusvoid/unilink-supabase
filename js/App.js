@@ -365,16 +365,6 @@ function App() {
                             </span>
                             {opsAbertos.length} abertos, {opsEmAtend.length} em atendimento
                         </div>
-                        <div className="wave-layer" aria-hidden="true">
-                            <div className="wave-track">
-                                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="text-[#0E3263]/10 dark:text-sky-400/10"><path d="M0,64 C180,88 360,40 540,58 C720,76 900,44 1080,60 C1260,76 1350,52 1440,64 L1440,120 L0,120 Z" fill="currentColor" /></svg>
-                                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="text-[#0E3263]/10 dark:text-sky-400/10"><path d="M0,64 C180,88 360,40 540,58 C720,76 900,44 1080,60 C1260,76 1350,52 1440,64 L1440,120 L0,120 Z" fill="currentColor" /></svg>
-                            </div>
-                            <div className="wave-track lenta">
-                                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="text-[#0E3263]/[.05] dark:text-sky-400/[.06]"><path d="M0,70 C200,48 380,86 560,66 C740,46 920,80 1100,64 C1280,48 1360,70 1440,70 L1440,120 L0,120 Z" fill="currentColor" /></svg>
-                                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="text-[#0E3263]/[.05] dark:text-sky-400/[.06]"><path d="M0,70 C200,48 380,86 560,66 C740,46 920,80 1100,64 C1280,48 1360,70 1440,70 L1440,120 L0,120 Z" fill="currentColor" /></svg>
-                            </div>
-                        </div>
                     </div>
                     </div>
                 )}
