@@ -323,7 +323,7 @@ function App() {
                 </header>
             )}
 
-            <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-8 sm:px-5 sm:pt-10 ${showDock ? 'pb-28' : 'pb-6'}`}>
+            <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-10 sm:px-5 sm:pt-12 ${showDock ? 'pb-28' : 'pb-6'}`}>
                 {telaAtual === 'splash' && (
                     <div className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col py-6">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
@@ -390,7 +390,7 @@ function App() {
                     <TelaAcompanhamento protocoloInicial={protocoloBusca} />
                 )}
                 {telaAtual === 'manutencao' && autenticado && (
-                    <div className="mx-auto w-full max-w-[960px] py-6">
+                    <div className="mx-auto my-auto w-full max-w-[960px] py-6">
                         <PageHeader
                             title="Manutenção"
                             meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
