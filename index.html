@@ -134,7 +134,23 @@
             mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
             -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
         }
-        /* Cartão de ambiente */
+        /* Ondas da splash — movimento visível e contínuo */
+        .wave-layer {
+            position: absolute; left: 0; right: 0; bottom: -12px; height: 130px;
+            z-index: -1; overflow: hidden; pointer-events: none;
+            mask-image: linear-gradient(to top, black 60%, transparent);
+            -webkit-mask-image: linear-gradient(to top, black 60%, transparent);
+        }
+        .wave-track {
+            position: absolute; inset: 0; display: flex; width: 200%;
+            animation: waveSlide 14s linear infinite;
+        }
+        .wave-track.lenta { animation-duration: 24s; }
+        .wave-track svg { width: 50%; height: 100%; flex-shrink: 0; }
+        @keyframes waveSlide {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
         .env-card { transition: transform 0.18s ease-out, border-color 0.15s, box-shadow 0.18s ease-out; }
         .env-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(14, 50, 99, 0.10); }
         html.dark .env-card:hover { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
