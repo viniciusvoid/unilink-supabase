@@ -95,11 +95,11 @@
         .splash-art::before {
             content: ""; position: fixed; inset: -12%; z-index: -1; pointer-events: none;
             background:
-                radial-gradient(560px 340px at 22% 14%, rgba(14, 50, 99, 0.11), transparent 70%),
-                radial-gradient(620px 380px at 80% 26%, rgba(14, 50, 99, 0.07), transparent 70%);
+                radial-gradient(560px 340px at 22% 14%, rgba(14, 50, 99, 0.13), transparent 70%),
+                radial-gradient(620px 380px at 80% 26%, rgba(14, 50, 99, 0.08), transparent 70%);
             mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
             -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
-            animation: waveFlow 24s ease-in-out infinite alternate;
+            animation: waveFlow 18s ease-in-out infinite alternate;
         }
         .splash-art::after {
             content: ""; position: fixed; inset: -140px; z-index: -1; pointer-events: none;
@@ -109,11 +109,11 @@
             background-size: 28px 28px;
             mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
             -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 98%);
-            animation: gridDrift 34s ease-in-out infinite alternate;
+            animation: gridDrift 16s ease-in-out infinite alternate;
         }
         @keyframes waveFlow {
-            from { transform: translate3d(-1.5%, -1%, 0); }
-            to { transform: translate3d(1.5%, 1.5%, 0); }
+            from { transform: translate3d(-2.5%, -2%, 0); }
+            to { transform: translate3d(2.5%, 2.5%, 0); }
         }
         @keyframes gridDrift {
             from { transform: translate3d(0, 0, 0); }
@@ -121,8 +121,8 @@
         }
         html.dark .splash-art::before {
             background:
-                radial-gradient(560px 340px at 22% 14%, rgba(56, 189, 248, 0.12), transparent 70%),
-                radial-gradient(620px 380px at 80% 26%, rgba(56, 189, 248, 0.07), transparent 70%);
+                radial-gradient(560px 340px at 22% 14%, rgba(56, 189, 248, 0.14), transparent 70%),
+                radial-gradient(620px 380px at 80% 26%, rgba(56, 189, 248, 0.08), transparent 70%);
             mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
             -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 98%);
         }
