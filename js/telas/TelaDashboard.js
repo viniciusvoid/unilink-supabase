@@ -118,18 +118,21 @@ function TelaDashboard({ chamados }) {
     const dataCabecalho = atualizadoEm.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/\./g, '').toUpperCase();
     const horaCabecalho = atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const Ind = ({ rotulo, valor, icon, extra }) => (
+    const Ind = ({ rotulo, valor, icon, extra }) => {
+        const n = useCountUp(valor);
+        return (
         <div className="min-w-0 flex-1 px-3 py-3.5 sm:px-4">
             <div className="flex items-center gap-2">
                 <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 min-[400px]:flex dark:bg-slate-800 dark:text-slate-400">{icon}</span>
                 <span className="min-w-0">
                     <span className="block truncate text-[13px] text-slate-500 dark:text-slate-400">{rotulo}</span>
-                    <span className="mt-0.5 block text-2xl font-semibold tabular-nums leading-none tracking-tight text-slate-900 dark:text-slate-100">{valor}</span>
+                    <span className="mt-0.5 block text-2xl font-semibold tabular-nums leading-none tracking-tight text-slate-900 dark:text-slate-100">{n}</span>
                 </span>
             </div>
             {extra && <div className="mt-1.5">{extra}</div>}
         </div>
-    );
+        );
+    };
 
     return (
         <div className="w-full">

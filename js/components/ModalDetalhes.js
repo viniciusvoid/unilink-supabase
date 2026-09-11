@@ -64,7 +64,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                     aoFechar={() => setImgAmpliada(null)}
                 />
             )}
-            <div className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-pop flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="border-b u-divider px-5 pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhes do chamado</h3>

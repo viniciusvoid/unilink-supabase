@@ -46,7 +46,7 @@ function ModalLogin({ aoAutenticar, fechar }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 fade-in" onClick={fechar}>
-            <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-pop w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{modo === 'recuperar' ? 'Recuperar senha' : 'Acesso'}</h3>
                     <button type="button" onClick={fechar} aria-label="Fechar" className="icon-btn">

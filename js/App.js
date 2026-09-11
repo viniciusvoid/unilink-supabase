@@ -314,13 +314,14 @@ function App() {
 
             <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pb-28 pt-5 sm:px-5">
                 {telaAtual === 'splash' && (
-                    <div className="mx-auto my-auto w-full max-w-[640px] py-6">
+                    <div className="splash-art mx-auto my-auto w-full max-w-[640px] py-6">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
-                        <div className="mb-8 flex justify-center">
+                        <div className="anim-rise d1 mb-8 flex justify-center">
                             <Logo variant="full" />
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
-                            <button onClick={() => setTelaAtual('solicitante')} className="u-surface p-5 text-left transition hover:border-slate-300 sm:p-6 dark:hover:border-slate-600">
+                            <div className="anim-rise d2">
+                            <button onClick={() => setTelaAtual('solicitante')} className="env-card u-surface h-full w-full p-5 text-left sm:p-6">
                                 <span className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                                 </span>
@@ -329,7 +330,9 @@ function App() {
                                     <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                 </span>
                             </button>
-                            <button onClick={irManutencao} className="u-surface border-[#0E3263]/30 p-5 text-left transition hover:border-[#0E3263]/60 sm:p-6 dark:border-sky-400/20 dark:hover:border-sky-400/40">
+                            </div>
+                            <div className="anim-rise d3">
+                            <button onClick={irManutencao} className="env-card u-surface h-full w-full border-[#0E3263]/30 p-5 text-left sm:p-6 dark:border-sky-400/20 dark:hover:border-sky-400/40">
                                 <span className="flex h-11 w-11 items-center justify-center rounded-md bg-[#0E3263] text-white dark:bg-sky-400/15 dark:text-sky-300">
                                     <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>
                                 </span>
@@ -341,6 +344,14 @@ function App() {
                                     <svg className="h-4 w-4 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
                                 </span>
                             </button>
+                            </div>
+                        </div>
+                        <div className="anim-rise d4 mt-5 flex items-center justify-center gap-1.5 text-xs tabular-nums text-slate-500 dark:text-slate-400">
+                            <span className="relative flex w-1.5 h-1.5">
+                                <span className="pulse-ring absolute inline-flex h-full w-full rounded-full bg-[#1B7A4D]"></span>
+                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#1B7A4D]"></span>
+                            </span>
+                            {opsAbertos.length} abertos, {opsEmAtend.length} em atendimento
                         </div>
                     </div>
                 )}

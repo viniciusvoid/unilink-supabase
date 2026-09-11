@@ -61,14 +61,36 @@ function ProtocoloTag({ codigo, copiar = true }) {
     );
 }
 
-// ---------- Indicador de atualização (estático, discreto) ----------
+// ---------- Indicador de atualização (pulso discreto) ----------
 function LiveDot({ label = 'Atualizado agora' }) {
     return (
         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A4D]"></span>
+            <span className="relative flex w-1.5 h-1.5">
+                <span className="pulse-ring absolute inline-flex h-full w-full rounded-full bg-[#1B7A4D]"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#1B7A4D]"></span>
+            </span>
             {label}
         </span>
     );
+}
+
+// ---------- Contador animado (números do dashboard) ----------
+function useCountUp(valor, duracao = 650) {
+    const reduz = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const [exibido, setExibido] = React.useState(typeof valor === 'number' && !reduz ? 0 : valor);
+    React.useEffect(() => {
+        if (reduz || typeof valor !== 'number') { setExibido(valor); return; }
+        let raf;
+        const inicio = performance.now();
+        const passo = (t) => {
+            const p = Math.min(1, (t - inicio) / duracao);
+            setExibido(Math.round((1 - Math.pow(1 - p, 3)) * valor));
+            if (p < 1) raf = requestAnimationFrame(passo);
+        };
+        raf = requestAnimationFrame(passo);
+        return () => cancelAnimationFrame(raf);
+    }, [valor]);
+    return exibido;
 }
 
 // ---------- Cabeçalho de página ----------

@@ -168,7 +168,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
 
             {chamadoEmEncerramento && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 fade-in" onClick={() => setChamadoEmEncerramento(null)}>
-                    <div className="flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-pop flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between border-b u-divider px-5 py-3">
                             <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Concluir chamado</h3>
                             <button onClick={() => setChamadoEmEncerramento(null)} aria-label="Fechar" className="icon-btn">✕</button>
