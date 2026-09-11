@@ -378,7 +378,15 @@ function App() {
 
                 {telaAtual === 'solicitante' && (
                     <div className="mx-auto my-auto w-full max-w-[720px] py-6">
-                        <PageHeader title="Solicitante" />
+                        <PageHeader
+                            title="Solicitante"
+                            actions={
+                                <button onClick={() => setTelaAtual('manutencao')} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs" title="Trocar de ambiente">
+                                    <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                    Manutenção
+                                </button>
+                            }
+                        />
                         <div className="grid gap-3 sm:grid-cols-2">
                             <EnvRow destaque label="Novo chamado" onClick={() => setTelaAtual('corretiva')} icon={ICONS.plus} />
                             <EnvRow label="Acompanhar chamado" badge={recentesSol.length > 0 ? <span className="font-mono text-[11px] text-slate-400">#{String(recentesSol[0]).replace(/^#/, '')}</span> : null} onClick={() => abrirAcompanhamento()} icon={ICONS.search} />
@@ -394,7 +402,15 @@ function App() {
                         <PageHeader
                             title="Manutenção"
                             meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
-                            actions={<button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>}
+                            actions={
+                                <span className="flex items-center gap-2">
+                                    <button onClick={() => setTelaAtual('solicitante')} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs" title="Trocar de ambiente">
+                                        <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" /></svg>
+                                        Solicitante
+                                    </button>
+                                    <button onClick={handleSair} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs">Sair</button>
+                                </span>
+                            }
                         />
                         <div className="grid items-start gap-4 lg:grid-cols-2">
                         <div className="u-surface mb-4 grid grid-cols-4 divide-x u-divider lg:col-start-1 lg:mb-0">
@@ -447,6 +463,7 @@ function App() {
                             <p className="text-sm text-slate-500 dark:text-slate-400">Acesso restrito.</p>
                             <button onClick={solicitarLoginUnico} className="btn-primary shrink-0">Entrar</button>
                         </div>
+                        <button onClick={() => setTelaAtual('solicitante')} className="mt-3 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">Entrar como solicitante</button>
                     </div>
                 )}
                 {telaAtual === 'pendencia' && (
