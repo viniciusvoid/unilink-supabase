@@ -241,19 +241,6 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const splashRef = React.useRef(null);
-    const moverFundo = (e) => {
-        const el = splashRef.current;
-        if (!el) return;
-        try {
-            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            const r = el.getBoundingClientRect();
-            const x = ((e.clientX - r.left) / Math.max(r.width, 1)) * 100;
-            const y = ((e.clientY - r.top) / Math.max(r.height, 1)) * 100;
-            el.style.setProperty('--mx', x.toFixed(1) + '%');
-            el.style.setProperty('--my', Math.min(Math.max(y, 0), 60).toFixed(1) + '%');
-        } catch {}
-    };
     const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard'];
     const showDock = telasConteudo.includes(telaAtual) && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
@@ -338,7 +325,7 @@ function App() {
 
             <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-8 sm:px-5 sm:pt-10 ${showDock ? 'pb-28' : 'pb-6'}`}>
                 {telaAtual === 'splash' && (
-                    <div ref={splashRef} onMouseMove={moverFundo} className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col py-6">
+                    <div className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col py-6">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
                         <div className="m-auto w-full">
                         <div className="anim-rise d1 mb-8 flex justify-center">
