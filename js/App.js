@@ -327,10 +327,11 @@ function App() {
                 </header>
             )}
 
-            <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-6 sm:px-5 sm:pt-8 ${showDock ? 'pb-28' : 'pb-6'}`}>
+            <main className={`mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-4 pt-8 sm:px-5 sm:pt-10 ${showDock ? 'pb-28' : 'pb-6'}`}>
                 {telaAtual === 'splash' && (
-                    <div ref={splashRef} onMouseMove={moverFundo} className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col justify-center py-6">
+                    <div ref={splashRef} onMouseMove={moverFundo} className="splash-art mx-auto flex w-full max-w-[640px] flex-1 flex-col py-6">
                         <div className="absolute right-3 top-3"><ToggleDark /></div>
+                        <div className="m-auto w-full">
                         <div className="anim-rise d1 mb-8 flex justify-center">
                             <Logo variant="full" />
                         </div>
@@ -367,6 +368,7 @@ function App() {
                                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#1B7A4D]"></span>
                             </span>
                             {opsAbertos.length} abertos, {opsEmAtend.length} em atendimento
+                        </div>
                         </div>
                     </div>
                 )}
