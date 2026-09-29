@@ -55,7 +55,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
+        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
             {imgAmpliada !== null && evidencias.length > 0 && (
                 <GaleriaAmpliada
                     fotos={evidencias}
@@ -64,7 +64,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                     aoFechar={() => setImgAmpliada(null)}
                 />
             )}
-            <div className="modal-pop flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-pop modal-panel m-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="border-b u-divider px-5 pb-3 pt-4">
                     <div className="flex items-center justify-between gap-3">
                         <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhes do chamado</h3>
@@ -89,7 +89,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
                     {aba === 'geral' && (
                         <div className="grid gap-x-8 md:grid-cols-[1fr_230px]">
                             <div className="min-w-0">

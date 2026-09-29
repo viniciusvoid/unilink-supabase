@@ -62,13 +62,13 @@ function ModalConcluir({ chamado, aoFechar }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-4 backdrop-in" onClick={() => aoFechar && aoFechar()}>
-            <div className="modal-pop flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/50 p-3 sm:p-4 backdrop-in" onClick={() => aoFechar && aoFechar()}>
+            <div className="modal-pop modal-panel m-auto flex w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b u-divider px-5 py-3">
                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Concluir chamado</h3>
                     <button onClick={() => aoFechar && aoFechar()} aria-label="Fechar" className="icon-btn">✕</button>
                 </div>
-                <form onSubmit={handleConfirmarFinalizacao} className="space-y-4 overflow-y-auto px-5 py-4">
+                <form onSubmit={handleConfirmarFinalizacao} className="min-h-0 space-y-4 overflow-y-auto px-5 py-4">
                     <div>
                         <p className="u-label">Itens</p>
                         <div className="space-y-1.5">
