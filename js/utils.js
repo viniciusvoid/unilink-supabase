@@ -4,6 +4,40 @@
 
 const priorityWeights = { 'Urgente': 1, 'Alta': 2, 'Média': 3, 'Baixa': 4 };
 
+// ==========================================================
+// ASSUNTO — resumo curto da descrição para as listas
+// ----------------------------------------------------------
+// Não existe coluna `assunto` no banco; a descrição carrega o
+// texto livre (ex.: "[DEMO] Porta travada — registro fictício
+// para apresentação."). Nas listas (Chamados/Histórico) a
+// descrição completa polui a linha, então derivamos um assunto:
+// remove o marcador [DEMO], corta no primeiro separador
+// (" — ", " – ", " - ", ":", ";") e limita a ~60 caracteres.
+// A descrição completa continua na busca, no tooltip (title)
+// e no ModalDetalhes.
+// ==========================================================
+const extrairAssunto = (descricao) => {
+    if (!descricao) return '-';
+    let t = String(descricao).replace(/\s+/g, ' ').trim();
+    t = t.replace(/^\[DEMO\]\s*/i, '').trim();
+    if (!t) return '-';
+    let corte = t.length;
+    for (const sep of [' — ', ' – ', ' - ', ': ', '; ']) {
+        const i = t.indexOf(sep);
+        if (i >= 3) corte = Math.min(corte, i);
+    }
+    if (corte === t.length) {
+        for (const ch of ['—', '–', ':']) {
+            const i = t.indexOf(ch);
+            if (i >= 3) { corte = Math.min(corte, i); break; }
+        }
+    }
+    let assunto = (corte < t.length ? t.slice(0, corte) : t).trim();
+    const LIMITE = 60;
+    if (assunto.length > LIMITE) assunto = assunto.slice(0, LIMITE).trim() + '…';
+    return assunto || '-';
+};
+
 const formatarApenasData = (dataStr) => {
     if (!dataStr) return '-';
     return dataStr.split(/[, ]+/)[0];

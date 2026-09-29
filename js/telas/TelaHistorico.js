@@ -54,7 +54,7 @@ function TelaHistorico({ chamados }) {
             />
 
             <div className="u-surface mb-2 flex gap-2 p-2">
-                <input type="text" placeholder="Buscar protocolo, equipamento ou descrição..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
+                <input type="text" placeholder="Buscar protocolo, equipamento ou assunto..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
                 <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="tablist" aria-label="Visualização">
                     {[['lista', 'Lista'], ['timeline', 'Timeline']].map(([v, l]) => (
                         <button key={v} type="button" role="tab" aria-selected={visao === v} onClick={() => setVisao(v)} className={`rounded px-2.5 text-xs transition ${visao === v ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
@@ -118,36 +118,40 @@ function TelaHistorico({ chamados }) {
             ) : (
                 <React.Fragment>
                     <ul className="u-surface divide-y u-divider px-4 md:hidden">
-                        {listaExibicaoPaginada.map(c => (
+                        {listaExibicaoPaginada.map(c => {
+                            const assunto = extrairAssunto(c.descricao);
+                            return (
                             <li key={c.idFirebase}>
                                 <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">
                                     <div className="flex items-center justify-between gap-2">
                                         <ProtocoloTag codigo={c.protocolo} />
                                         <span className="text-xs tabular-nums text-slate-500">{formatarApenasData(c.dataEncerramento)}</span>
                                     </div>
-                                    <p className="mt-0.5 truncate text-sm font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
-                                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
-                                        <span className="flex items-center gap-2">
-                                            <PriorityBadge prioridade={c.prioridade} />
-                                            <StatusBadge status={c.status} concluido={c.concluido} />
-                                        </span>
-                                        <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost !min-h-[32px] !px-2.5 !py-1 !text-xs">OS</button>
+                                    <div className="mt-0.5 flex items-start justify-between gap-2">
+                                        <p className="min-w-0 flex-1 break-words text-sm font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
+                                        <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost shrink-0 !min-h-[32px] !px-2.5 !py-1 !text-xs">OS</button>
+                                    </div>
+                                    <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={c.descricao}>{assunto}</p>
+                                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                        <PriorityBadge prioridade={c.prioridade} />
+                                        <StatusBadge status={c.status} concluido={c.concluido} />
                                     </div>
                                 </div>
                             </li>
-                        ))}
+                            );
+                        })}
                     </ul>
 
                     <div className="u-surface hidden overflow-x-auto md:block">
                         <table className="u-table">
-                            <thead><tr><th>Protocolo</th><th>Descrição</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Abertura</th><th>Encerramento</th><th>Status</th><th className="!text-right">OS</th></tr></thead>
+                            <thead><tr><th>Protocolo</th><th>Equipamento / Assunto</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Abertura</th><th>Encerramento</th><th>Status</th><th className="!text-right">OS</th></tr></thead>
                             <tbody>
                                 {listaExibicaoPaginada.map(c => (
                                     <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
                                         <td><ProtocoloTag codigo={c.protocolo} /></td>
                                         <td className="min-w-[200px] max-w-[320px]">
                                             <p className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
-                                            <p className="truncate text-xs text-slate-500">{c.descricao}</p>
+                                            <p className="truncate text-xs text-slate-500" title={c.descricao}>{extrairAssunto(c.descricao)}</p>
                                         </td>
                                         <td className="whitespace-nowrap text-[13px] text-slate-600 dark:text-slate-400">{c.unidade || 'MATRIZ'}</td>
                                         <td><ServiceBadge servico={c.servico} /></td>
