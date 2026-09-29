@@ -78,8 +78,8 @@
             to { opacity: 1; transform: none; }
         }
         /* Abertura de modal/detalhes */
-        .backdrop-in { animation: fadeIn 0.18s ease-out both; }
-        .modal-pop { animation: pop 0.26s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .backdrop-in { animation: fadeIn 0.3s ease-out both; }
+        .modal-pop { animation: pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @keyframes pop {
             from { opacity: 0; transform: translateY(16px) scale(0.97); }
             to { opacity: 1; transform: none; }
@@ -91,13 +91,13 @@
             }
         }
         /* Transição entre telas (navegação) */
-        .screen-enter { animation: screenIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .screen-enter { animation: screenIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @keyframes screenIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: none; }
         }
         /* Entrada das linhas nas listas */
-        .row-enter { animation: rowIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .row-enter { animation: rowIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @keyframes rowIn {
             from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: none; }
