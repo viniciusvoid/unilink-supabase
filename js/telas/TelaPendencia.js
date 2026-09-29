@@ -178,7 +178,7 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                 <div className="u-surface"><EmptyState numero="0" title="Nenhum chamado encontrado." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
             ) : (
                 <React.Fragment>
-                    <ul className="u-surface divide-y u-divider px-4 md:hidden">
+                    <ul className="u-surface divide-y u-divider px-4">
                         {listaExibicaoPaginada.map((c, idx) => {
                             const assunto = extrairAssunto(c.descricao);
                             const protoCurto = String(c.protocolo || '').replace(/^#/, '').slice(-6);
@@ -187,8 +187,9 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                             <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}>
                                 <div onClick={() => setDetalhes(c)} className="flex cursor-pointer items-center gap-2 py-2" title={`${c.protocolo || ''} — ${c.descricao || ''}`}>
                                     <span className={`h-6 w-1 shrink-0 rounded-full ${corPrio}`} title={c.prioridade} />
+                                    <span className="hidden shrink-0 sm:inline-flex"><ProtocoloTag codigo={c.protocolo} copiar={false} /></span>
                                     <p className="min-w-0 flex-1 truncate text-[13px] leading-5">
-                                        {protoCurto !== '' && <span className="font-mono text-[11px] text-slate-400">{protoCurto} · </span>}
+                                        {protoCurto !== '' && <span className="font-mono text-[11px] text-slate-400 sm:hidden">{protoCurto} · </span>}
                                         <span className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</span>
                                         <span className="text-slate-500 dark:text-slate-400"> · {assunto}</span>
                                     </p>
@@ -199,37 +200,6 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                         })}
                     </ul>
 
-                    <div className="u-surface hidden overflow-x-auto md:block">
-                        <table className="u-table u-table-pin">
-                            <thead><tr><th>Protocolo</th><th>Equipamento / Assunto</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Responsável</th><th>Abertura</th><th>Tempo</th><th>Status</th><th className="!text-right">Ações</th></tr></thead>
-                            <tbody>
-                                {listaExibicaoPaginada.map(c => (
-                                    <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
-                                        <td><ProtocoloTag codigo={c.protocolo} /></td>
-                                        <td className="min-w-[200px] max-w-[320px]">
-                                            <p className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
-                                            <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={c.descricao}>{extrairAssunto(c.descricao)}</p>
-                                        </td>
-                                        <td className="whitespace-nowrap text-[13px] text-slate-600 dark:text-slate-400">{c.unidade || 'MATRIZ'}</td>
-                                        <td><ServiceBadge servico={c.servico} /></td>
-                                        <td><PriorityBadge prioridade={c.prioridade} /></td>
-                                        <td className="max-w-[140px] truncate text-[13px] text-slate-600 dark:text-slate-400">{c.atribuidoParaNome || '—'}</td>
-                                        <td><DateBadge dataStr={c.dataAbertura} /></td>
-                                        <td><TempoAberto dataAbertura={c.dataAbertura} /></td>
-                                        <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
-                                        <td className="!text-right" onClick={(e) => e.stopPropagation()}>
-                                            <span className="inline-flex items-center gap-1.5">
-                                                {acao(c)}
-                                                <button onClick={(e) => { e.stopPropagation(); imprimirOrdemServico(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                                </button>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
                 </React.Fragment>
             )}
 
