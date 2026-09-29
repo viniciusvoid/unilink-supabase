@@ -181,24 +181,18 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                     <ul className="u-surface divide-y u-divider px-4 md:hidden">
                         {listaExibicaoPaginada.map((c, idx) => {
                             const assunto = extrairAssunto(c.descricao);
+                            const protoCurto = String(c.protocolo || '').replace(/^#/, '').slice(-6);
+                            const corPrio = c.prioridade === 'Urgente' ? 'bg-[#B3261E]' : c.prioridade === 'Alta' ? 'bg-[#B9770E]' : 'bg-slate-300 dark:bg-slate-600';
                             return (
-                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 70, 450)}ms` }}>
-                                <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <ProtocoloTag codigo={c.protocolo} />
-                                        <StatusBadge status={c.status} concluido={c.concluido} />
-                                    </div>
-                                    <div className="mt-0.5 flex items-start justify-between gap-2">
-                                        <p className="min-w-0 flex-1 break-words text-sm font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
-                                        <span onClick={(e) => e.stopPropagation()} className="shrink-0">{acao(c)}</span>
-                                    </div>
-                                    <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={c.descricao}>{assunto}</p>
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                                        <PriorityBadge prioridade={c.prioridade} />
-                                        <ServiceBadge servico={c.servico} />
-                                        <TempoAberto dataAbertura={c.dataAbertura} />
-                                    </div>
-                                    {c.atribuidoParaNome && <p className="mt-1 text-[11px] text-slate-400">{c.atribuidoParaNome}</p>}
+                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}>
+                                <div onClick={() => setDetalhes(c)} className="flex cursor-pointer items-center gap-2 py-2" title={`${c.protocolo || ''} — ${c.descricao || ''}`}>
+                                    <span className={`h-6 w-1 shrink-0 rounded-full ${corPrio}`} title={c.prioridade} />
+                                    <p className="min-w-0 flex-1 truncate text-[13px] leading-5">
+                                        {protoCurto !== '' && <span className="font-mono text-[11px] text-slate-400">{protoCurto} · </span>}
+                                        <span className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</span>
+                                        <span className="text-slate-500 dark:text-slate-400"> · {assunto}</span>
+                                    </p>
+                                    <span onClick={(e) => e.stopPropagation()} className="shrink-0">{acao(c)}</span>
                                 </div>
                             </li>
                             );

@@ -51,6 +51,8 @@
             text-rendering: optimizeLegibility;
         }
         html.dark, html.dark body { background-color: #0B1220; }
+        /* Altura do app = viewport visível (100vh puro cria rolagem fantasma no mobile) */
+        #root > div.min-h-screen { min-height: 100vh; min-height: 100dvh; }
 
         svg {
             shape-rendering: geometricPrecision;
@@ -79,29 +81,29 @@
         }
         /* Abertura de modal/detalhes */
         .backdrop-in { animation: fadeIn 0.3s ease-out both; }
-        .modal-pop { animation: pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .modal-pop { animation: pop 0.35s ease-out both; }
         @keyframes pop {
-            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
             to { opacity: 1; transform: none; }
         }
         @media (max-width: 640px) {
             @keyframes pop {
-                from { opacity: 0; transform: translateY(28px) scale(0.98); }
+                from { opacity: 0; transform: translateY(20px) scale(0.98); }
                 to { opacity: 1; transform: none; }
             }
         }
         /* Painel de modal: altura limitada com fallback (dvh nem sempre existe no mobile) */
         .modal-panel { max-height: 92vh; max-height: 92dvh; }
         /* Transição entre telas (navegação) */
-        .screen-enter { animation: screenIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .screen-enter { animation: screenIn 0.35s ease-out both; }
         @keyframes screenIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: none; }
         }
         /* Entrada das linhas nas listas */
-        .row-enter { animation: rowIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .row-enter { animation: rowIn 0.35s ease-out both; }
         @keyframes rowIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: none; }
         }
         /* Pulso do indicador online */

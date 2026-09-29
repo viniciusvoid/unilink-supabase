@@ -157,7 +157,7 @@ function TelaHistorico({ chamados, assumir }) {
                         {listaExibicaoPaginada.map((c, idx) => {
                             const assunto = extrairAssunto(c.descricao);
                             return (
-                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 70, 450)}ms` }}>
+                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}>
                                 <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">
                                     <div className="flex items-center justify-between gap-2">
                                         <ProtocoloTag codigo={c.protocolo} />
