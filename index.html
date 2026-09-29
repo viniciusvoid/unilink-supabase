@@ -77,10 +77,29 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: none; }
         }
-        /* Abertura de modal */
-        .modal-pop { animation: pop 0.18s ease-out both; }
+        /* Abertura de modal/detalhes */
+        .backdrop-in { animation: fadeIn 0.18s ease-out both; }
+        .modal-pop { animation: pop 0.26s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @keyframes pop {
-            from { opacity: 0; transform: scale(0.97) translateY(6px); }
+            from { opacity: 0; transform: translateY(16px) scale(0.97); }
+            to { opacity: 1; transform: none; }
+        }
+        @media (max-width: 640px) {
+            @keyframes pop {
+                from { opacity: 0; transform: translateY(28px) scale(0.98); }
+                to { opacity: 1; transform: none; }
+            }
+        }
+        /* Transição entre telas (navegação) */
+        .screen-enter { animation: screenIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @keyframes screenIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: none; }
+        }
+        /* Entrada das linhas nas listas */
+        .row-enter { animation: rowIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @keyframes rowIn {
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: none; }
         }
         /* Pulso do indicador online */
@@ -286,6 +305,17 @@
         .u-table tbody tr:hover { background: #E8F0F8; }
         html.dark .u-table tbody tr:hover { background: #172033; }
 
+        /* Coluna de ações fixa à direita (tabelas com rolagem horizontal) */
+        .u-table-pin th:last-child, .u-table-pin td:last-child {
+            position: sticky; right: 0; z-index: 1;
+            background: #fff;
+            box-shadow: -1px 0 0 #D9DEE5;
+        }
+        html.dark .u-table-pin th:last-child, html.dark .u-table-pin td:last-child {
+            background: #111827;
+            box-shadow: -1px 0 0 #1F2937;
+        }
+
         /* Modal: bottom-sheet no mobile */
         @media (max-width: 640px) {
             .sheet-mobile {
@@ -336,6 +366,7 @@
     <script type="text/babel" charset="utf-8" src="js/components/PriorityBadge.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/ModalLogin.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/CameraCapture.js"></script>
+    <script type="text/babel" charset="utf-8" src="js/components/ModalConcluir.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/Toast.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/ModalDetalhes.js"></script>
     <script type="text/babel" charset="utf-8" src="js/components/PieChart.js"></script>

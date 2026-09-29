@@ -55,7 +55,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-6 fade-in" onClick={aoFechar}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
             {imgAmpliada !== null && evidencias.length > 0 && (
                 <GaleriaAmpliada
                     fotos={evidencias}

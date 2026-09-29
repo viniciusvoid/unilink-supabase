@@ -1,5 +1,5 @@
 // TELA: Histórico — pesquisa e consulta
-function TelaHistorico({ chamados }) {
+function TelaHistorico({ chamados, assumir }) {
     const [busca, setBusca] = React.useState('');
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
@@ -8,6 +8,8 @@ function TelaHistorico({ chamados }) {
     const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
 
     const [detalhes, setDetalhes] = React.useState(null);
+    const [chamadoEmEncerramento, setChamadoEmEncerramento] = React.useState(null);
+    const [assumindoId, setAssumindoId] = React.useState(null);
     const [visao, setVisao] = React.useState('lista'); // lista | timeline
     const itensPorPagina = 10;
     const encerrados = chamados.filter(c => c.concluido);
@@ -26,6 +28,40 @@ function TelaHistorico({ chamados }) {
     const totalPaginas = Math.ceil(listaExibicao.length / itensPorPagina);
     const listaExibicaoPaginada = listaExibicao.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
     const handleImprimirOS = (c) => imprimirOrdemServico(c);
+    const podeAssumir = (c) => ['ABERTO', 'EM_ANALISE', 'ATRIBUIDO', 'AGUARDANDO_USUARIO'].includes(c.status) && !c.emAtendimento;
+    const emAtendimento = (c) => c.status === 'EM_ATENDIMENTO' || c.emAtendimento;
+    const aguardando = (c) => c.status === 'AGUARDANDO_USUARIO';
+    const handleAssumir = async (chamado) => {
+        if (!chamado.idFirebase || chamado.idFirebase.length < 10) {
+            window.notifyError && window.notifyError('ID do chamado inválido. Recarregue a página.');
+            return;
+        }
+        setAssumindoId(chamado.idFirebase);
+        try {
+            if (typeof assumir === 'function') await assumir(chamado);
+            else await ChamadosService.assumirChamado(chamado);
+        } catch (e) {
+            window.notifyError && window.notifyError(e.message || 'Falha ao assumir');
+            if (window.UnilinkLogger) window.UnilinkLogger.error('Historico.handleAssumir', e);
+        }
+        finally { setAssumindoId(null); }
+    };
+    const handleIniciarEncerramento = (chamado) => {
+        if (!emAtendimento(chamado) && !aguardando(chamado)) {
+            window.notifyWarning && window.notifyWarning('Assuma o chamado antes de concluir.');
+            return;
+        }
+        setChamadoEmEncerramento(chamado);
+    };
+    const botaoAcao = (c) => {
+        if (podeAssumir(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleAssumir(c); }} disabled={assumindoId === c.idFirebase} className="btn-primary-outline !min-h-[32px] !px-3 !py-1.5 !text-xs disabled:opacity-60">{assumindoId === c.idFirebase ? 'Assumindo…' : 'Assumir'}</button>;
+        }
+        if (emAtendimento(c) || aguardando(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleIniciarEncerramento(c); }} className="btn-success !min-h-[32px] !px-3 !py-1.5 !text-xs">Concluir</button>;
+        }
+        return null;
+    };
     const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
     const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
     const atividade = React.useMemo(() => atividadeRecente(listaExibicao, 30), [listaExibicao]);
@@ -118,10 +154,10 @@ function TelaHistorico({ chamados }) {
             ) : (
                 <React.Fragment>
                     <ul className="u-surface divide-y u-divider px-4 md:hidden">
-                        {listaExibicaoPaginada.map(c => {
+                        {listaExibicaoPaginada.map((c, idx) => {
                             const assunto = extrairAssunto(c.descricao);
                             return (
-                            <li key={c.idFirebase}>
+                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 35, 280)}ms` }}>
                                 <div onClick={() => setDetalhes(c)} className="cursor-pointer py-2.5">
                                     <div className="flex items-center justify-between gap-2">
                                         <ProtocoloTag codigo={c.protocolo} />
@@ -129,7 +165,10 @@ function TelaHistorico({ chamados }) {
                                     </div>
                                     <div className="mt-0.5 flex items-start justify-between gap-2">
                                         <p className="min-w-0 flex-1 break-words text-sm font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</p>
-                                        <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost shrink-0 !min-h-[32px] !px-2.5 !py-1 !text-xs">OS</button>
+                                        <span onClick={(e) => e.stopPropagation()} className="flex shrink-0 items-center gap-1.5">
+                                            {botaoAcao(c)}
+                                            <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} className="btn-ghost !min-h-[32px] !px-2.5 !py-1 !text-xs">OS</button>
+                                        </span>
                                     </div>
                                     <p className="truncate text-xs text-slate-500 dark:text-slate-400" title={c.descricao}>{assunto}</p>
                                     <div className="mt-1.5 flex flex-wrap items-center gap-2">
@@ -143,8 +182,8 @@ function TelaHistorico({ chamados }) {
                     </ul>
 
                     <div className="u-surface hidden overflow-x-auto md:block">
-                        <table className="u-table">
-                            <thead><tr><th>Protocolo</th><th>Equipamento / Assunto</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Abertura</th><th>Encerramento</th><th>Status</th><th className="!text-right">OS</th></tr></thead>
+                        <table className="u-table u-table-pin">
+                            <thead><tr><th>Protocolo</th><th>Equipamento / Assunto</th><th>Unidade</th><th>Serviço</th><th>Prioridade</th><th>Abertura</th><th>Encerramento</th><th>Status</th><th className="!text-right">Ações</th></tr></thead>
                             <tbody>
                                 {listaExibicaoPaginada.map(c => (
                                     <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
@@ -160,9 +199,12 @@ function TelaHistorico({ chamados }) {
                                         <td className="whitespace-nowrap text-xs font-medium tabular-nums text-[#1B7A4D] dark:text-emerald-400">{formatarApenasData(c.dataEncerramento)}</td>
                                         <td><StatusBadge status={c.status} concluido={c.concluido} /></td>
                                         <td className="!text-right" onClick={(e) => e.stopPropagation()}>
-                                            <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                            </button>
+                                            <span className="inline-flex items-center gap-1.5">
+                                                {botaoAcao(c)}
+                                                <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                                </button>
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}
@@ -172,7 +214,10 @@ function TelaHistorico({ chamados }) {
                 </React.Fragment>
             )}
 
-            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={handleImprimirOS} />}
+            {chamadoEmEncerramento && (
+                <ModalConcluir chamado={chamadoEmEncerramento} aoFechar={() => setChamadoEmEncerramento(null)} />
+            )}
+            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={handleImprimirOS} aoAssumir={(c) => handleAssumir(c)} aoConcluir={(c) => { setDetalhes(null); handleIniciarEncerramento(c); }} />}
             {visao === 'lista' && <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />}
         </div>
     );
