@@ -516,7 +516,7 @@ function App() {
                                 <button
                                     key={item.k}
                                     onClick={() => irNav(item.k)}
-                                    className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[13px] transition ${ativo ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                    className={`dock-btn flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-[13px] [&>*]:relative [&>*]:z-[1] ${ativo ? 'dock-btn-ativo font-medium' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     {item.icon}
                                     {item.l}

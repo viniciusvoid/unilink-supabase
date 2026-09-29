@@ -285,6 +285,20 @@
         html.dark .btn-page { background: transparent; border-color: #1F2937; color: #CBD5E1; }
         html.dark .btn-page-ativo { background: #0E3263 !important; border-color: #0E3263 !important; color: #fff !important; }
 
+        /* Dock inferior: pill ativa em degradê com fade suave (opacity interpola; background não) */
+        .dock-btn { position: relative; transition: color .3s ease; }
+        .dock-btn::before {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background: linear-gradient(135deg, rgba(14,50,99,.16), rgba(14,50,99,.04));
+            opacity: 0; transition: opacity .35s ease;
+        }
+        .dock-btn-ativo { color: #0E3263; }
+        .dock-btn-ativo::before { opacity: 1; }
+        html.dark .dock-btn::before {
+            background: linear-gradient(135deg, rgba(56,189,248,.25), rgba(56,189,248,.06));
+        }
+        html.dark .dock-btn-ativo { color: #7DD3FC; }
+
         /* Botão de ícone inline (copiar, fechar, remover) — nunca estica */
         .icon-btn {
             display: inline-flex; align-items: center; justify-content: center;
