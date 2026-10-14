@@ -20,5 +20,5 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const API_BASE_URL = window.API_BASE_URL || (
   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3001'
-    : 'https://clever-expression-production-8bf5.up.railway.app'
+    : 'https://sunny-gratitude-production-0433.up.railway.app'
 );
