@@ -43,6 +43,14 @@ const formatarApenasData = (dataStr) => {
     return dataStr.split(/[, ]+/)[0];
 };
 
+// Nome de usuário a partir do e-mail sintético (joao@unilink.local → joao)
+const extrairUsuario = (email) => {
+    const e = String(email || '').trim();
+    if (!e) return 'usuário';
+    const local = e.split('@')[0].trim();
+    return local || e;
+};
+
 const calcularDiasDecorridos = (dataStr) => {
     if (!dataStr || dataStr === '-') return 0;
     const parteData = dataStr.split(/[, ]+/)[0];

@@ -1,5 +1,5 @@
-// TELA: Redefinir Senha
-function TelaRedefinirSenha({ voltar, aoSucesso }) {
+// TELA: Redefinir Senha — troca logada ("Alterar senha") e 1º acesso (semVoltar)
+function TelaRedefinirSenha({ voltar, aoSucesso, semVoltar }) {
     const [novaSenha, setNovaSenha] = React.useState('');
     const [confirmar, setConfirmar] = React.useState('');
     const [erro, setErro] = React.useState('');
@@ -38,7 +38,7 @@ function TelaRedefinirSenha({ voltar, aoSucesso }) {
                     <input type="password" required minLength="6" autoComplete="new-password" className="u-input" value={confirmar} onChange={e => setConfirmar(e.target.value)} />
                 </div>
                 <div className="flex gap-2 pt-1">
-                    <button type="button" onClick={voltar} className="btn-ghost flex-1 !justify-center">Voltar</button>
+                    {!semVoltar && voltar && <button type="button" onClick={voltar} className="btn-ghost flex-1 !justify-center">Voltar</button>}
                     <button type="submit" disabled={carregando} className="btn-primary flex-1 !justify-center disabled:opacity-60">
                         {carregando ? 'Salvando…' : 'Salvar'}
                     </button>

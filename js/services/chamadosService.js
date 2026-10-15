@@ -467,5 +467,9 @@ const ApiClient = {
 
     get(caminho) {
         return this._autenticado('GET', caminho, null);
+    },
+
+    del(caminho) {
+        return this._autenticado('DELETE', caminho, null);
     }
 };

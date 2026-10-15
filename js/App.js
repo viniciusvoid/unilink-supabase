@@ -94,10 +94,10 @@ function App() {
                         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout perfil')), 2500))
                     ]);
                     if (perfil) setMeuPerfil(perfil);
-                    else setMeuPerfil({ email: session?.user?.email || 'usuario', papel: 'atendente' });
+                    else setMeuPerfil({ usuario: extrairUsuario(session?.user?.email), email: session?.user?.email || 'usuario', papel: 'atendente', precisaTrocarSenha: false });
                 } catch (e) {
                     console.warn('obterMeuPerfil falhou, usando fallback', e?.message);
-                    setMeuPerfil({ email: session?.user?.email || 'usuario', papel: 'atendente' });
+                    setMeuPerfil({ usuario: extrairUsuario(session?.user?.email), email: session?.user?.email || 'usuario', papel: 'atendente', precisaTrocarSenha: false });
                 } finally {
                     isFetchingPerfilRef.current = false;
                 }
@@ -212,6 +212,9 @@ function App() {
             assumirChamado(c).catch(() => {});
         }
     }, [autenticado, carregandoAuth]);
+    React.useEffect(() => {
+        if (autenticado && !carregandoAuth && meuPerfil?.precisaTrocarSenha) setTelaAtual('primeiro-acesso');
+    }, [autenticado, carregandoAuth, meuPerfil]);
     const toggleAtendimento = async (chamado) => {
         try { await ChamadosService.toggleAtendimento(chamado); }
         catch (e) {
@@ -253,7 +256,7 @@ function App() {
         </button>
     );
 
-    const ambiente = ['pendencia', 'historico', 'dashboard', 'manutencao'].includes(telaAtual)
+    const ambiente = ['pendencia', 'historico', 'dashboard', 'manutencao', 'admin'].includes(telaAtual)
         ? 'Manutenção'
         : ['corretiva', 'acompanhamento', 'sucesso', 'solicitante'].includes(telaAtual)
             ? 'Solicitante'
@@ -272,6 +275,13 @@ function App() {
     };
 
     const irNav = (k) => {
+        if (meuPerfil?.precisaTrocarSenha) { setTelaAtual('primeiro-acesso'); return; }
+        if (k === 'admin') {
+            if (!autenticado) { setDestinoAposLogin('admin'); setExibirLogin(true); return; }
+            if (meuPerfil?.papel !== 'administrador') { window.notifyWarning && window.notifyWarning('Acesso restrito ao administrador.'); return; }
+            setTelaAtual('admin');
+            return;
+        }
         if (k === 'pendencia' || k === 'historico' || k === 'dashboard') {
             if (autenticado) { setTelaAtual(k); return; }
             setDestinoAposLogin(k);
@@ -282,7 +292,7 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard'];
+    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard', 'admin'];
     const showDock = telasConteudo.includes(telaAtual) && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
         .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
@@ -320,7 +330,8 @@ function App() {
         search: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>,
         wrench: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>,
         clock: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-        chart: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg>
+        chart: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18M7 12l3-3 3 3 4-4" /></svg>,
+        shield: <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z" /></svg>
     };
 
     return (
@@ -351,7 +362,7 @@ function App() {
                         <div className="ml-auto flex items-center gap-1">
                             {autenticado && meuPerfil && (
                                 <span className="mr-1 hidden items-center gap-2 md:flex">
-                                    <span className="max-w-[220px] truncate text-xs text-slate-500 dark:text-slate-400">{meuPerfil.email}</span>
+                                    <span className="max-w-[220px] truncate text-xs text-slate-500 dark:text-slate-400">{meuPerfil.usuario || extrairUsuario(meuPerfil.email)}</span>
                                     <button onClick={handleSair} className="text-xs text-slate-500 hover:text-slate-800 hover:underline dark:hover:text-slate-200">Sair</button>
                                 </span>
                             )}
@@ -442,7 +453,7 @@ function App() {
                     <div className="page-art mx-auto my-auto w-full max-w-[960px] py-6">
                         <PageHeader
                             title="Manutenção"
-                            meta={meuPerfil ? `${meuPerfil.email}, ${meuPerfil.papel}` : null}
+                            meta={meuPerfil ? `${meuPerfil.usuario || extrairUsuario(meuPerfil.email)}, ${meuPerfil.papel}` : null}
                             actions={
                                 <span className="flex items-center gap-2">
                                     <button onClick={() => setTelaAtual('solicitante')} className="btn-ghost !min-h-[32px] !px-3 !py-1.5 !text-xs" title="Trocar de ambiente">
@@ -492,6 +503,7 @@ function App() {
                             <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
                             <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
+                            {meuPerfil?.papel === 'administrador' && <EnvRow destaque label="Administração" onClick={() => setTelaAtual('admin')} icon={ICONS.shield} />}
                         </div>
                         <button onClick={() => setTelaAtual('redefinir')} className="justify-self-start text-xs text-slate-400 hover:text-slate-600 lg:col-start-1 dark:hover:text-slate-200">Alterar senha</button>
                         </div>
@@ -524,6 +536,25 @@ function App() {
                 )}
                 {telaAtual === 'dashboard' && (
                     typeof TelaDashboard !== 'undefined' ? <TelaDashboard chamados={chamados} /> : <TelaAusente nome="dashboard" />
+                )}
+                {telaAtual === 'admin' && (
+                    autenticado && meuPerfil?.papel === 'administrador'
+                        ? (typeof TelaAdmin !== 'undefined' ? <TelaAdmin /> : <TelaAusente nome="admin" />)
+                        : <div className="u-surface mx-auto w-full max-w-[480px] p-6 text-center"><p className="text-sm text-slate-500">Acesso restrito ao administrador.</p><button onClick={() => setTelaAtual('splash')} className="btn-primary mt-3">Início</button></div>
+                )}
+                {telaAtual === 'primeiro-acesso' && (
+                    typeof TelaRedefinirSenha !== 'undefined' ? (
+                    <TelaRedefinirSenha
+                        semVoltar
+                        aoSucesso={async () => {
+                            try { await ApiClient.patch('/meu-perfil/senha-trocada'); } catch {}
+                            setMeuPerfil((p) => p ? { ...p, precisaTrocarSenha: false } : p);
+                            window.history.replaceState(null, '', window.location.pathname);
+                            setTelaAtual(destinoAposLogin);
+                            window.notifySuccess && window.notifySuccess('Senha criada. Bem-vindo!');
+                        }}
+                    />
+                    ) : <TelaAusente nome="primeiro-acesso" />
                 )}
                 {telaAtual === 'sucesso' && (
                     typeof TelaSucesso !== 'undefined' ? (
