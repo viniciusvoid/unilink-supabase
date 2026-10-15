@@ -1,7 +1,5 @@
-﻿// ==========================================================
-// TELA: Nova Corretiva — formulário limpo, dark mode, contraste
-// ==========================================================
-function TelaCorretiva({ aoSalvar, voltar }) {
+﻿// TELA: Novo chamado — solicitação + contexto
+function TelaCorretiva({ aoSalvar }) {
     const [form, setForm] = React.useState({ unidade: 'MATRIZ', equipamento: '', servico: [], descricao: '', localizacao: '', prioridade: 'Média' });
     const [enviando, setEnviando] = React.useState(false);
     const [fotos, setFotos] = React.useState([]);
@@ -10,119 +8,115 @@ function TelaCorretiva({ aoSalvar, voltar }) {
     const TAMANHO_MAX_MB = 8;
     const handleSelecionarFotos = (files) => {
         const arquivos = Array.from(files || []); setErroFoto(''); const validos = [];
-        let houveErro = false;
         for (const arq of arquivos) {
             const ext = (arq.name.split('.').pop() || '').toLowerCase();
-            if (!EXTENSOES_ACEITAS.includes(ext)) { setErroFoto(`"${arq.name}" formato não permitido. Use JPG, PNG ou WEBP.`); window.notifyWarning && window.notifyWarning(`Arquivo "${arq.name}" ignorado: formato inválido`); houveErro = true; continue; }
-            if (arq.size > TAMANHO_MAX_MB * 1024 * 1024) { setErroFoto(`"${arq.name}" excede ${TAMANHO_MAX_MB}MB.`); window.notifyWarning && window.notifyWarning(`"${arq.name}" excede ${TAMANHO_MAX_MB}MB e foi ignorado`); houveErro = true; continue; }
+            if (!EXTENSOES_ACEITAS.includes(ext)) { setErroFoto(`"${arq.name}" formato não permitido. Use JPG, PNG ou WEBP.`); continue; }
+            if (arq.size > TAMANHO_MAX_MB * 1024 * 1024) { setErroFoto(`"${arq.name}" excede ${TAMANHO_MAX_MB}MB.`); continue; }
             validos.push(arq);
         }
-        if (validos.length > 0) window.notifySuccess && window.notifySuccess(`${validos.length} foto(s) adicionada(s)`);
-        else if (houveErro) window.notifyError && window.notifyError('Nenhuma foto válida adicionada');
-        if (fotos.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos atingido — excedentes ignorados');
+        if (fotos.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos.');
         setFotos(prev => [...prev, ...validos].slice(0, 5));
     };
     const handleCaptureFoto = (file) => handleSelecionarFotos([file]);
-    const removerFoto = (idx) => { setFotos(prev => prev.filter((_, i) => i !== idx)); window.notifyInfo && window.notifyInfo('Foto removida'); };
+    const removerFoto = (idx) => { setFotos(prev => prev.filter((_, i) => i !== idx)); };
     const toggleServico = (srv) => {
         setForm(prev => {
             const jaExiste = prev.servico.includes(srv);
-            const novo = jaExiste ? prev.servico.filter(s => s !== srv) : [...prev.servico, srv];
-            if (!jaExiste) window.notifyInfo && window.notifyInfo(`${srv} adicionado`);
-            return { ...prev, servico: novo };
+            return { ...prev, servico: jaExiste ? prev.servico.filter(s => s !== srv) : [...prev.servico, srv] };
         });
     };
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.equipamento) { window.notifyWarning && window.notifyWarning('Informe o equipamento'); return; }
-        if (form.servico.length === 0) { window.notifyWarning && window.notifyWarning('Selecione ao menos um serviço'); return; }
-        if (!form.descricao.trim()) { window.notifyWarning && window.notifyWarning('Descreva o problema'); return; }
-        if (!form.localizacao.trim()) { window.notifyWarning && window.notifyWarning('Informe a localização'); return; }
+        if (!form.equipamento) { window.notifyWarning && window.notifyWarning('Informe o equipamento.'); return; }
+        if (form.servico.length === 0) { window.notifyWarning && window.notifyWarning('Selecione ao menos um serviço.'); return; }
+        if (!form.descricao.trim()) { window.notifyWarning && window.notifyWarning('Descreva o problema.'); return; }
+        if (!form.localizacao.trim()) { window.notifyWarning && window.notifyWarning('Informe a localização.'); return; }
         setEnviando(true);
         try { await aoSalvar({ ...form, servico: form.servico.join(', '), fotos }); }
-        catch (err) { window.notifyError && window.notifyError(err.message || 'Falha ao abrir chamado'); }
+        catch (err) { window.notifyError && window.notifyError(err.message || 'Falha ao abrir chamado.'); }
         finally { setEnviando(false); }
     };
+
+    const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente'];
+    const Grupo = ({ titulo, children }) => (
+        <p className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">{titulo}</p>
+    );
+
     return (
-        <div className="w-full flex justify-center fade-in px-3 sm:px-4">
-            <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                <div className="h-1 bg-[#0E3263] dark:bg-slate-700 w-full"></div>
-                <div className="p-4 sm:p-6 md:p-7">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-                        <div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Nova corretiva</h2>
+        <div className="mx-auto w-full max-w-[1024px]">
+            <PageHeader title="Novo chamado" />
 
-                        </div>
-                        <button onClick={voltar} className="text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2 rounded-lg transition inline-flex items-center gap-1.5">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg> Voltar
-                        </button>
-                    </div>
-
-                    <div className="mb-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1.5 flex gap-1.5">
-                        {['MATRIZ','PECÉM'].map(u => (
-                            <button key={u} type="button" onClick={() => setForm({ ...form, unidade: u })} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition ${form.unidade===u ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm' : 'text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-slate-200 dark:hover:border-slate-600'}`}>
-                                {u === 'MATRIZ' ? 'Matriz' : 'Pecém'}
-                            </button>
-                        ))}
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Prioridade</label>
-                                <select className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none min-h-[44px]" value={form.prioridade} onChange={(e) => setForm({...form, prioridade: e.target.value})}>
-                                    <option value="Urgente">Urgente</option><option value="Alta">Alta</option><option value="Média">Média</option><option value="Baixa">Baixa</option>
-                                </select>
+            <form onSubmit={handleSubmit} className="u-surface overflow-hidden">
+                <div className="grid md:grid-cols-[1.25fr_1fr]">
+                    <div className="px-4 py-4 sm:px-5 md:border-r u-divider">
+                        <Grupo titulo="Solicitação" />
+                        <label className="u-label">Descrição</label>
+                        <textarea required maxLength="1000" rows="5" className="u-input resize-none uppercase placeholder:normal-case" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} />
+                        <div className="mt-4">
+                            <div className="mb-1.5 flex items-center justify-between">
+                                <label className="u-label !mb-0">Evidências</label>
+                                <span className="text-[11px] tabular-nums text-slate-400">{fotos.length}/5</span>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Equipamento</label>
-                                <input type="text" required maxLength="120" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 dark:focus:ring-white focus:outline-none placeholder:normal-case placeholder:text-slate-500 min-h-[44px]" value={form.equipamento} onChange={(e) => setForm({...form, equipamento: e.target.value.toUpperCase()})} placeholder="Ex: Caminhão 102" />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Serviço</label>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {['PINTURA', 'ELETRICA', 'SOLDA', 'MECANICA', 'BORRACHARIA', 'TRANSLADO'].map(srv => (
-                                    <ServiceBadge key={srv} servico={srv} selected={form.servico.includes(srv)} onClick={() => toggleServico(srv)} />
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Descrição</label>
-                            <textarea required maxLength="1000" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 focus:outline-none resize-none placeholder:normal-case placeholder:text-slate-500" rows="3" value={form.descricao} onChange={(e) => setForm({...form, descricao: e.target.value.toUpperCase()})} placeholder="Descreva o problema encontrado..."></textarea>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Localização</label>
-                            <input type="text" required maxLength="120" className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base sm:text-sm uppercase focus:ring-2 focus:ring-slate-900 focus:outline-none placeholder:normal-case placeholder:text-slate-500 min-h-[44px]" value={form.localizacao} onChange={(e) => setForm({...form, localizacao: e.target.value.toUpperCase()})} placeholder="Ex: Pátio principal" />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Fotos evidence <span className="normal-case font-normal text-slate-600 text-[11px]">({fotos.length}/5)</span></label>
-                            <CameraCapture
-                                onCapture={handleCaptureFoto}
-                                onSelectFiles={handleSelecionarFotos}
-                                maxFiles={5}
-                                currentCount={fotos.length}
-                            />
-                            {erroFoto && <p className="text-red-600 dark:text-red-400 text-xs font-semibold mt-2">{erroFoto}</p>}
+                            <CameraCapture onCapture={handleCaptureFoto} onSelectFiles={handleSelecionarFotos} maxFiles={5} currentCount={fotos.length} />
+                            {erroFoto && <p className="mt-1.5 text-xs text-[#B3261E] dark:text-red-400">{erroFoto}</p>}
                             {fotos.length > 0 && (
-                                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 mt-3">
+                                <div className="mt-2 grid grid-cols-4 gap-2">
                                     {fotos.map((f, idx) => (
-                                        <div key={idx} className="relative group">
-                                            <img src={URL.createObjectURL(f)} alt={f.name} className="w-full h-24 sm:h-20 object-cover rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700" />
-                                            <button type="button" onClick={() => removerFoto(idx)} className="absolute -top-2 -right-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full w-7 h-7 sm:w-5 sm:h-5 flex items-center justify-center text-base sm:text-sm sm:text-xs shadow-md active:scale-95">×</button>
-                                            <p className="text-[9px] truncate text-slate-600 dark:text-slate-400 mt-1 hidden sm:block">{f.name}</p>
+                                        <div key={idx} className="relative aspect-square overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
+                                            <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+                                            <button type="button" onClick={() => removerFoto(idx)} aria-label="Remover foto" className="icon-btn absolute right-1 top-1 !rounded-full !bg-slate-950/70 !p-0 !text-white">×</button>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                        <button type="submit" disabled={enviando} className="w-full bg-[#0E3263] dark:bg-white hover:bg-[#0A2447] dark:hover:bg-slate-100 disabled:opacity-60 text-white dark:text-slate-900 font-bold py-3.5 rounded-xl shadow-sm text-[15px] transition flex items-center justify-center gap-2 mt-2">
-                            <span>{enviando ? 'Enviando...' : 'Abrir chamado'}</span>
-                            {!enviando && <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>}
-                        </button>
-                    </form>
+                    </div>
+                    <div className="divide-y u-divider border-t u-divider md:border-t-0">
+                        <div className="px-4 py-4 sm:px-5">
+                            <Grupo titulo="Contexto" />
+                            <label className="u-label">Unidade</label>
+                            <div className="grid h-9 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800">
+                                {['MATRIZ', 'PECÉM'].map(u => (
+                                    <button key={u} type="button" onClick={() => setForm({ ...form, unidade: u })} aria-pressed={form.unidade === u} className={`rounded text-[13px] transition ${form.unidade === u ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+                                        {u === 'MATRIZ' ? 'Matriz' : 'Pecém'}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="mt-3">
+                                <label className="u-label">Localização</label>
+                                <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value.toUpperCase() })} />
+                            </div>
+                        </div>
+                        <div className="px-4 py-4 sm:px-5">
+                            <label className="u-label">Equipamento</label>
+                            <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.equipamento} onChange={(e) => setForm({ ...form, equipamento: e.target.value.toUpperCase() })} />
+                            <div className="mt-3">
+                                <label className="u-label">Serviço</label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {['PINTURA', 'ELETRICA', 'SOLDA', 'MECANICA', 'BORRACHARIA', 'TRANSLADO'].map(srv => (
+                                        <ServiceBadge key={srv} servico={srv} selected={form.servico.includes(srv)} onClick={() => toggleServico(srv)} />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-4 py-4 sm:px-5">
+                            <label className="u-label">Prioridade</label>
+                            <div className="grid h-9 grid-cols-4 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="radiogroup" aria-label="Prioridade">
+                                {PRIORIDADES.map(p => (
+                                    <button key={p} type="button" role="radio" aria-checked={form.prioridade === p} onClick={() => setForm({ ...form, prioridade: p })} className={`rounded text-[13px] transition ${form.prioridade === p ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+                                        {p}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+                <div className="border-t u-divider px-4 py-4 sm:px-5">
+                    <button type="submit" disabled={enviando} className="btn-primary w-full !justify-center !text-sm disabled:opacity-60 md:w-auto md:min-w-[220px]">
+                        {enviando ? 'Enviando…' : 'Abrir chamado'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }

@@ -34,7 +34,7 @@ const Logo = ({ variant = "full" }) => {
         <svg
             viewBox="0 0 1400 336"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-auto drop-shadow-sm mx-auto"
+            className="w-full h-auto mx-auto"
             shapeRendering="geometricPrecision"
             textRendering="optimizeLegibility"
         >
@@ -93,6 +93,14 @@ const Logo = ({ variant = "full" }) => {
         </svg>
     );
 
+    if (variant === "mark") {
+        return (
+            <div className="w-8 h-8 rounded-md bg-[#0E3263] flex items-center justify-center shrink-0" aria-hidden="true">
+                <span className="text-white font-bold italic text-base leading-none tracking-tight">U</span>
+            </div>
+        );
+    }
+
     if (variant === "header") {
         return (
             <div className="w-32 sm:w-44 md:w-48">
@@ -102,7 +110,7 @@ const Logo = ({ variant = "full" }) => {
     }
 
     return (
-        <div className="w-full max-w-xl sm:max-w-2xl md:max-w-3xl mx-auto flex justify-center items-center">
+        <div className="w-full max-w-md sm:max-w-lg mx-auto flex justify-center items-center">
             {svgContent}
         </div>
     );

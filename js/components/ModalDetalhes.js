@@ -1,122 +1,155 @@
-// ==========================================================
-// COMPONENTE: ModalDetalhes — exibe todas as infos do chamado
-// Usado em Pendentes, Histórico, Dashboard (clique no card/linha)
-// ==========================================================
-function ModalDetalhes({ chamado, aoFechar, aoImprimir }) {
+// COMPONENTE: ModalDetalhes — registro operacional com abas
+function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir, aoConcluir }) {
     const [eventos, setEventos] = React.useState([]);
     const [evidencias, setEvidencias] = React.useState([]);
-    const [aba, setAba] = React.useState('geral'); // geral | timeline | fotos
+    const [aba, setAba] = React.useState('geral'); // geral | atividade | evidencias
     const [imgAmpliada, setImgAmpliada] = React.useState(null);
 
     React.useEffect(() => {
         if (!chamado) return;
-        ChamadosService.listarEventos(chamado.idFirebase).then(setEventos);
-        ChamadosService.listarEvidencias(chamado.idFirebase).then(setEvidencias);
+        setAba('geral');
+        ChamadosService.listarEventos(chamado.idFirebase).then(setEventos).catch(() => {});
+        ChamadosService.listarEvidencias(chamado.idFirebase).then(setEvidencias).catch(() => {});
     }, [chamado]);
 
-    if (!chamado) return null;
+    React.useEffect(() => {
+        const esc = (e) => { if (e.key === 'Escape') aoFechar && aoFechar(); };
+        document.addEventListener('keydown', esc);
+        return () => document.removeEventListener('keydown', esc);
+    }, [aoFechar]);
 
-    const copiarProtocolo = () => {
-        navigator.clipboard.writeText(chamado.protocolo).then(()=>window.notifySuccess && window.notifySuccess('Protocolo ' + chamado.protocolo + ' copiado!'));
+    if (!chamado) return null;
+    const tempo = tempoAbertoInfo(chamado.dataAbertura);
+    const podeAssumir = ['ABERTO', 'EM_ANALISE', 'ATRIBUIDO', 'AGUARDANDO_USUARIO'].includes(chamado.status) && !chamado.emAtendimento && typeof aoAssumir === 'function';
+    const podeConcluir = (chamado.status === 'EM_ATENDIMENTO' || chamado.emAtendimento || chamado.status === 'AGUARDANDO_USUARIO') && typeof aoConcluir === 'function';
+
+    const equipStats = (() => {
+        try {
+            const k = (chamado.equipamento || '-').toUpperCase();
+            const lista = (chamados || []).filter(c => (c.equipamento || '-').toUpperCase() === k);
+            if (lista.length === 0) return null;
+            let ultimo = null;
+            lista.forEach(c => {
+                try {
+                    const dt = parseDataBR(c.dataAbertura);
+                    if (dt && (!ultimo || dt > ultimo)) ultimo = dt;
+                } catch {}
+            });
+            const n = lista.length;
+            return {
+                total: n,
+                ultimo: ultimo ? ultimo.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-',
+                nivel: n > 3 ? 'Alta' : n > 1 ? 'Média' : 'Baixa'
+            };
+        } catch { return null; }
+    })();
+
+    const Linha = ({ rotulo, valor }) => {
+        if (!valor || valor === 'NENHUMA') return null;
+        return (
+            <div className="flex gap-3 py-1.5">
+                <dt className="w-24 shrink-0 text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
+                <dd className="min-w-0 flex-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-200">{valor}</dd>
+            </div>
+        );
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 fade-in">
-            {imgAmpliada && (
-                <div className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4" onClick={()=>setImgAmpliada(null)}>
-                    <img src={imgAmpliada} alt="Evidência" className="max-w-full max-h-full rounded-xl shadow-2xl" onClick={e=>e.stopPropagation()} />
-                    <button onClick={()=>setImgAmpliada(null)} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center">×</button>
-                </div>
+        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
+            {imgAmpliada !== null && evidencias.length > 0 && (
+                <GaleriaAmpliada
+                    fotos={evidencias}
+                    indice={imgAmpliada}
+                    aoMudar={setImgAmpliada}
+                    aoFechar={() => setImgAmpliada(null)}
+                />
             )}
-            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
-                <div className="px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3 bg-slate-50 dark:bg-slate-800">
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg truncate">{chamado.equipamento}</h3>
-                            <PriorityBadge prioridade={chamado.prioridade} />
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-1">
-                            <span className="text-xs font-mono bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded text-slate-700 dark:text-slate-300">{chamado.protocolo}</span>
-                            <button onClick={copiarProtocolo} className="p-1 rounded hover:bg-white dark:hover:bg-slate-700" title="Copiar protocolo"><svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
-                            <span className="text-xs bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-2 py-1 rounded-full font-bold">{chamado.status}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                            <span className="text-xs bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded-full text-slate-700 dark:text-slate-300">{chamado.unidade}</span>
-                            <ServiceBadge servico={chamado.servico} />
-                            <span className="text-xs text-slate-500">{chamado.dataAbertura}</span>
-                        </div>
+            <div className="modal-pop modal-panel m-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+                <div className="border-b u-divider px-5 pb-3 pt-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Detalhes do chamado</h3>
+                        <button onClick={aoFechar} aria-label="Fechar" className="icon-btn">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
-                    <button onClick={aoFechar} className="shrink-0 w-8 h-8 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 hover:bg-slate-50">×</button>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        <ProtocoloTag codigo={chamado.protocolo} />
+                        <h4 className="w-full text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{chamado.equipamento}</h4>
+                        <StatusBadge status={chamado.status} concluido={chamado.concluido} />
+                        <PriorityBadge prioridade={chamado.prioridade} />
+                    </div>
+                    <div className="mt-3 flex gap-1 border-t u-divider pt-2">
+                        {[
+                            ['geral', 'Geral'],
+                            ['atividade', `Atividade${eventos.length > 0 ? ` (${eventos.length})` : ''}`],
+                            ['evidencias', `Evidências${evidencias.length > 0 ? ` (${evidencias.length})` : ''}`]
+                        ].map(([k, l]) => (
+                            <button key={k} onClick={() => setAba(k)} className={`rounded-md px-3 py-1.5 text-[13px] transition ${aba === k ? 'bg-[#0E3263]/[0.07] font-medium text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'}`}>{l}</button>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="flex gap-1 p-2 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
-                    {[
-                        {k:'geral', l:'Geral'},
-                        {k:'timeline', l:`Timeline (${eventos.length})`},
-                        {k:'fotos', l:`Fotos (${evidencias.length})`}
-                    ].map(t=>(
-                        <button key={t.k} onClick={()=>setAba(t.k)} className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${aba===t.k ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300'}`}>{t.l}</button>
-                    ))}
-                    <button onClick={()=>aoImprimir && aoImprimir(chamado)} className="ml-auto px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg> PDF</button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-                    {aba==='geral' && (
-                        <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"><p className="text-[11px] font-bold uppercase text-slate-500">Equipamento</p><p className="font-semibold text-slate-900 dark:text-white">{chamado.equipamento}</p></div>
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"><p className="text-[11px] font-bold uppercase text-slate-500">Prioridade</p><p className="font-semibold"><PriorityBadge prioridade={chamado.prioridade}/></p></div>
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"><p className="text-[11px] font-bold uppercase text-slate-500">Localização</p><p className="font-medium text-slate-700 dark:text-slate-300">{chamado.localizacao}</p></div>
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"><p className="text-[11px] font-bold uppercase text-slate-500">Unidade</p><p className="font-medium text-slate-700 dark:text-slate-300">{chamado.unidade}</p></div>
-                            </div>
-                            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3"><p className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Descrição</p><p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{chamado.descricao}</p></div>
-                            {(chamado.servicoFeito || chamado.pendencia || chamado.observacoes) && (
-                                <div className="space-y-2">
-                                    {chamado.servicoFeito && <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3"><p className="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase">Serviço feito</p><p className="text-sm text-slate-700 dark:text-slate-300">{chamado.servicoFeito}</p></div>}
-                                    {chamado.pendencia && chamado.pendencia!=='NENHUMA' && <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-3"><p className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase">Pendência</p><p className="text-sm text-slate-700 dark:text-slate-300">{chamado.pendencia}</p></div>}
-                                    {chamado.observacoes && <div className="bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 rounded-lg p-3"><p className="text-xs font-bold text-sky-700 dark:text-sky-300 uppercase">Observações</p><p className="text-sm text-slate-700 dark:text-slate-300">{chamado.observacoes}</p></div>}
-                                </div>
-                            )}
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5"><p className="font-semibold text-slate-500 uppercase text-[10px]">Abertura</p><p className="font-medium text-slate-700 dark:text-slate-300">{chamado.dataAbertura}</p></div>
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5"><p className="font-semibold text-slate-500 uppercase text-[10px]">Encerramento</p><p className="font-medium text-slate-700 dark:text-slate-300">{chamado.dataEncerramento}</p></div>
-                                {chamado.atribuidoParaNome && <div className="col-span-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5"><p className="font-semibold text-slate-500 uppercase text-[10px]">Atribuído</p><p className="font-medium text-slate-700 dark:text-slate-300">{chamado.atribuidoParaNome} {chamado.atribuidoEm ? `• ${chamado.atribuidoEm}` : ''}</p></div>}
-                            </div>
-                        </div>
-                    )}
-                    {aba==='timeline' && (
-                        <div className="space-y-3">
-                            {eventos.length===0 ? <p className="text-sm text-slate-500 text-center py-6">Nenhum evento</p> : eventos.map((ev, idx)=>(
-                                <div key={ev.id} className="flex gap-3">
-                                    <div className="flex flex-col items-center shrink-0"><div className="w-2 h-2 rounded-full bg-slate-900 dark:bg-white mt-1.5"></div>{idx<eventos.length-1 && <div className="w-px flex-1 bg-slate-200 dark:bg-slate-700 mt-1"></div>}</div>
-                                    <div className="pb-3 flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-slate-800 dark:text-white">{ev.tipoEvento}</p>
-                                        {ev.descricao && <p className="text-xs text-slate-600 dark:text-slate-300 break-words">{ev.descricao}</p>}
-                                        <p className="text-xs text-slate-500 mt-1">{ev.criadoEm} {ev.usuarioNome ? `• ${ev.usuarioNome}` : ''}</p>
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                    {aba === 'geral' && (
+                        <div className="grid gap-x-8 md:grid-cols-[1fr_230px]">
+                            <div className="min-w-0">
+                                <SectionTitle>Descrição</SectionTitle>
+                                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-200">{chamado.descricao || '-'}</p>
+                                {(chamado.servicoFeito || chamado.pendencia || chamado.observacoes) && (
+                                    <div className="mt-4 border-t u-divider pt-3">
+                                        <Linha rotulo="Serviço feito" valor={chamado.servicoFeito} />
+                                        <Linha rotulo="Pendência" valor={chamado.pendencia} />
+                                        <Linha rotulo="Observações" valor={chamado.observacoes} />
                                     </div>
-                                </div>
-                            ))}
+                                )}
+                                {equipStats && (
+                                    <div className="mt-4 rounded-md border-l-2 border-[#0E3263] bg-slate-50 p-3.5 dark:border-sky-400 dark:bg-slate-800/60">
+                                        <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">Equipamento</p>
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div>
+                                                <p className="text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-100">{equipStats.total}</p>
+                                                <p className="text-[11px] text-slate-500">Chamados</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-100">{equipStats.ultimo}</p>
+                                                <p className="text-[11px] text-slate-500">Último</p>
+                                            </div>
+                                            <div>
+                                                <p className={`text-lg font-semibold ${equipStats.nivel === 'Alta' ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-900 dark:text-slate-100'}`}>{equipStats.nivel}</p>
+                                                <p className="text-[11px] text-slate-500">Recorrência</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <aside className="mt-5 md:mt-0">
+                                <dl>
+                                    <Linha rotulo="Unidade" valor={chamado.unidade || 'MATRIZ'} />
+                                    <Linha rotulo="Equipamento" valor={chamado.equipamento} />
+                                    <Linha rotulo="Serviço" valor={chamado.servico} />
+                                    <Linha rotulo="Localização" valor={chamado.localizacao} />
+                                    <Linha rotulo="Responsável" valor={chamado.atribuidoParaNome} />
+                                    <Linha rotulo="Abertura" valor={chamado.dataAbertura} />
+                                    <Linha rotulo="Tempo aberto" valor={tempo.texto} />
+                                    <Linha rotulo="Encerramento" valor={chamado.dataEncerramento} />
+                                </dl>
+                            </aside>
                         </div>
                     )}
-                    {aba==='fotos' && (
-                        <div>
-                            {evidencias.length===0 ? <p className="text-sm text-slate-500 text-center py-6">Nenhuma evidência</p> : (
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                                    {evidencias.map(ev=>(
-                                        <button key={ev.id} onClick={()=>setImgAmpliada(ev.url)} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-                                            <img src={ev.url} alt={ev.nomeArquivo} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                                            <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[10px] px-1 py-0.5 truncate">{ev.etapa}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {aba === 'atividade' && <TimelineView eventos={eventos} />}
+                    {aba === 'evidencias' && <EvidenceGallery fotos={evidencias} onExpand={setImgAmpliada} />}
                 </div>
 
-                <div className="p-3 border-t border-slate-200 dark:border-slate-700 flex gap-2 bg-slate-50 dark:bg-slate-800">
-                    <button onClick={aoFechar} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-lg text-sm">Fechar</button>
-                    <button onClick={()=>{ aoImprimir && aoImprimir(chamado); }} className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold py-2.5 rounded-lg text-sm">Imprimir OS</button>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t u-divider px-5 py-3">
+                    <button onClick={aoFechar} className="btn-ghost">Fechar</button>
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={() => aoImprimir && aoImprimir(chamado)} className="btn-ghost">
+                            <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            Imprimir OS
+                        </button>
+                        {podeAssumir && <button onClick={() => aoAssumir(chamado)} className="btn-primary-outline">Assumir</button>}
+                        {podeConcluir && <button onClick={() => aoConcluir(chamado)} className="btn-success">Concluir</button>}
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,168 +1,192 @@
-﻿// ==========================================================
-// TELA: Histórico — layout limpo, responsivo
-// ==========================================================
-function TelaHistorico({ chamados, voltar }) {
+// TELA: Histórico — pesquisa e consulta
+function TelaHistorico({ chamados, assumir }) {
     const [busca, setBusca] = React.useState('');
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
     const [dataFiltro, setDataFiltro] = React.useState('TODOS');
     const [paginaAtual, setPaginaAtual] = React.useState(1);
+    const [mostrarFiltros, setMostrarFiltros] = React.useState(false);
 
     const [detalhes, setDetalhes] = React.useState(null);
-    const itensPorPagina = 6;
+    const [chamadoEmEncerramento, setChamadoEmEncerramento] = React.useState(null);
+    const [assumindoId, setAssumindoId] = React.useState(null);
+    const [visao, setVisao] = React.useState('lista'); // lista | timeline
+    const itensPorPagina = 10;
     const encerrados = chamados.filter(c => c.concluido);
     const parciais = chamados.filter(c => c.status === 'AGUARDANDO_USUARIO');
     const baseHistorico = statusFiltro === 'AGUARDANDO_USUARIO' ? parciais : statusFiltro === 'TODOS' ? [...encerrados, ...parciais] : encerrados;
-    React.useEffect(()=>{setPaginaAtual(1);},[busca, unidadeFiltro, statusFiltro, dataFiltro]);
-    let listaExibicao = baseHistorico.filter(c=>{
-        const atendeEquipamento = c.equipamento && c.equipamento.toLowerCase().includes(busca.toLowerCase());
-        const unidadeDoChamado = c.unidade || 'MATRIZ';
-        const atendeUnidade = unidadeFiltro==='TODOS' || unidadeDoChamado===unidadeFiltro;
-        const atendeStatus = statusFiltro==='TODOS' || (c.status||'FECHADO')===statusFiltro;
-        return atendeEquipamento && atendeUnidade && atendeStatus;
+    React.useEffect(() => { setPaginaAtual(1); }, [busca, unidadeFiltro, statusFiltro, dataFiltro]);
+    let listaExibicao = baseHistorico.filter(c => {
+        const q = busca.toLowerCase();
+        const atendeBusca = !q || (c.protocolo && c.protocolo.toLowerCase().includes(q)) || (c.equipamento && c.equipamento.toLowerCase().includes(q)) || (c.descricao && c.descricao.toLowerCase().includes(q));
+        const atendeUnidade = unidadeFiltro === 'TODOS' || (c.unidade || 'MATRIZ') === unidadeFiltro;
+        const atendeStatus = statusFiltro === 'TODOS' || (c.status || 'FECHADO') === statusFiltro;
+        return atendeBusca && atendeUnidade && atendeStatus;
     });
     if (dataFiltro !== 'TODOS') listaExibicao = filtrarChamadosPorData(listaExibicao, dataFiltro);
-    listaExibicao.sort((a,b)=>(b.id||0)-(a.id||0));
-    const totalPaginas = Math.ceil(listaExibicao.length/itensPorPagina);
-    const listaExibicaoPaginada = listaExibicao.slice((paginaAtual-1)*itensPorPagina, paginaAtual*itensPorPagina);
-    const handleImprimirOS = (c)=>imprimirOrdemServico(c);
-    const handleImprimirHistoricoCompleto = ()=>imprimirRelatorioLista(listaExibicao, 'Relatório de Histórico de Chamados', unidadeFiltro);
+    listaExibicao.sort((a, b) => (b.id || 0) - (a.id || 0));
+    const totalPaginas = Math.ceil(listaExibicao.length / itensPorPagina);
+    const listaExibicaoPaginada = listaExibicao.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
+    const handleImprimirOS = (c) => imprimirOrdemServico(c);
+    const podeAssumir = (c) => ['ABERTO', 'EM_ANALISE', 'ATRIBUIDO', 'AGUARDANDO_USUARIO'].includes(c.status) && !c.emAtendimento;
+    const emAtendimento = (c) => c.status === 'EM_ATENDIMENTO' || c.emAtendimento;
+    const aguardando = (c) => c.status === 'AGUARDANDO_USUARIO';
+    const handleAssumir = async (chamado) => {
+        if (!chamado.idFirebase || chamado.idFirebase.length < 10) {
+            window.notifyError && window.notifyError('ID do chamado inválido. Recarregue a página.');
+            return;
+        }
+        setAssumindoId(chamado.idFirebase);
+        try {
+            if (typeof assumir === 'function') await assumir(chamado);
+            else await ChamadosService.assumirChamado(chamado);
+        } catch (e) {
+            window.notifyError && window.notifyError(e.message || 'Falha ao assumir');
+            if (window.UnilinkLogger) window.UnilinkLogger.error('Historico.handleAssumir', e);
+        }
+        finally { setAssumindoId(null); }
+    };
+    const handleIniciarEncerramento = (chamado) => {
+        if (!emAtendimento(chamado) && !aguardando(chamado)) {
+            window.notifyWarning && window.notifyWarning('Assuma o chamado antes de concluir.');
+            return;
+        }
+        setChamadoEmEncerramento(chamado);
+    };
+    const botaoAcao = (c) => {
+        if (podeAssumir(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleAssumir(c); }} disabled={assumindoId === c.idFirebase} className="btn-primary-outline !min-h-[32px] !px-3 !py-1.5 !text-xs disabled:opacity-60">{assumindoId === c.idFirebase ? 'Assumindo…' : 'Assumir'}</button>;
+        }
+        if (emAtendimento(c) || aguardando(c)) {
+            return <button onClick={(e) => { e.stopPropagation(); handleIniciarEncerramento(c); }} className="btn-success !min-h-[32px] !px-3 !py-1.5 !text-xs">Concluir</button>;
+        }
+        return null;
+    };
+    const filtrosAtivos = (unidadeFiltro !== 'TODOS' ? 1 : 0) + (statusFiltro !== 'TODOS' ? 1 : 0) + (dataFiltro !== 'TODOS' ? 1 : 0);
+    const limparFiltros = () => { setStatusFiltro('TODOS'); setDataFiltro('TODOS'); setUnidadeFiltro('TODOS'); setBusca(''); };
+    const atividade = React.useMemo(() => atividadeRecente(listaExibicao, 30), [listaExibicao]);
+    const agora = new Date();
+    const esteMes = baseHistorico.filter(c => {
+        try {
+            const dt = parseDataBR(c.dataAbertura);
+            return dt && dt.getMonth() === agora.getMonth() && dt.getFullYear() === agora.getFullYear();
+        } catch { return false; }
+    }).length;
+    const recorrentes = (() => {
+        const cont = {};
+        baseHistorico.forEach(c => {
+            const k = (c.equipamento || '-').toUpperCase();
+            cont[k] = (cont[k] || 0) + 1;
+        });
+        return Object.values(cont).filter(n => n > 1).length;
+    })();
 
     return (
-        <div className="w-full flex justify-center fade-in">
-            <div className="w-full max-w-7xl bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 dark:border-slate-800 overflow-hidden">
-                <div className="h-1 bg-emerald-600 dark:bg-emerald-700 w-full"></div>
-                <div className="p-4 sm:p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
-                        <div>
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Histórico</h2>
-                            <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{statusFiltro === 'AGUARDANDO_USUARIO' ? `${parciais.length} parciais` : statusFiltro === 'TODOS' ? `${encerrados.length + parciais.length} concluídos/parciais` : `${encerrados.length} concluídos`} • {listaExibicao.length} filtrados</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2 items-center">
-                            <DownloadPopover dados={[...encerrados, ...parciais]} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />
-                            <button onClick={voltar} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium px-3 py-2 rounded-lg text-xs inline-flex items-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg> Menu</button>
-                        </div>
-                    </div>
+        <div className="w-full">
+            <PageHeader
+                title="Histórico"
+                meta={`${baseHistorico.length} chamados, ${esteMes} este mês, ${recorrentes} recorrentes`}
+                actions={<DownloadPopover dados={[...encerrados, ...parciais]} unidadeFiltro={unidadeFiltro} statusFiltro={statusFiltro} dataFiltro={dataFiltro} busca={busca} />}
+            />
 
-                    <div className="flex flex-col gap-2 mb-4">
-                        <div className="flex flex-wrap items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5">
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Filial</span>
-                                <select value={unidadeFiltro} onChange={e=>setUnidadeFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                    <option value="TODOS">Todas filiais</option>
-                                    <option value="MATRIZ">Matriz</option>
-                                    <option value="PECÉM">Pecém</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[110px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Status</span>
-                                <select value={statusFiltro} onChange={e=>setStatusFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                    <option value="TODOS">Todos status</option>
-                                    <option value="FECHADO">Fechado</option>
-                                    <option value="RESOLVIDO">Resolvido</option>
-                                    <option value="AGUARDANDO_USUARIO">Parcial</option>
-                                </select>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-1 min-w-[130px]">
-                                <span className="text-[11px] font-bold text-slate-500 uppercase hidden sm:inline">Período</span>
-                                <select value={dataFiltro} onChange={e=>setDataFiltro(e.target.value)} className="flex-1 min-w-0 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                                    <option value="TODOS">Todo período</option>
-                                    <option value="HOJE">Hoje</option>
-                                    <option value="7d">Últimos 7 dias</option>
-                                    <option value="30d">Últimos 30 dias</option>
-                                    <option value="MES_ATUAL">Mês atual</option>
-                                    <option value="CALENDARIO">Calendário...</option>
-                                </select>
-                            </div>
-                            {(statusFiltro!=='TODOS'||dataFiltro!=='TODOS'||unidadeFiltro!=='TODOS'|| busca) && (
-                                <button onClick={()=>{setStatusFiltro('TODOS');setDataFiltro('TODOS');setUnidadeFiltro('TODOS');setBusca('');}} className="shrink-0 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 underline px-2">Limpar</button>
-                            )}
-                        </div>
-                        {dataFiltro==='CALENDARIO' && (
-                            <div className="flex gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl p-2.5">
-                                <input type="date" onChange={e=>{
-                                    const d = e.target.value ? new Date(e.target.value) : null;
-                                    if (d) { d.setHours(0,0,0,0); setDataFiltro('CALENDARIO'); // usa filtrarChamadosPorIntervalo com d
-                                    }
-                                }} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
-                                <span className="text-xs text-slate-500 self-center">até</span>
-                                <input type="date" onChange={e=>{
-                                    const d2 = e.target.value ? new Date(e.target.value) : null;
-                                    if (d2) { d2.setHours(23,59,59,999); }
-                                }} className="flex-1 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 text-xs" />
-                            </div>
-                        )}
-                    </div>
+            <div className="u-surface mb-2 flex gap-2 p-2">
+                <input type="text" placeholder="Buscar protocolo, equipamento ou assunto..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
+                <div className="grid shrink-0 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="tablist" aria-label="Visualização">
+                    {[['lista', 'Lista'], ['timeline', 'Timeline']].map(([v, l]) => (
+                        <button key={v} type="button" role="tab" aria-selected={visao === v} onClick={() => setVisao(v)} className={`rounded px-2.5 text-xs transition ${visao === v ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
+                            {l}
+                        </button>
+                    ))}
+                </div>
+                <button onClick={() => setMostrarFiltros(v => !v)} className="btn-ghost shrink-0 sm:hidden">
+                    Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
+                </button>
+            </div>
+            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} u-surface mb-4 flex-col gap-2 p-2 sm:flex sm:flex-row sm:flex-wrap`}>
+                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
+                    <option value="TODOS">Filial: todas</option>
+                    <option value="MATRIZ">Matriz</option>
+                    <option value="PECÉM">Pecém</option>
+                </select>
+                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Status: todos</option>
+                    <option value="FECHADO">Encerrado</option>
+                    <option value="RESOLVIDO">Resolvido</option>
+                    <option value="AGUARDANDO_USUARIO">Parcial</option>
+                </select>
+                <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Período: todo</option>
+                    <option value="HOJE">Hoje</option>
+                    <option value="7d">7 dias</option>
+                    <option value="30d">30 dias</option>
+                    <option value="MES_ATUAL">Mês atual</option>
+                </select>
+                {(filtrosAtivos > 0 || busca) && (
+                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-[#0E3263] underline underline-offset-2 hover:text-[#0A2447] dark:text-sky-300 dark:hover:text-sky-200">Limpar</button>
+                )}
+            </div>
 
-                    <input type="text" placeholder="Pesquisar por equipamento..." className="w-full border border-slate-200 dark:border-slate-700 p-3 sm:p-2.5 rounded-lg mb-4 text-base sm:text-sm bg-white dark:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:outline-none placeholder:text-slate-500 min-h-[44px]" value={busca} onChange={(e)=>setBusca(e.target.value.toUpperCase())}/>
-
-                    <div className="grid grid-cols-1 gap-3 md:hidden">
-                        {listaExibicaoPaginada.map(c=>(
-                            <div key={c.idFirebase} onClick={()=>setDetalhes(c)} className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition active:scale-[0.98]">
-                                <div className="flex items-center justify-between gap-2 mb-2">
-                                    <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 px-2 py-1 rounded-md">{c.unidade||'MATRIZ'}</span>
-                                    <PriorityBadge prioridade={c.prioridade}/>
-                                </div>
-                                <h3 className="font-semibold text-slate-900 dark:text-white text-base sm:text-sm">{c.equipamento}</h3>
-                                <p className="text-[11px] font-mono text-slate-600 dark:text-slate-300 mb-2">{c.protocolo}</p>
-                                <div className="mb-3"><ServiceBadge servico={c.servico}/></div>
-                                <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-700 dark:text-slate-300 dark:text-slate-300 space-y-1 mb-3">
-                                    <p><span className="font-semibold text-slate-700 dark:text-slate-300">Abertura:</span> {formatarApenasData(c.dataAbertura)}</p>
-                                    <p className="text-emerald-700"><span className="font-semibold">Encerrado:</span> {formatarApenasData(c.dataEncerramento)}</p>
-                                    <p><span className="font-semibold text-slate-700 dark:text-slate-300">Feito:</span> {c.servicoFeito||'-'}</p>
-                                </div>
-                                <button onClick={(e)=>{e.stopPropagation(); handleImprimirOS(c)}} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium py-2 rounded-lg text-xs flex items-center justify-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg> Imprimir OS</button>
-                            </div>
-                        ))}
-                        {listaExibicaoPaginada.length===0 && <div className="p-6 text-center text-base sm:text-sm text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">Nenhum chamado concluído.</div>}
-                    </div>
-
-                    <div className="hidden md:block overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                        <table className="min-w-full text-base sm:text-sm">
-                            <thead>
-                                <tr className="bg-slate-900 dark:bg-slate-800 text-slate-100 text-xs uppercase">
-                                    <th className="p-3 text-center font-semibold">Unidade</th>
-                                    <th className="p-3 text-center font-semibold">Prioridade</th>
-                                    <th className="p-3 text-center font-semibold">Abertura</th>
-                                    <th className="p-3 font-semibold">Equipamento</th>
-                                    <th className="p-3 text-center font-semibold">Serviço</th>
-                                    <th className="p-3 font-semibold">Descrição</th>
-                                    <th className="p-3 font-semibold">Feito</th>
-                                    <th className="p-3 text-center font-semibold">Encerramento</th>
-                                    <th className="p-3 text-center font-semibold">OS</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {listaExibicaoPaginada.map((c,i)=>(
-                                    <tr key={c.idFirebase} onClick={()=>setDetalhes(c)} className={`cursor-pointer ${i%2===0?'bg-white dark:bg-slate-800':'bg-slate-50 dark:bg-slate-700'} hover:bg-slate-50 dark:hover:bg-slate-700`}>
-                                        <td className="p-3 text-center"><span className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-md text-xs font-medium text-slate-700 dark:text-slate-300">{c.unidade||'MATRIZ'}</span></td>
-                                        <td className="p-3 text-center"><PriorityBadge prioridade={c.prioridade}/></td>
-                                        <td className="p-3 text-center text-xs text-slate-600 dark:text-slate-300">{formatarApenasData(c.dataAbertura)}</td>
-                                        <td className="p-3 font-medium text-slate-900">{c.equipamento}<div className="text-[11px] font-mono text-slate-600 dark:text-slate-300">{c.protocolo}</div></td>
-                                        <td className="p-3 text-center"><ServiceBadge servico={c.servico}/></td>
-                                        <td className="p-3 text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{c.descricao}</td>
-                                        <td className="p-3 text-slate-600 dark:text-slate-300 max-w-[200px] truncate">{c.servicoFeito||'-'}</td>
-                                        <td className="p-3 text-center text-xs font-medium text-emerald-700">{formatarApenasData(c.dataEncerramento)}</td>
-                                        <td className="p-3 text-center"><button onClick={(e)=>{e.stopPropagation(); handleImprimirOS(c)}} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"><svg className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.56-4.171L18 18M12 12a3 3 0 100-6 3 3 0 000 6z"/></svg></button></td>
-                                    </tr>
-                                ))}
-                                {listaExibicaoPaginada.length===0 && <tr><td colSpan="9" className="p-8 text-center text-slate-700 dark:text-slate-300">Nenhum chamado concluído.</td></tr>}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={()=>setDetalhes(null)} aoImprimir={handleImprimirOS} />}
-                    {totalPaginas>1 && (
-                        <div className="flex justify-center items-center gap-1.5 mt-5">
-                            <button disabled={paginaAtual===1} onClick={()=>setPaginaAtual(paginaAtual-1)} className="w-8 h-8 border rounded-lg bg-white disabled:opacity-40 text-base sm:text-sm">‹</button>
-                            {Array.from({length: totalPaginas},(_,i)=>i+1).map(n=>(
-                                <button key={n} onClick={()=>setPaginaAtual(n)} className={`w-8 h-8 rounded-lg text-base sm:text-sm font-medium ${paginaAtual===n?'bg-emerald-600 text-white':'bg-white border text-slate-600 dark:text-slate-300'}`}>{n}</button>
-                            ))}
-                            <button disabled={paginaAtual===totalPaginas} onClick={()=>setPaginaAtual(paginaAtual+1)} className="w-8 h-8 border rounded-lg bg-white disabled:opacity-40 text-base sm:text-sm">›</button>
-                        </div>
+            {visao === 'timeline' ? (
+                <div className="u-surface px-4 py-3 sm:px-5">
+                    {atividade.length === 0 ? (
+                        <p className="py-2 text-xs text-slate-500">Sem atividade para os filtros atuais.</p>
+                    ) : (
+                        <ol className="ml-1 space-y-3.5 border-l-2 border-slate-200 py-1 pl-5 dark:border-slate-700">
+                            {atividade.map((a, idx) => {
+                                const dt = new Date(a.ts);
+                                const hh = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                                return (
+                                    <li key={a.id} className="relative">
+                                        <span className={`absolute -left-[25px] top-1 h-2 w-2 rounded-full ${idx === 0 ? 'bg-[#0E3263] dark:bg-sky-400' : 'bg-white ring-2 ring-slate-300 dark:bg-slate-900 dark:ring-slate-600'}`}></span>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="w-9 shrink-0 font-mono text-xs text-slate-400" title={dt.toLocaleString('pt-BR')}>{hh}</span>
+                                            <ProtocoloTag codigo={a.protocolo} />
+                                            <span className="min-w-0 flex-1 truncate text-sm text-slate-700 dark:text-slate-200">{a.texto}</span>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ol>
                     )}
                 </div>
-            </div>
+            ) : listaExibicaoPaginada.length === 0 ? (
+                <div className="u-surface"><EmptyState numero="0" title="Nenhum chamado encontrado." action={(filtrosAtivos > 0 || busca) ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
+            ) : (
+                <React.Fragment>
+                    <ul className="u-surface divide-y u-divider px-4">
+                        {listaExibicaoPaginada.map((c, idx) => {
+                            const assunto = extrairAssunto(c.descricao);
+                            const protoCurto = String(c.protocolo || '').replace(/^#/, '').slice(-6);
+                            const corPrio = c.prioridade === 'Urgente' ? 'bg-[#B3261E]' : c.prioridade === 'Alta' ? 'bg-[#B9770E]' : 'bg-slate-300 dark:bg-slate-600';
+                            return (
+                            <li key={c.idFirebase} className="row-enter" style={{ animationDelay: `${Math.min(idx * 50, 300)}ms` }}>
+                                <div onClick={() => setDetalhes(c)} className="flex cursor-pointer items-center gap-2 py-2" title={`${c.protocolo || ''} — ${c.descricao || ''}`}>
+                                    <span className={`h-6 w-1 shrink-0 rounded-full ${corPrio}`} title={c.prioridade} />
+                                    <span className="hidden shrink-0 sm:inline-flex"><ProtocoloTag codigo={c.protocolo} copiar={false} /></span>
+                                    <p className="min-w-0 flex-1 truncate text-[13px] leading-5">
+                                        {protoCurto !== '' && <span className="font-mono text-[11px] text-slate-400 sm:hidden">{protoCurto} · </span>}
+                                        <span className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</span>
+                                        <span className="text-slate-500 dark:text-slate-400"> · {assunto}</span>
+                                    </p>
+                                    <span onClick={(e) => e.stopPropagation()} className="flex shrink-0 items-center gap-1.5">
+                                        {botaoAcao(c)}
+                                        <button onClick={(e) => { e.stopPropagation(); handleImprimirOS(c); }} aria-label="Imprimir OS" className="icon-btn" title="Imprimir OS">
+                                            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                        </button>
+                                    </span>
+                                </div>
+                            </li>
+                            );
+                        })}
+                    </ul>
+                </React.Fragment>
+            )}
+
+            {chamadoEmEncerramento && (
+                <ModalConcluir chamado={chamadoEmEncerramento} aoFechar={() => setChamadoEmEncerramento(null)} />
+            )}
+            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={handleImprimirOS} aoAssumir={(c) => handleAssumir(c)} aoConcluir={(c) => { setDetalhes(null); handleIniciarEncerramento(c); }} />}
+            {visao === 'lista' && <Paginacao pagina={paginaAtual} total={totalPaginas} aoMudar={setPaginaAtual} />}
         </div>
     );
 }

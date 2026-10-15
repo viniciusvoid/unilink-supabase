@@ -1,58 +1,25 @@
-// ==========================================================
-// COMPONENTE: PriorityBadge (selo de prioridade)
-// ==========================================================
+// COMPONENTE: PriorityBadge — apenas ponto + rótulo
 const PriorityBadge = ({ prioridade }) => {
-    let styles = "";
-    let icon = null;
-
-    switch (prioridade) {
-        case 'Urgente':
-            styles = "bg-red-50 text-red-700 border border-red-200";
-            icon = (
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    !
-                </div>
-            );
-            break;
-        case 'Alta':
-            styles = "bg-orange-50 text-orange-700 border border-orange-200";
-            icon = (
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-orange-500 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                    </svg>
-                </div>
-            );
-            break;
-        case 'Média':
-            styles = "bg-yellow-50 text-amber-600 border border-yellow-200";
-            icon = (
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-amber-400 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                    </svg>
-                </div>
-            );
-            break;
-        case 'Baixa':
-            styles = "bg-green-50 text-green-700 border border-green-200";
-            icon = (
-                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-green-600 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-            );
-            break;
-        default:
-            styles = "bg-gray-50 text-gray-700 border border-gray-200";
-            icon = null;
-    }
-
+    const mapa = {
+        'Urgente': 'bg-[#B3261E]/10 text-[#B3261E] dark:bg-red-500/10 dark:text-red-300',
+        'Alta': 'bg-[#B9770E]/10 text-[#B9770E] dark:bg-amber-500/10 dark:text-amber-300',
+        'Média': 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+        'Media': 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+        'Baixa': 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+    };
+    const ponto = {
+        'Urgente': 'bg-[#B3261E]',
+        'Alta': 'bg-[#B9770E]',
+        'Média': 'bg-slate-400',
+        'Media': 'bg-slate-400',
+        'Baixa': 'bg-slate-400'
+    };
+    const cls = mapa[prioridade] || 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
+    const dot = ponto[prioridade] || 'bg-slate-400';
     return (
-        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold text-xs ${styles}`}>
-            {icon}
-            <span>{prioridade}</span>
-        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium leading-5 whitespace-nowrap ${cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dot}`}></span>
+            {prioridade || '-'}
+        </span>
     );
 };
