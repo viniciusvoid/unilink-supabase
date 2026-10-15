@@ -2,6 +2,47 @@
 // APP: UNILINK — lógica preservada; navegação corporativa
 // (breadcrumb + menu por ambiente, sem telas de apresentação).
 // ==========================================================
+function TelaAusente({ nome }) {
+    return (
+        <div className="u-surface mx-auto w-full max-w-[480px] p-6 text-center">
+            <p className="text-sm text-slate-700 dark:text-slate-200">Não foi possível carregar a tela ({nome}).</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Recarregue com Ctrl+Shift+R — pode ser cache ou CDN bloqueado.</p>
+            <button onClick={() => window.location.reload()} className="btn-primary mt-3">Recarregar</button>
+        </div>
+    );
+}
+
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { erro: null };
+    }
+    static getDerivedStateFromError(erro) { return { erro }; }
+    componentDidCatch(erro, info) {
+        try {
+            console.warn('ErrorBoundary capturou:', erro && erro.message, info && info.componentStack);
+            if (window.UnilinkLogger) window.UnilinkLogger.warn('ErrorBoundary: ' + (erro && erro.message));
+        } catch {}
+    }
+    render() {
+        if (this.state.erro) {
+            return (
+                <div className="flex min-h-screen items-center justify-center bg-[#F4F6F8] p-4 dark:bg-[#0B1220]">
+                    <div className="u-surface w-full max-w-[480px] p-6 text-center">
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Algo falhou ao renderizar.</p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Tente recarregar (pode ser cache). Se persistir, anote o horário e avise o suporte.</p>
+                        <div className="mt-4 flex justify-center gap-2">
+                            <button onClick={() => window.location.reload()} className="btn-primary">Recarregar</button>
+                            <button onClick={() => this.setState({ erro: null })} className="btn-ghost">Tentar de novo</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
 function App() {
     const [telaAtual, setTelaAtual] = React.useState('splash');
     const [chamados, setChamados] = React.useState([]);
@@ -393,9 +434,9 @@ function App() {
                         </div>
                     </div>
                 )}
-                {telaAtual === 'corretiva' && <TelaCorretiva aoSalvar={adicionarChamado} />}
+                {telaAtual === 'corretiva' && (typeof TelaCorretiva !== 'undefined' ? <TelaCorretiva aoSalvar={adicionarChamado} /> : <TelaAusente nome="corretiva" />)}
                 {telaAtual === 'acompanhamento' && (
-                    <TelaAcompanhamento protocoloInicial={protocoloBusca} />
+                    typeof TelaAcompanhamento !== 'undefined' ? <TelaAcompanhamento protocoloInicial={protocoloBusca} /> : <TelaAusente nome="acompanhamento" />
                 )}
                 {telaAtual === 'manutencao' && autenticado && (
                     <div className="page-art mx-auto my-auto w-full max-w-[960px] py-6">
@@ -467,6 +508,7 @@ function App() {
                     </div>
                 )}
                 {telaAtual === 'pendencia' && (
+                    typeof TelaPendencia !== 'undefined' ? (
                     <TelaPendencia
                         chamados={chamados}
                         assumir={assumirChamado}
@@ -475,26 +517,31 @@ function App() {
                         toggleAtendimento={toggleAtendimento}
                         aoNovo={() => setTelaAtual('corretiva')}
                     />
+                    ) : <TelaAusente nome="pendencia" />
                 )}
                 {telaAtual === 'historico' && (
-                    <TelaHistorico chamados={chamados} assumir={assumirChamado} />
+                    typeof TelaHistorico !== 'undefined' ? <TelaHistorico chamados={chamados} assumir={assumirChamado} /> : <TelaAusente nome="historico" />
                 )}
                 {telaAtual === 'dashboard' && (
-                    <TelaDashboard chamados={chamados} />
+                    typeof TelaDashboard !== 'undefined' ? <TelaDashboard chamados={chamados} /> : <TelaAusente nome="dashboard" />
                 )}
                 {telaAtual === 'sucesso' && (
+                    typeof TelaSucesso !== 'undefined' ? (
                     <TelaSucesso
                         chamado={chamadoRecemCriado}
                         voltarInicio={() => setTelaAtual('splash')}
                         aoNovo={() => setTelaAtual('corretiva')}
                         aoAcompanhar={() => abrirAcompanhamento(chamadoRecemCriado?.protocolo)}
                     />
+                    ) : <TelaAusente nome="sucesso" />
                 )}
                 {telaAtual === 'redefinir' && (
+                    typeof TelaRedefinirSenha !== 'undefined' ? (
                     <TelaRedefinirSenha
                         voltar={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); }}
                         aoSucesso={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); window.notifySuccess && window.notifySuccess('Senha atualizada.'); }}
                     />
+                    ) : <TelaAusente nome="redefinir" />
                 )}
             </main>
 
@@ -510,7 +557,7 @@ function App() {
                             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v10h5v-6h4v6h5V10" /></svg>
                         </button>
                         <span className="mx-0.5 h-5 w-px bg-slate-200 dark:bg-slate-700"></span>
-                        {NAV[ambiente].map(item => {
+                        {(NAV[ambiente] || []).map(item => {
                             const ativo = telaAtual === item.k;
                             return (
                                 <button
@@ -534,4 +581,4 @@ function App() {
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(<ErrorBoundary><App /></ErrorBoundary>);

@@ -20,7 +20,8 @@ function ModalLogin({ aoAutenticar, fechar }) {
             window.notifySuccess && window.notifySuccess('Login efetuado.');
             aoAutenticar();
         } catch (err) {
-            console.error('Erro de autenticação:', err.message);
+            // Credencial inválida é fluxo esperado (usuário errou senha) — warn, não error
+            console.warn('Erro de autenticação:', err.message);
             setErro('Usuário ou senha incorretos.');
         } finally {
             setCarregando(false);
@@ -39,7 +40,7 @@ function ModalLogin({ aoAutenticar, fechar }) {
             if (error) throw error;
             setMsgRecuperar('Verifique seu e-mail para redefinir a senha.');
         } catch (err) {
-            console.error('Erro recuperação:', err.message);
+            console.warn('Erro recuperação:', err.message);
             setErro(err.message || 'Não foi possível enviar o e-mail.');
         } finally { setCarregandoRecuperar(false); }
     };

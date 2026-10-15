@@ -24,7 +24,8 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             setStream(s);
             setShowCamera(true);
         } catch (e) {
-            console.error('Erro câmera:', e);
+            // Permissão negada/dispensada é fluxo esperado do usuário — warn, não error (evita spam no backend)
+            console.warn('Erro câmera:', e && e.name ? e.name : e);
             setError('Não foi possível acessar a câmera. Use "Escolher arquivo".');
             // fallback: abre file picker com capture
             if (fileInputRef.current) fileInputRef.current.click();

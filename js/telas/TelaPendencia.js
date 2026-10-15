@@ -1,6 +1,5 @@
 // TELA: Chamados — operação de triagem
 function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
-    const assumirFn = assumir || encerrar && encerrar.assumir || (() => {});
 
     const [busca, setBusca] = React.useState('');
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
@@ -41,13 +40,19 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
         }
         setAssumindoId(chamado.idFirebase);
         try {
-            if (typeof assumirFn === 'function' && assumirFn.length >= 1) {
+            // Usa a prop `assumir` do App (com retry de sessão + modal de login); fallback direto só se prop ausente
+            if (typeof assumir === 'function') {
+                await assumir(chamado);
+            } else if (typeof ChamadosService !== 'undefined' && ChamadosService.assumirChamado) {
                 await ChamadosService.assumirChamado(chamado);
             } else {
                 await ChamadosService.atualizarStatus(chamado, 'EM_ATENDIMENTO');
             }
         } catch (e) {
-            window.notifyError && window.notifyError(e.message || 'Falha ao assumir');
+            // App.assumirChamado já notificou + abriu login quando sessão expirou — evita toast duplicado
+            const msg = (e && e.message) || '';
+            const jaTratado = msg.includes('Sessão') || msg.includes('expirada') || msg.includes('conectar à API');
+            if (!jaTratado) window.notifyError && window.notifyError(msg || 'Falha ao assumir');
             if (window.UnilinkLogger) window.UnilinkLogger.error('handleAssumir', e);
         }
         finally { setAssumindoId(null); }
