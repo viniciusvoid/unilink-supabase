@@ -87,6 +87,8 @@
 
     // Captura global
     window.addEventListener('error', (ev) => {
+        // "Script error." sem filename/lineno é erro opaco de CDN (CORS) — sem ação possível, não polui o backend
+        if ((ev.message === 'Script error.' || !ev.message) && !ev.filename && !ev.lineno) return;
         persist('error', `window.onerror: ${ev.message}`, { filename: ev.filename, lineno: ev.lineno, colno: ev.colno, error: ev.error && ev.error.stack });
     });
     window.addEventListener('unhandledrejection', (ev) => {

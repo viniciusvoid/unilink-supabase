@@ -391,7 +391,8 @@ const ChamadosService = {
                 console.warn('obterMeuPerfil 404 — API_BASE_URL provavelmente aponta para o front, não para a API. Usando fallback session.user');
                 return null;
             }
-            console.error('Erro ao obter perfil do usuário:', e);
+            // Sessão expirada/ausente é fluxo esperado (usuário deslogado) — warn, não error (evita spam no backend)
+            console.warn('Erro ao obter perfil do usuário:', e && e.message ? e.message : e);
             return null;
         }
     },
@@ -437,7 +438,8 @@ const ApiClient = {
                 ...(corpo ? { body: JSON.stringify(corpo) } : {})
             });
         } catch (e) {
-            console.error(`Falha de rede ao chamar API ${API_BASE_URL}${caminho}:`, e);
+            // API fora do ar/offline é ambiente, não bug — warn para não poluir o log de erros
+            console.warn(`Falha de rede ao chamar API ${API_BASE_URL}${caminho}:`, e && e.message ? e.message : e);
             throw new Error(`Não foi possível conectar à API (${API_BASE_URL}). Verifique se o serviço API está no ar.`);
         }
         if (!resp.ok) {
@@ -465,5 +467,9 @@ const ApiClient = {
 
     get(caminho) {
         return this._autenticado('GET', caminho, null);
+    },
+
+    del(caminho) {
+        return this._autenticado('DELETE', caminho, null);
     }
 };

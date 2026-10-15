@@ -1,121 +1,165 @@
-﻿// ==========================================================
-// TELA: Dashboard — painel operacional (contexto → números →
-// análise). Lógica de filtros/métricas preservada; apenas a
-// composição foi redesenhada: faixa integrada, sem 8 cards.
-// ==========================================================
-function TelaDashboard({ chamados, voltar }) {
+// TELA: Dashboard — composição operacional UNILINK
+function TelaDashboard({ chamados }) {
     const [filtro, setFiltro] = React.useState({ tipo: 'dias', valor: 30 });
     const [unidadeFiltro, setUnidadeFiltro] = React.useState('TODOS');
     const [statusFiltro, setStatusFiltro] = React.useState('TODOS');
-    const [expandReinc, setExpandReinc] = React.useState(false);
     const [detalhes, setDetalhes] = React.useState(null);
-    const [refreshKey, setRefreshKey] = React.useState(0);
     const [atualizadoEm, setAtualizadoEm] = React.useState(new Date());
+    React.useEffect(() => { setAtualizadoEm(new Date()); }, [chamados]);
 
     const periodoLabel = filtro.tipo === 'intervalo' ? filtro.label : (filtro.valor === null ? 'Todo o período' : `Últimos ${filtro.valor} dias`);
 
-    const chamadosFiltrados = React.useMemo(() => {
+    const baseFiltro = React.useMemo(() => {
         let base = chamados;
         if (unidadeFiltro !== 'TODOS') base = base.filter(c => (c.unidade || 'MATRIZ') === unidadeFiltro);
         if (statusFiltro !== 'TODOS') base = base.filter(c => (c.status || (c.concluido ? 'FECHADO' : 'ABERTO')) === statusFiltro);
-        return filtro.tipo === 'intervalo' ? filtrarChamadosPorIntervalo(base, filtro.inicio, filtro.fim) : filtrarChamadosPorPeriodo(base, filtro.valor);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [chamados, filtro, unidadeFiltro, statusFiltro, refreshKey]);
+        return base;
+    }, [chamados, unidadeFiltro, statusFiltro]);
+
+    const chamadosFiltrados = React.useMemo(() => {
+        return filtro.tipo === 'intervalo' ? filtrarChamadosPorIntervalo(baseFiltro, filtro.inicio, filtro.fim) : filtrarChamadosPorPeriodo(baseFiltro, filtro.valor);
+    }, [baseFiltro, filtro]);
+
+    const prevLista = React.useMemo(() => {
+        try {
+            if (filtro.tipo === 'intervalo' && filtro.inicio && filtro.fim) {
+                const dur = filtro.fim - filtro.inicio;
+                return filtrarChamadosPorIntervalo(baseFiltro, new Date(filtro.inicio - dur), filtro.inicio);
+            }
+            if (filtro.tipo === 'dias' && filtro.valor) {
+                const fim = new Date(); fim.setHours(0, 0, 0, 0); fim.setDate(fim.getDate() - filtro.valor);
+                const inicio = new Date(fim); inicio.setDate(inicio.getDate() - filtro.valor);
+                return filtrarChamadosPorIntervalo(baseFiltro, inicio, fim);
+            }
+        } catch {}
+        return null;
+    }, [baseFiltro, filtro]);
+
+    const mesmoDia = (dataStr, ref) => {
+        try {
+            const dt = parseDataBR(dataStr);
+            return dt && dt.getFullYear() === ref.getFullYear() && dt.getMonth() === ref.getMonth() && dt.getDate() === ref.getDate();
+        } catch { return false; }
+    };
 
     const resumo = React.useMemo(() => calcularResumoGeral(chamadosFiltrados), [chamadosFiltrados]);
+    const resumoPrev = React.useMemo(() => (prevLista ? calcularResumoGeral(prevLista) : null), [prevLista]);
     const metricasServico = React.useMemo(() => calcularMetricasPorServico(chamadosFiltrados), [chamadosFiltrados]);
-    const distPrioridade = React.useMemo(() => calcularDistribuicaoPorPrioridade(chamadosFiltrados), [chamadosFiltrados]);
-    const distUnidade = React.useMemo(() => calcularDistribuicaoPorUnidade(chamadosFiltrados), [chamadosFiltrados]);
     const distStatus = React.useMemo(() => calcularDistribuicaoPorStatus(chamadosFiltrados), [chamadosFiltrados]);
     const maiorTotalServico = Math.max(1, ...metricasServico.map(m => m.total));
 
-    // Série temporal: chamados por dia (últimos 14 dias dentro do filtro)
+    const hoje = new Date();
+    const abertosHoje = chamadosFiltrados.filter(c => !c.concluido && mesmoDia(c.dataAbertura, hoje)).length;
+    const emAtend = chamadosFiltrados.filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento));
+    const emAtendAlta = emAtend.filter(c => c.prioridade === 'Urgente' || c.prioridade === 'Alta').length;
+    const conclHoje = chamadosFiltrados.filter(c => c.concluido && mesmoDia(c.dataEncerramento, hoje)).length;
+
+    const deltaTempo = (() => {
+        const cur = resumo.tempoMedioResolucao;
+        const prv = resumoPrev?.tempoMedioResolucao;
+        if (!cur || !prv) return null;
+        const pct = Math.round(((cur - prv) / prv) * 100);
+        if (pct === 0) return null;
+        return { pct: Math.abs(pct), melhorou: pct < 0 };
+    })();
+
     const serieTemporal = React.useMemo(() => {
         const dias = [];
-        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        const ref = new Date(); ref.setHours(0, 0, 0, 0);
         for (let i = 13; i >= 0; i--) {
-            const d = new Date(hoje); d.setDate(d.getDate() - i);
+            const d = new Date(ref); d.setDate(d.getDate() - i);
             const fim = new Date(d); fim.setHours(23, 59, 59, 999);
             let qtd = 0;
             try { qtd = filtrarChamadosPorIntervalo(chamadosFiltrados, d, fim).length; } catch { qtd = 0; }
-            dias.push({ data: d, qtd, hoje: i === 0 });
+            dias.push({ data: d, qtd });
         }
         return dias;
     }, [chamadosFiltrados]);
-
     const maxSerie = Math.max(1, ...serieTemporal.map(p => p.qtd));
 
-    // Críticos: urgentes ou atrasados ainda abertos
-    const criticos = React.useMemo(() => chamadosFiltrados
-        .filter(c => !c.concluido && (c.prioridade === 'Urgente' || calcularDiasDecorridos(c.dataAbertura) > 3))
-        .sort((a, b) => priorityWeights[a.prioridade] - priorityWeights[b.prioridade])
-        .slice(0, 5), [chamadosFiltrados]);
-
-    // Atividade recente: últimos 5 por data de abertura
-    const recentes = React.useMemo(() => [...chamadosFiltrados]
+    const emAtendimentoLista = React.useMemo(() => [...emAtend]
         .sort((a, b) => {
-            const da = (typeof parseDataBR === 'function' && parseDataBR(a.dataAbertura)) || new Date(0);
-            const db = (typeof parseDataBR === 'function' && parseDataBR(b.dataAbertura)) || new Date(0);
-            return db - da;
+            const ua = a.prioridade === 'Urgente';
+            const ub = b.prioridade === 'Urgente';
+            if (ua !== ub) return ua ? -1 : 1;
+            return calcularDiasDecorridos(b.dataAbertura) - calcularDiasDecorridos(a.dataAbertura);
         })
-        .slice(0, 5), [chamadosFiltrados]);
+        .slice(0, 8), [chamadosFiltrados]);
 
-    const aguardando = chamadosFiltrados.filter(c => !c.concluido && (c.status === 'AGUARDANDO_USUARIO' || c.status === 'ATRIBUIDO')).length;
+    const atividade = React.useMemo(() => atividadeRecente(chamadosFiltrados, 8), [chamadosFiltrados]);
 
-    const atualizar = () => {
-        setRefreshKey(k => k + 1);
-        setAtualizadoEm(new Date());
-        window.notifySuccess && window.notifySuccess('Dados atualizados');
+    const recorrencias = React.useMemo(() => {
+        const cur = {};
+        chamadosFiltrados.forEach(c => {
+            const k = (c.equipamento || '-').toUpperCase();
+            if (!cur[k]) cur[k] = { equip: c.equipamento || '-', servico: c.servico, n: 0, ultima: null };
+            cur[k].n += 1;
+            try {
+                const dt = parseDataBR(c.dataAbertura);
+                if (dt && (!cur[k].ultima || dt > cur[k].ultima)) cur[k].ultima = dt;
+            } catch {}
+        });
+        const prev = {};
+        (prevLista || []).forEach(c => {
+            const k = (c.equipamento || '-').toUpperCase();
+            prev[k] = (prev[k] || 0) + 1;
+        });
+        return Object.values(cur)
+            .filter(r => r.n > 1)
+            .sort((a, b) => b.n - a.n)
+            .slice(0, 5)
+            .map(r => ({
+                ...r,
+                trend: prevLista ? r.n - (prev[r.equip.toUpperCase()] || 0) : null,
+                ultimaStr: r.ultima ? r.ultima.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '-'
+            }));
+    }, [chamadosFiltrados, prevLista]);
+
+    const dataCabecalho = atualizadoEm.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/\./g, '').toUpperCase();
+    const horaCabecalho = atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    const Ind = ({ rotulo, valor, icon, extra }) => {
+        const n = useCountUp(valor);
+        return (
+        <div className="min-w-0 flex-1 px-3 py-3.5 sm:px-4">
+            <div className="flex items-center gap-2">
+                <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 min-[400px]:flex dark:bg-slate-800 dark:text-slate-400">{icon}</span>
+                <span className="min-w-0">
+                    <span className="block truncate text-[13px] text-slate-500 dark:text-slate-400">{rotulo}</span>
+                    <span className="mt-0.5 block text-2xl font-semibold tabular-nums leading-none tracking-tight text-slate-900 dark:text-slate-100">{n}</span>
+                </span>
+            </div>
+            {extra && <div className="mt-1.5">{extra}</div>}
+        </div>
+        );
     };
 
-    const horaAtualizada = atualizadoEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-    const StatDestaque = ({ valor, rotulo, tom = '', sub }) => (
-        <div className="min-w-0 flex-1 px-4 py-4 text-center sm:px-6">
-            <div className={`text-[26px] font-extrabold tabular-nums leading-none tracking-tight ${tom}`}>{valor}</div>
-            <div className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">{rotulo}</div>
-            {sub && <div className="mt-0.5 text-[11px] text-slate-400">{sub}</div>}
-        </div>
-    );
-
-    const corPrioridade = { 'Urgente': '#ef4444', 'Alta': '#f97316', 'Média': '#eab308', 'Baixa': '#94a3b8' };
-    const maiorPrioridade = Math.max(1, ...Object.values(distPrioridade));
-
     return (
-        <div className="fade-in w-full">
-            {detalhes && <ModalDetalhes chamado={detalhes} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
+        <div className="w-full">
+            {detalhes && <ModalDetalhes chamado={detalhes} chamados={chamados} aoFechar={() => setDetalhes(null)} aoImprimir={(c) => imprimirOrdemServico(c)} />}
 
             <PageHeader
-                eyebrow="Manutenção · Dashboard"
-                title="Visão geral dos chamados"
-                live
-                updatedAt={`Atualizado às ${horaAtualizada}`}
-                back={voltar}
-                backLabel="Menu"
+                title="Operação"
+                meta={`${dataCabecalho}, ${horaCabecalho}, ${periodoLabel}`}
                 actions={
                     <React.Fragment>
-                        <button onClick={atualizar} className="btn-ghost" title="Atualizar dados">
-                            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                            Atualizar
+                        <LiveDot label={`Atualizado ${horaCabecalho}`} />
+                        <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="btn-ghost">
+                            <svg className="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                            PDF
                         </button>
-                        <button onClick={() => imprimirRelatorioMetricas(resumo, metricasServico, `${periodoLabel} — ${unidadeFiltro}`)} className="btn-ghost">PDF</button>
                     </React.Fragment>
                 }
             />
 
-            {/* Filtros integrados */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                <div className="relative min-w-[150px] flex-1 sm:max-w-[220px]">
-                    <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-slate-400">Filial ▾</span>
-                    <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input !pl-9">
-                        <option value="TODOS">Todas</option>
-                        <option value="MATRIZ">Matriz</option>
-                        <option value="PECÉM">Pecém</option>
-                    </select>
-                </div>
-                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input min-w-[130px] flex-1 sm:max-w-[190px]">
-                    <option value="TODOS">Todos status ▾</option>
+            <div className="u-surface mb-4 flex flex-wrap gap-2 p-2.5">
+                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[160px]">
+                    <option value="TODOS">Filial: todas</option>
+                    <option value="MATRIZ">Matriz</option>
+                    <option value="PECÉM">Pecém</option>
+                </select>
+                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[180px]">
+                    <option value="TODOS">Status: todos</option>
                     <option value="ABERTO">Aberto</option>
                     <option value="EM_ATENDIMENTO">Em atendimento</option>
                     <option value="AGUARDANDO_USUARIO">Parcial</option>
@@ -130,222 +174,157 @@ function TelaDashboard({ chamados, voltar }) {
                     else if (v === 'Mês anterior') { const { inicio, fim } = obterIntervaloMesAnterior(); setFiltro({ tipo: 'intervalo', inicio, fim, label: 'Mês anterior' }); }
                     else if (v === 'Tudo') setFiltro({ tipo: 'dias', valor: null });
                     else setFiltro({ tipo: 'dias', valor: parseInt(v) || 30 });
-                }} aria-label="Período" className="u-input min-w-[140px] flex-1 sm:max-w-[190px]">
-                    <option value="7d">Últimos 7 dias ▾</option>
-                    <option value="30d">Últimos 30 dias ▾</option>
-                    <option value="90d">Últimos 90 dias ▾</option>
-                    <option value="Tudo">Todo período ▾</option>
+                }} aria-label="Período" className="u-input sm:max-w-[180px]">
                     <option value="Hoje">Hoje</option>
                     <option value="Ontem">Ontem</option>
-                    <option value="Mês atual">Mês atual</option>
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d">Últimos 30 dias</option>
+                    <option value="90d">Últimos 90 dias</option>
+                    <option value="Mês atual">Este mês</option>
                     <option value="Mês anterior">Mês anterior</option>
+                    <option value="Tudo">Todo período</option>
                 </select>
                 {(statusFiltro !== 'TODOS' || unidadeFiltro !== 'TODOS' || filtro.tipo === 'intervalo' || filtro.valor !== 30) && (
-                    <button onClick={() => { setStatusFiltro('TODOS'); setUnidadeFiltro('TODOS'); setFiltro({ tipo: 'dias', valor: 30 }); }} className="px-2 text-xs font-semibold text-slate-500 underline underline-offset-2 hover:text-slate-800 dark:hover:text-white">Limpar</button>
+                    <button onClick={() => { setStatusFiltro('TODOS'); setUnidadeFiltro('TODOS'); setFiltro({ tipo: 'dias', valor: 30 }); }} className="px-2 text-xs text-[#0E3263] underline underline-offset-2 hover:text-[#0A2447] dark:text-sky-300 dark:hover:text-sky-200">Limpar</button>
                 )}
             </div>
 
-            {/* Faixa integrada de indicadores */}
-            <section key={refreshKey} className="flash-update u-surface mb-4">
-                <div className="flex divide-x divide-slate-100 dark:divide-white/[0.06]">
-                    <StatDestaque valor={resumo.abertos} rotulo="abertos" tom="text-slate-900 dark:text-white" />
-                    <StatDestaque valor={resumo.emAtendimento} rotulo="em atendimento" tom="text-slate-900 dark:text-white" />
-                    <StatDestaque valor={aguardando} rotulo="aguardando" tom="text-slate-900 dark:text-white" />
-                    <StatDestaque valor={`${resumo.taxaResolucao}%`} rotulo="resolução" tom="text-emerald-600 dark:text-emerald-400" />
+            <section className="u-surface mb-5">
+                <div className="grid grid-cols-3 divide-x divide-slate-100 dark:divide-slate-700">
+                    <Ind rotulo="Chamados" valor={resumo.total} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>} extra={abertosHoje > 0 ? <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">+{abertosHoje} hoje</span> : null} />
+                    <Ind rotulo="Em atendimento" valor={emAtend.length} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.734-.05a2.5 2.5 0 111.316 4.813 2.5 2.5 0 01-3.05-3.05z" /></svg>} extra={emAtendAlta > 0 ? <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{emAtendAlta} alta prioridade</span> : null} />
+                    <Ind rotulo="Tempo médio" valor={formatarHoras(resumo.tempoMedioResolucao)} icon={<svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} extra={deltaTempo ? <span className={`text-xs tabular-nums ${deltaTempo.melhorou ? 'text-[#1B7A4D] dark:text-emerald-400' : 'text-[#B3261E] dark:text-red-400'}`}>{deltaTempo.melhorou ? '↓' : '↑'} {deltaTempo.pct}%</span> : null} />
                 </div>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-t u-divider px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 sm:px-6">
-                    <span><strong className="font-bold text-slate-700 dark:text-slate-200">{resumo.total}</strong> no período</span>
-                    <span><strong className="font-bold text-slate-700 dark:text-slate-200">{resumo.encerrados}</strong> encerrados</span>
-                    <span>Tempo médio <strong className="font-bold text-slate-700 dark:text-slate-200">{formatarHoras(resumo.tempoMedioResolucao)}</strong></span>
-                    <span><strong className={`font-bold ${resumo.atrasados ? 'text-red-600 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{resumo.atrasados}</strong> atrasados</span>
-                    <span><strong className="font-bold text-slate-700 dark:text-slate-200">{resumo.pendentesSemAtendimento}</strong> sem atendimento</span>
+                <div className="flex flex-wrap gap-x-5 gap-y-1 border-t u-divider px-4 py-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>Abertos <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.abertos}</strong></span>
+                    <span>Concluídos <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.encerrados}{conclHoje > 0 ? ` (+${conclHoje} hoje)` : ''}</strong></span>
+                    <span>Taxa de resolução <strong className="font-medium text-slate-700 dark:text-slate-200">{resumo.taxaResolucao}%</strong></span>
+                    <span>Atrasados <strong className={`font-medium ${resumo.atrasados ? 'text-[#B3261E] dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{resumo.atrasados}</strong></span>
                 </div>
             </section>
 
-            {/* Análise: evolução + distribuição */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr]">
-                <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle>Chamados ao longo do tempo</SectionTitle>
-                    <div className="flex h-32 items-end gap-1.5" role="img" aria-label="Chamados por dia nos últimos 14 dias">
-                        {serieTemporal.map((p, i) => (
-                            <div key={i} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${p.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}: ${p.qtd}`}>
-                                <span className="text-[10px] font-semibold tabular-nums text-slate-400">{p.qtd > 0 ? p.qtd : ''}</span>
-                                <div className="flex h-20 w-full items-end">
-                                    <div className={`w-full rounded-sm transition-all ${p.hoje ? 'bg-[#0E3263] dark:bg-white' : 'bg-slate-200 dark:bg-white/15'}`} style={{ height: `${Math.max(p.qtd > 0 ? 8 : 2, (p.qtd / maxSerie) * 100)}%` }}></div>
-                                </div>
-                                {(i % 2 === 0 || p.hoje) && <span className={`text-[9px] tabular-nums ${p.hoje ? 'font-bold text-[#0E3263] dark:text-white' : 'text-slate-400'}`}>{p.data.toLocaleDateString('pt-BR', { day: '2-digit' })}</span>}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="mt-2 text-[11px] text-slate-400">Últimos 14 dias • {periodoLabel}</p>
-                </section>
-
-                <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle>Distribuição por status</SectionTitle>
-                    <PieChart data={distStatus} colors={{ ABERTO: '#94a3b8', EM_ANALISE: '#0ea5e9', ATRIBUIDO: '#6366f1', EM_ATENDIMENTO: '#f59e0b', AGUARDANDO_USUARIO: '#f97316', RESOLVIDO: '#10b981', FECHADO: '#059669' }} />
-                </section>
-            </div>
-
-            {/* Críticos + atividade */}
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle action={criticos.length > 0 ? <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[11px] font-bold text-red-600 dark:text-red-400">{criticos.length}</span> : null}>
-                        Chamados críticos
-                    </SectionTitle>
-                    {criticos.length === 0 ? (
-                        <p className="py-4 text-center text-xs text-slate-500">Nenhum chamado crítico no período.</p>
-                    ) : (
-                        <ul className="divide-y u-divider">
-                            {criticos.map(c => (
-                                <li key={c.idFirebase}>
-                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2.5 text-left">
-                                        <span className="h-8 w-1 shrink-0 rounded-full bg-red-500/80"></span>
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">{c.equipamento}</span>
-                                            <ProtocoloTag codigo={c.protocolo} />
-                                        </span>
-                                        <span className="flex shrink-0 flex-col items-end gap-1">
-                                            <PriorityBadge prioridade={c.prioridade} />
-                                            <TempoAberto dataAbertura={c.dataAbertura} />
-                                        </span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
-
-                <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle>Atividade recente</SectionTitle>
-                    {recentes.length === 0 ? (
-                        <p className="py-4 text-center text-xs text-slate-500">Sem atividade no período.</p>
-                    ) : (
-                        <ul className="divide-y u-divider">
-                            {recentes.map(c => (
-                                <li key={c.idFirebase}>
-                                    <button onClick={() => setDetalhes(c)} className="flex w-full items-center gap-3 py-2.5 text-left transition hover:bg-slate-50 dark:hover:bg-white/[0.02]">
-                                        <span className="min-w-0 flex-1">
-                                            <span className="block truncate text-[13px] font-semibold text-slate-800 dark:text-slate-100">{c.equipamento}</span>
-                                            <span className="mt-0.5 block text-[11px] text-slate-400">{formatarApenasData(c.dataAbertura)} • {c.unidade || 'MATRIZ'}</span>
-                                        </span>
-                                        <StatusBadge status={c.status} concluido={c.concluido} />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </section>
-            </div>
-
-            {/* Reincidências (colapsável) */}
-            <section className="u-surface mt-4">
-                <button onClick={() => setExpandReinc(v => !v)} className="flex w-full items-center justify-between gap-2 px-4 py-3.5 text-left sm:px-5">
-                    <span className="flex items-center gap-2.5">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-[13px]">⚠</span>
-                        <span>
-                            <span className="block text-[13px] font-bold text-slate-800 dark:text-slate-100">Reincidências</span>
-                            <span className="block text-[11px] text-slate-400">{metricasServico.reduce((a, m) => a + m.recorrentes, 0)} equipamentos repetidos</span>
-                        </span>
-                    </span>
-                    <svg className={`h-4 w-4 text-slate-400 transition ${expandReinc ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                {expandReinc && (
-                    <div className="border-t u-divider px-4 py-3 sm:px-5">
-                        {metricasServico.filter(m => m.recorrentes > 0).length === 0 ? (
-                            <p className="py-3 text-center text-xs text-slate-500">Nenhuma reincidência — ótimo.</p>
-                        ) : (
-                            <ul className="space-y-1.5">
-                                {metricasServico.filter(m => m.recorrentes > 0).slice(0, 5).map(m => (
-                                    <li key={m.servico} className="flex w-full items-center justify-between rounded-lg px-3 py-2">
-                                        <ServiceBadge servico={m.servico} />
-                                        <span className="text-[13px] font-bold text-amber-700 dark:text-amber-300">{m.recorrentes} ×</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                        <p className="mt-2 text-[11px] text-slate-400">Mesmo equipamento com &gt;1 chamado do mesmo serviço no período.</p>
-                    </div>
-                )}
+            <section className="u-surface mb-5 p-4 sm:p-5">
+                <SectionTitle>Volume de chamados</SectionTitle>
+                <div className="flex h-28 items-end gap-1.5">
+                    {serieTemporal.map((p, i) => (
+                        <div key={i} className="flex min-w-0 flex-1 flex-col items-center justify-end gap-1 self-stretch" title={`${p.data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}: ${p.qtd}`}>
+                            <div className="w-full rounded-sm bg-[#0E3263]/80 dark:bg-sky-400/70" style={{ height: `${Math.max(p.qtd > 0 ? 6 : 2, (p.qtd / maxSerie) * 100)}%` }}></div>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-1.5 flex justify-between text-[10px] tabular-nums text-slate-400">
+                    <span>{serieTemporal[0].data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
+                    <span>Últimos 14 dias</span>
+                    <span>{serieTemporal[13].data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
+                </div>
             </section>
 
-            {/* Prioridade + unidade */}
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                 <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle>Por prioridade</SectionTitle>
-                    <div className="space-y-2.5">
-                        {Object.entries(distPrioridade).map(([p, qtd]) => (
-                            <div key={p} className="flex items-center gap-2.5">
-                                <span className="w-[52px] shrink-0 text-xs font-medium text-slate-500 dark:text-slate-400">{p}</span>
-                                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                    <div className="h-full rounded-full transition-all" style={{ width: `${(qtd / maiorPrioridade) * 100}%`, background: corPrioridade[p] || '#94a3b8' }}></div>
-                                </div>
-                                <span className="w-6 shrink-0 text-right text-xs font-bold tabular-nums text-slate-700 dark:text-slate-200">{qtd}</span>
-                            </div>
-                        ))}
-                    </div>
+                    <SectionTitle>Status</SectionTitle>
+                    <PieChart data={distStatus} colors={{ ABERTO: '#94a3b8', EM_ANALISE: '#2563A8', ATRIBUIDO: '#6366f1', EM_ATENDIMENTO: '#B9770E', AGUARDANDO_USUARIO: '#CA8A04', RESOLVIDO: '#2E9E63', FECHADO: '#1B7A4D' }} />
                 </section>
                 <section className="u-surface p-4 sm:p-5">
-                    <SectionTitle>Por unidade</SectionTitle>
-                    <div className="space-y-1.5">
-                        {Object.entries(distUnidade).length === 0 && <p className="py-3 text-center text-xs text-slate-500">Sem dados no período.</p>}
-                        {Object.entries(distUnidade).map(([u, qtd]) => (
-                            <div key={u} className="flex items-center justify-between rounded-lg px-3 py-2 transition hover:bg-slate-50 dark:hover:bg-white/5">
-                                <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300">{u}</span>
-                                <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">{qtd}</span>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            </div>
-
-            {/* Indicadores por serviço */}
-            <section className="u-surface mt-4 overflow-hidden">
-                <div className="px-4 pt-4 sm:px-5 sm:pt-5">
-                    <SectionTitle>Indicadores por serviço</SectionTitle>
-                </div>
-                {metricasServico.length === 0 && <p className="px-5 pb-6 text-center text-xs text-slate-500">Nenhum chamado no período.</p>}
-                {metricasServico.length > 0 && (
-                    <React.Fragment>
-                        <div className="space-y-px px-2 pb-2 md:hidden">
-                            {metricasServico.map(m => (
-                                <div key={m.servico} className="rounded-lg px-3 py-2.5">
-                                    <div className="mb-1.5 flex items-center justify-between">
-                                        <ServiceBadge servico={m.servico} />
-                                        <span className="text-xs font-bold tabular-nums text-slate-700 dark:text-slate-200">{m.total}</span>
+                    <SectionTitle>Serviços</SectionTitle>
+                    {metricasServico.length === 0 ? (
+                        <p className="py-2 text-xs text-slate-500">Nenhum chamado no período.</p>
+                    ) : (
+                        <div className="space-y-2.5">
+                            {metricasServico.slice(0, 6).map((m, idx) => (
+                                <div key={m.servico} className="flex items-center gap-2.5">
+                                    <span className="w-24 shrink-0 truncate text-xs text-slate-500 dark:text-slate-400">{m.servico}</span>
+                                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                        <div className={`h-full rounded-full ${idx === 0 ? 'bg-[#0E3263] dark:bg-sky-400' : 'bg-slate-300 dark:bg-slate-600'}`} style={{ width: `${(m.total / maiorTotalServico) * 100}%` }}></div>
                                     </div>
-                                    <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-white/10">
-                                        <div className="h-full rounded-full bg-[#0E3263] dark:bg-white" style={{ width: `${(m.total / maiorTotalServico) * 100}%` }}></div>
-                                    </div>
-                                    <div className="mt-1.5 grid grid-cols-4 gap-1 text-[11px] text-slate-400">
-                                        <span><strong className="font-semibold text-slate-600 dark:text-slate-300">{m.abertos}</strong> abertos</span>
-                                        <span><strong className="font-semibold text-slate-600 dark:text-slate-300">{m.encerrados}</strong> ok</span>
-                                        <span><strong className="font-semibold text-slate-600 dark:text-slate-300">{formatarHoras(m.tempoMedioHoras)}</strong></span>
-                                        <span><strong className={`font-semibold ${m.atrasados ? 'text-red-500' : 'text-slate-600 dark:text-slate-300'}`}>{m.atrasados}</strong> atras.</span>
-                                    </div>
+                                    <span className="w-7 shrink-0 text-right text-xs tabular-nums text-slate-700 dark:text-slate-200">{m.total}</span>
                                 </div>
                             ))}
                         </div>
-                        <div className="hidden overflow-x-auto md:block">
+                    )}
+                </section>
+            </div>
+
+            <section className="u-surface mt-5 overflow-hidden">
+                <div className="px-4 pt-4 sm:px-5">
+                    <SectionTitle>Chamados em atendimento</SectionTitle>
+                </div>
+                {emAtendimentoLista.length === 0 ? (
+                    <p className="px-5 pb-4 text-xs text-slate-500">Nenhum chamado em atendimento.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="u-table">
+                            <thead><tr><th>Protocolo</th><th>Equipamento</th><th>Responsável</th><th>Prioridade</th><th className="!text-right">Tempo</th></tr></thead>
+                            <tbody>
+                                {emAtendimentoLista.map(c => (
+                                    <tr key={c.idFirebase} onClick={() => setDetalhes(c)} className="cursor-pointer">
+                                        <td><ProtocoloTag codigo={c.protocolo} /></td>
+                                        <td className="font-medium text-slate-900 dark:text-slate-100">{c.equipamento}</td>
+                                        <td className="max-w-[160px] truncate text-[13px] text-slate-600 dark:text-slate-400">{c.atribuidoParaNome || '—'}</td>
+                                        <td><PriorityBadge prioridade={c.prioridade} /></td>
+                                        <td className="text-right"><TempoAberto dataAbertura={c.dataAbertura} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </section>
+
+            <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
+                <section className="u-surface p-4 sm:p-5">
+                    <SectionTitle>Atividade operacional</SectionTitle>
+                    {atividade.length === 0 ? (
+                        <p className="py-1 text-xs text-slate-500">Sem atividade no período.</p>
+                    ) : (
+                        <ul className="divide-y u-divider">
+                            {atividade.map(a => {
+                                const dt = new Date(a.ts);
+                                const hh = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+                                const dd = dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                                return (
+                                    <li key={a.id} className="flex items-center gap-2.5 py-2">
+                                        <span className="shrink-0 font-mono text-xs text-slate-400" title={dt.toLocaleString('pt-BR')}>{hh}</span>
+                                        <ProtocoloTag codigo={a.protocolo} />
+                                        <span className="min-w-0 flex-1 truncate text-[13px] text-slate-600 dark:text-slate-300">{a.texto}</span>
+                                        <span className="shrink-0 text-[11px] tabular-nums text-slate-400">{dd}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    )}
+                </section>
+                <section className="u-surface p-4 sm:p-5">
+                    <SectionTitle>Recorrências</SectionTitle>
+                    {recorrencias.length === 0 ? (
+                        <p className="py-1 text-xs text-slate-500">Nenhuma recorrência no período.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
                             <table className="u-table">
-                                <thead><tr><th>Serviço</th><th className="!text-center">Total</th><th className="!text-center">Abertos</th><th className="!text-center">Encerrados</th><th className="!text-center">Tempo médio</th><th className="!text-center">Atrasados</th><th className="!text-center">Taxa</th></tr></thead>
+                                <thead><tr><th>Equipamento</th><th className="!text-right">Ocorrências</th><th className="!text-right">Última</th><th className="!text-right">Tendência</th></tr></thead>
                                 <tbody>
-                                    {metricasServico.map(m => (
-                                        <tr key={m.servico}>
-                                            <td><ServiceBadge servico={m.servico} /></td>
-                                            <td className="text-center font-bold tabular-nums">{m.total}</td>
-                                            <td className="text-center tabular-nums text-amber-600">{m.abertos}</td>
-                                            <td className="text-center tabular-nums text-emerald-600">{m.encerrados}</td>
-                                            <td className="text-center tabular-nums">{formatarHoras(m.tempoMedioHoras)}</td>
-                                            <td className="text-center tabular-nums text-red-600">{m.atrasados}</td>
-                                            <td className="text-center tabular-nums">{m.taxaResolucao}%</td>
+                                    {recorrencias.map(r => (
+                                        <tr key={r.equip}>
+                                            <td>
+                                                <p className="font-medium text-slate-900 dark:text-slate-100">{r.equip}</p>
+                                                <p className="truncate text-[11px] text-slate-400">{r.servico}</p>
+                                            </td>
+                                            <td className="text-right tabular-nums">{r.n}</td>
+                                            <td className="text-right tabular-nums text-slate-500">{r.ultimaStr}</td>
+                                            <td className="text-right tabular-nums">
+                                                {r.trend === null || r.trend === 0 ? (
+                                                    <span className="text-slate-300 dark:text-slate-600">→</span>
+                                                ) : (
+                                                    <span className={r.trend > 0 ? 'text-[#B3261E] dark:text-red-400' : 'text-[#1B7A4D] dark:text-emerald-400'}>{r.trend > 0 ? '↑' : '↓'}</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    </React.Fragment>
-                )}
-            </section>
+                    )}
+                </section>
+            </div>
         </div>
     );
 }

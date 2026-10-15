@@ -1,8 +1,4 @@
-// ==========================================================
-// COMPONENTE: Toast — notificações compactas e discretas
-// Mesma API (window.showToast / notifySuccess|Error|Warning|Info).
-// Visual: pílula escura neutra, ícone de 14px, sem alerta gigante.
-// ==========================================================
+// COMPONENTE: Toast — notificações objetivas
 function ToastContainer() {
     const [toasts, setToasts] = React.useState([]);
 
@@ -24,19 +20,19 @@ function ToastContainer() {
     }, [addToast]);
 
     const dot = {
-        success: "bg-emerald-500",
-        error: "bg-red-500",
-        warning: "bg-amber-500",
-        info: "bg-sky-500"
+        success: "bg-[#1B7A4D]",
+        error: "bg-[#B3261E]",
+        warning: "bg-[#B9770E]",
+        info: "bg-[#2563A8]"
     };
 
     return (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-[100] w-[92vw] sm:w-auto sm:max-w-sm flex flex-col gap-2 pointer-events-none">
             {toasts.map(t => (
-                <div key={t.id} className="toast-in pointer-events-auto flex items-center gap-2.5 rounded-full bg-slate-900/95 dark:bg-white dark:text-slate-900 text-white pl-3.5 pr-2 py-2 shadow-lg backdrop-blur-sm">
+                <div key={t.id} className="toast-in pointer-events-auto flex items-center gap-2.5 rounded-md border border-slate-200 bg-white py-2.5 pl-3.5 pr-2 text-slate-700 shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot[t.type] || dot.info}`}></span>
-                    <span className="flex-1 text-[13px] font-medium leading-snug break-words">{t.msg}</span>
-                    <button onClick={() => remove(t.id)} aria-label="Fechar" className="shrink-0 p-1.5 rounded-full hover:bg-white/15 dark:hover:bg-slate-900/10">
+                    <span className="flex-1 text-[13px] leading-snug break-words">{t.msg}</span>
+                    <button onClick={() => remove(t.id)} aria-label="Fechar" className="icon-btn shrink-0">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
