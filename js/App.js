@@ -115,8 +115,6 @@ function App() {
             } else {
                 supabase.auth.getSession().then(({ data: { session } }) => {
                     clearTimeout(timeout);
-                    const hasRecovery = window.location.hash.includes('type=recovery') || window.location.search.includes('code=');
-                    if (hasRecovery) setTelaAtual('redefinir');
                     aplicarSessao(session);
                 }).catch(err => {
                     console.error('getSession falhou:', err);
@@ -125,7 +123,6 @@ function App() {
                     setAutenticado(false);
                 });
                 const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-                    if (event === 'PASSWORD_RECOVERY') setTelaAtual('redefinir');
                     const newId = session?.user?.id || null;
                     if (event === 'TOKEN_REFRESHED' && newId && lastSessionIdRef.current === newId && meuPerfilRef.current) return;
                     await aplicarSessao(session);
@@ -505,7 +502,6 @@ function App() {
                             <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
                             {meuPerfil?.papel === 'administrador' && <EnvRow destaque label="Administração" onClick={() => setTelaAtual('admin')} icon={ICONS.shield} />}
                         </div>
-                        <button onClick={() => setTelaAtual('redefinir')} className="justify-self-start text-xs text-slate-400 hover:text-slate-600 lg:col-start-1 dark:hover:text-slate-200">Alterar senha</button>
                         </div>
                     </div>
                 )}
@@ -565,14 +561,6 @@ function App() {
                         aoAcompanhar={() => abrirAcompanhamento(chamadoRecemCriado?.protocolo)}
                     />
                     ) : <TelaAusente nome="sucesso" />
-                )}
-                {telaAtual === 'redefinir' && (
-                    typeof TelaRedefinirSenha !== 'undefined' ? (
-                    <TelaRedefinirSenha
-                        voltar={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); }}
-                        aoSucesso={() => { window.history.replaceState(null, '', window.location.pathname); setTelaAtual('splash'); window.notifySuccess && window.notifySuccess('Senha atualizada.'); }}
-                    />
-                    ) : <TelaAusente nome="redefinir" />
                 )}
             </main>
 
