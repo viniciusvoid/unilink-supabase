@@ -233,7 +233,7 @@ function TelaAdmin() {
                         ) : usuariosFiltrados.length === 0 ? (
                             <div className="u-surface"><EmptyState numero="0" title="Nenhum usuário." action={filtrosAtivos > 0 ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
                         ) : (
-                            <ul className="u-surface divide-y u-divider px-4">
+                            <ul className="u-surface divide-y u-divider max-h-[55vh] overflow-y-auto px-4">
                                 {usuariosFiltrados.map((u) => (
                                     <li key={u.id} className="flex items-center gap-2 py-2">
                                         <button onClick={() => verMovimentosDe(u)} className="min-w-0 flex-1 truncate text-left text-[13px] leading-5" title={`Ver movimentos de ${u.usuario}`}>
@@ -261,7 +261,7 @@ function TelaAdmin() {
                         ) : movimentosFiltrados.length === 0 ? (
                             <div className="u-surface"><EmptyState numero="0" title="Sem movimentos." action={filtrosAtivos > 0 ? <button onClick={limparFiltros} className="btn-ghost">Limpar filtros</button> : null} /></div>
                         ) : (
-                            <ul className="u-surface divide-y u-divider px-4">
+                            <ul className="u-surface divide-y u-divider max-h-[55vh] overflow-y-auto px-4">
                                 {movimentosFiltrados.map((m) => (
                                     <li key={`${m.origem}-${m.id}`} className="flex items-center gap-2 py-2">
                                         <span className="w-24 shrink-0 font-mono text-[11px] tabular-nums text-slate-400">{formatarApenasData(formatarDataBR(m.criado_em))}</span>
