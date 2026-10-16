@@ -118,7 +118,6 @@ app.patch('/chamados/:id/concluir', async (req,res)=>{
 // ADMIN_SENHA_PADRAO (padrão 'unilink123') e o 1º acesso exige troca.
 // ----------------------------------------------------------
 const DOMINIO_USUARIO = '@unilink.local';
-const SENHA_PADRAO = process.env.ADMIN_SENHA_PADRAO || 'unilink123';
 const PAPEIS = ['atendente', 'supervisor', 'administrador'];
 
 const normalizarUsuario = (u) => String(u || '').trim().toLowerCase();
@@ -210,14 +209,16 @@ app.get('/admin/usuarios', exigirAdmin, async (req,res)=>{
   }))});
 });
 
-// POST /admin/usuarios {usuario, papel} — cria com senha padrão + troca forçada
+// POST /admin/usuarios {usuario, papel, senha} — senha definida pelo admin; 1º acesso exige troca
 app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
   const usuario = normalizarUsuario(req.body?.usuario);
   const papel = String(req.body?.papel || 'atendente');
+  const senha = String(req.body?.senha || '');
   if (!usuarioValido(usuario)) return res.status(400).json({ mensagem:'Usuário inválido: use 3–40 letras minúsculas, números, ponto, _ ou -.' });
   if (!PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'Papel inválido.' });
+  if (senha.length < 6) return res.status(400).json({ mensagem:'Defina uma senha inicial com pelo menos 6 caracteres.' });
   const email = emailDeUsuario(usuario);
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: SENHA_PADRAO, email_confirm: true, user_metadata: { usuario } });
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { usuario } });
   if (error){
     logger.warn(`Criar usuario falhou ${usuario}: ${error.message}`);
     if (/already|exists|duplicate/i.test(error.message)) return res.status(409).json({ mensagem:`Usuário "${usuario}" já existe.` });
@@ -248,10 +249,12 @@ app.delete('/admin/usuarios/:id', exigirAdmin, async (req,res)=>{
   res.json({ ok:true });
 });
 
-// POST /admin/usuarios/:id/reset-senha — volta p/ padrão + força troca
+// POST /admin/usuarios/:id/reset-senha {novaSenha} — senha definida pelo admin + força troca
 app.post('/admin/usuarios/:id/reset-senha', exigirAdmin, async (req,res)=>{
   const { id } = req.params;
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: SENHA_PADRAO });
+  const novaSenha = String(req.body?.novaSenha || '');
+  if (novaSenha.length < 6) return res.status(400).json({ mensagem:'Defina a nova senha com pelo menos 6 caracteres.' });
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: novaSenha });
   if (error){ logger.error('Erro reset senha', error); return res.status(500).json({ mensagem:'Erro ao redefinir senha.' }); }
   await supabaseAdmin.from('perfis_usuario').update({ precisa_trocar_senha:true }).eq('user_id', id);
   const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
