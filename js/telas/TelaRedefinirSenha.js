@@ -1,4 +1,5 @@
-// TELA: Redefinir Senha — troca logada ("Alterar senha") e 1º acesso (semVoltar)
+// TELA: Redefinir Senha — uso exclusivo do 1º acesso forçado (semVoltar).
+// Não há mais entrada voluntária: sem "Esqueci a senha", sem "Alterar senha".
 function TelaRedefinirSenha({ voltar, aoSucesso, semVoltar }) {
     const [novaSenha, setNovaSenha] = React.useState('');
     const [confirmar, setConfirmar] = React.useState('');
