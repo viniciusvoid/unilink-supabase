@@ -112,7 +112,6 @@ function TelaCorretiva({ aoSalvar }) {
                                 ))}
                             </div>
                         </div>
-                        </div>
                     </div>
                 </div>
                 <div className="border-t u-divider px-4 py-4 sm:px-5">
