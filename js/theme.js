@@ -327,6 +327,28 @@ function TempoAberto({ dataAbertura }) {
     );
 }
 
+// ---------- Paginação ----------
+function Paginacao({ pagina, total, aoMudar }) {
+    if (!total || total <= 1) return null;
+    const ir = (n) => { if (n >= 1 && n <= total && n !== pagina) aoMudar(n); };
+    const nums = [];
+    for (let n = 1; n <= total; n++) {
+        if (total <= 7 || n === 1 || n === total || Math.abs(n - pagina) <= 1) nums.push(n);
+        else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    return (
+        <div className="mt-4 flex items-center justify-center gap-1">
+            <button disabled={pagina === 1} onClick={() => ir(pagina - 1)} aria-label="Anterior" className="btn-page">‹</button>
+            {nums.map((n, i) => n === '…' ? (
+                <span key={`e${i}`} className="px-1 text-xs text-slate-400">…</span>
+            ) : (
+                <button key={n} onClick={() => ir(n)} className={`btn-page ${pagina === n ? 'btn-page-ativo' : ''}`}>{n}</button>
+            ))}
+            <button disabled={pagina === total} onClick={() => ir(pagina + 1)} aria-label="Próxima" className="btn-page">›</button>
+        </div>
+    );
+}
+
 // ---------- Controle Segmentado (Unidade, Prioridade, etc.) ----------
 function SegmentedControl({ options, value, onChange, disabled, className }) {
     const n = options.length;
