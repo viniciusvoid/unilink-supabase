@@ -1,8 +1,9 @@
 // ==========================================================
 // COMPONENTE: CameraCapture — tirar foto ou escolher arquivo
 // Reutilizável para TelaCorretiva e TelaPendencia
-// Mobile: usa getUserMedia com facingMode environment (câmera traseira)
-// Desktop: fallback para file picker
+// Mobile: "Galeria" abre seletor nativo (câmera + galeria)
+//         "Câmera" abre modal in-app com getUserMedia (traseira)
+// Desktop: ambos usam file picker; "Câmera" abre modal in-app
 // ==========================================================
 function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 0, disabled = false }) {
     const [showCamera, setShowCamera] = React.useState(false);
@@ -24,10 +25,8 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             setStream(s);
             setShowCamera(true);
         } catch (e) {
-            // Permissão negada/dispensada é fluxo esperado do usuário — warn, não error (evita spam no backend)
             console.warn('Erro câmera:', e && e.name ? e.name : e);
             setError('Não foi possível acessar a câmera. Use "Escolher arquivo".');
-            // fallback: abre file picker com capture
             if (fileInputRef.current) fileInputRef.current.click();
         }
     };
@@ -35,9 +34,8 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
     React.useEffect(() => {
         if (showCamera && videoRef.current && stream) {
             videoRef.current.srcObject = stream;
-            videoRef.current.play().catch(()=>{});
+            videoRef.current.play().catch(() => {});
         }
-        return () => {};
     }, [showCamera, stream]);
 
     const closeCamera = () => {
@@ -80,8 +78,39 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files || []);
-        onSelectFiles(files);
+        if (files.length === 0) return;
+
+        const validFiles = [];
+        const invalid = [];
+
+        for (const file of files) {
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                invalid.push(`${file.name}: tipo não permitido (apenas JPG, PNG, WEBP)`);
+                continue;
+            }
+            if (file.size > 8 * 1024 * 1024) {
+                invalid.push(`${file.name}: excede 8 MB`);
+                continue;
+            }
+            validFiles.push(file);
+        }
+
+        if (invalid.length) {
+            setError(invalid.join('; '));
+            window.notifyWarning && window.notifyWarning(invalid.join('; '));
+        }
+
+        if (validFiles.length) {
+            onSelectFiles(validFiles);
+        }
+
         e.target.value = '';
+    };
+
+    const openFilePicker = () => {
+        if (disabled || currentCount >= maxFiles) return;
+        setError('');
+        if (fileInputRef.current) fileInputRef.current.click();
     };
 
     const isDisabled = disabled || currentCount >= maxFiles;
@@ -92,12 +121,12 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             <div className="grid grid-cols-2 gap-2">
                 <button
                     type="button"
-                    onClick={() => !isDisabled && fileInputRef.current && fileInputRef.current.click()}
+                    onClick={openFilePicker}
                     disabled={isDisabled}
                     className={`flex items-center justify-center gap-2 w-full border border-dashed rounded-md px-3 text-[13px] font-medium transition min-h-[36px] ${isDisabled ? 'opacity-40 cursor-not-allowed bg-slate-50 dark:bg-slate-800 border-slate-200 text-slate-400' : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 bg-white dark:bg-transparent text-slate-600 dark:text-slate-300'}`}
                 >
                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h2l2-3h6l2 3h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"/><circle cx="12" cy="13" r="3"/></svg>
-                    Galeria
+                    Escolher arquivo
                 </button>
                 <button
                     type="button"
@@ -112,8 +141,7 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/*"
-                capture="environment"
+                accept="image/jpeg,image/png,image/webp"
                 multiple
                 className="hidden"
                 onChange={handleFileChange}
@@ -121,7 +149,7 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             />
             <canvas ref={canvasRef} className="hidden" />
             {error && <p className="text-xs text-[#B3261E] dark:text-red-400 font-medium mt-2">{error}</p>}
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-1.5 sm:hidden">Toque em Câmera para foto instantânea ou Galeria para arquivo</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-1.5 sm:hidden">"Escolher arquivo" abre galeria ou câmera do sistema; "Câmera" usa a do app</p>
 
             {showCamera && (
                 <div className="fixed inset-0 z-[70] bg-black flex flex-col">
