@@ -75,15 +75,14 @@ function TelaCorretiva({ aoSalvar }) {
                         <div className="px-4 py-4 sm:px-5">
                             <Grupo titulo="Contexto" />
                             <label className="u-label">Unidade</label>
-                            <div className="flex justify-center">
-                                <div className="grid h-9 grid-cols-2 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800">
-                                    {['MATRIZ', 'PECÉM'].map(u => (
-                                    <button key={u} type="button" onClick={() => setForm({ ...form, unidade: u })} aria-pressed={form.unidade === u} className={`rounded text-[13px] transition ${form.unidade === u ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
-                                        {u === 'MATRIZ' ? 'Matriz' : 'Pecém'}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                            <SegmentedControl
+                                options={[
+                                    { value: 'MATRIZ', label: 'Matriz' },
+                                    { value: 'PECÉM', label: 'Pecém' }
+                                ]}
+                                value={form.unidade}
+                                onChange={v => setForm({ ...form, unidade: v })}
+                            />
                             <div className="mt-3">
                                 <label className="u-label">Localização</label>
                                 <input type="text" required maxLength="120" className="u-input uppercase placeholder:normal-case" value={form.localizacao} onChange={(e) => setForm({ ...form, localizacao: e.target.value.toUpperCase() })} />
@@ -103,14 +102,11 @@ function TelaCorretiva({ aoSalvar }) {
                         </div>
                         <div className="px-4 py-4 sm:px-5">
                             <label className="u-label">Prioridade</label>
-                            <div className="flex justify-center">
-                                <div className="grid h-9 grid-cols-4 gap-1 rounded-md bg-slate-200/60 p-1 dark:bg-slate-800" role="radiogroup" aria-label="Prioridade">
-                                {PRIORIDADES.map(p => (
-                                    <button key={p} type="button" role="radio" aria-checked={form.prioridade === p} onClick={() => setForm({ ...form, prioridade: p })} className={`rounded text-[13px] transition ${form.prioridade === p ? 'bg-white font-medium text-slate-900 dark:bg-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>
-                                        {p}
-                                    </button>
-                                ))}
-                            </div>
+                            <SegmentedControl
+                                options={PRIORIDADES.map(p => ({ value: p, label: p }))}
+                                value={form.prioridade}
+                                onChange={v => setForm({ ...form, prioridade: v })}
+                            />
                         </div>
                     </div>
                 </div>

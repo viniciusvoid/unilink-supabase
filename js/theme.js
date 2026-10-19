@@ -327,24 +327,44 @@ function TempoAberto({ dataAbertura }) {
     );
 }
 
-// ---------- Paginação ----------
-function Paginacao({ pagina, total, aoMudar }) {
-    if (!total || total <= 1) return null;
-    const ir = (n) => { if (n >= 1 && n <= total && n !== pagina) aoMudar(n); };
-    const nums = [];
-    for (let n = 1; n <= total; n++) {
-        if (total <= 7 || n === 1 || n === total || Math.abs(n - pagina) <= 1) nums.push(n);
-        else if (nums[nums.length - 1] !== '…') nums.push('…');
-    }
+// ---------- Controle Segmentado (Unidade, Prioridade, etc.) ----------
+function SegmentedControl({ options, value, onChange, disabled, className }) {
+    const n = options.length;
+    const selectedIndex = options.findIndex(o => o.value === value);
+    const pillStyle = {
+        position: 'absolute',
+        top: '2px',
+        bottom: '2px',
+        left: `${selectedIndex >= 0 ? (selectedIndex * (100 / n)) : 0}%`,
+        width: `${100 / n}%`,
+        borderRadius: 'inherit',
+        background: '#0E3263',
+        boxShadow: '0 1px 2px rgba(14,50,99,.2)',
+        transition: 'left .15s ease-out, width .15s ease-out',
+        zIndex: 1,
+    };
+
     return (
-        <div className="mt-4 flex items-center justify-center gap-1">
-            <button disabled={pagina === 1} onClick={() => ir(pagina - 1)} aria-label="Anterior" className="btn-page">‹</button>
-            {nums.map((n, i) => n === '…' ? (
-                <span key={`e${i}`} className="px-1 text-xs text-slate-400">…</span>
-            ) : (
-                <button key={n} onClick={() => ir(n)} className={`btn-page ${pagina === n ? 'btn-page-ativo' : ''}`}>{n}</button>
-            ))}
-            <button disabled={pagina === total} onClick={() => ir(pagina + 1)} aria-label="Próxima" className="btn-page">›</button>
+        <div className={`relative inline-flex items-center rounded-md bg-slate-200/60 p-1 dark:bg-slate-800 ${className || ''}`} role="radiogroup">
+            {selectedIndex >= 0 && <div style={pillStyle} aria-hidden="true" />}
+            <div className="relative flex" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+                {options.map((opt, i) => (
+                    <button
+                        key={opt.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={value === opt.value}
+                        disabled={disabled || opt.disabled}
+                        onClick={() => !disabled && !opt.disabled && onChange(opt.value)}
+                        className={`relative z-10 flex h-10 w-full items-center justify-center rounded-[inherit] text-sm font-medium transition-colors ${value === opt.value
+                            ? 'text-white'
+                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                        } ${disabled || opt.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 }
