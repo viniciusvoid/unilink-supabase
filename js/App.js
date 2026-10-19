@@ -351,12 +351,11 @@ function App() {
 
             {telaAtual !== 'splash' && (
                 <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-[#1F2937] dark:bg-[#0B1220]/80">
-                    <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center gap-3 px-4 sm:px-5">
-                        <button onClick={() => setTelaAtual('splash')} className="flex min-w-0 items-baseline gap-1.5" title="Início">
-                            <span className="text-[15px] font-extrabold italic tracking-tight text-[#0E3263] dark:text-white">UNILINK</span>
-                            {ambiente && <span className="whitespace-nowrap text-[13px] text-slate-400">/ {ambiente}</span>}
+                    <div className="mx-auto flex h-12 w-full max-w-[1280px] items-center justify-between gap-3 px-4 sm:px-5">
+                        <button onClick={() => setTelaAtual('splash')} className="flex items-center justify-center flex-1" title="Início" aria-label="Início">
+                            <Logo variant="header" />
                         </button>
-                        <div className="ml-auto flex items-center gap-1">
+                        <div className="flex items-center gap-1">
                             {autenticado && meuPerfil && (
                                 <span className="mr-1 hidden items-center gap-2 md:flex">
                                     <span className="max-w-[220px] truncate text-xs text-slate-500 dark:text-slate-400">{meuPerfil.usuario || extrairUsuario(meuPerfil.email)}</span>
