@@ -1,4 +1,8 @@
 ﻿// TELA: Novo chamado — solicitação + contexto
+const Grupo = ({ titulo, children }) => (
+    <p className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">{titulo}</p>
+);
+
 function TelaCorretiva({ aoSalvar }) {
     const [form, setForm] = React.useState({ unidade: 'MATRIZ', equipamento: '', servico: [], descricao: '', localizacao: '', prioridade: 'Média' });
     const [enviando, setEnviando] = React.useState(false);
@@ -6,25 +10,38 @@ function TelaCorretiva({ aoSalvar }) {
     const [erroFoto, setErroFoto] = React.useState('');
     const EXTENSOES_ACEITAS = ['jpg', 'jpeg', 'png', 'webp'];
     const TAMANHO_MAX_MB = 8;
-    const handleSelecionarFotos = (files) => {
-        const arquivos = Array.from(files || []); setErroFoto(''); const validos = [];
-        for (const arq of arquivos) {
-            const ext = (arq.name.split('.').pop() || '').toLowerCase();
-            if (!EXTENSOES_ACEITAS.includes(ext)) { setErroFoto(`"${arq.name}" formato não permitido. Use JPG, PNG ou WEBP.`); continue; }
-            if (arq.size > TAMANHO_MAX_MB * 1024 * 1024) { setErroFoto(`"${arq.name}" excede ${TAMANHO_MAX_MB}MB.`); continue; }
-            validos.push(arq);
+
+    const handleSelecionarFotos = (items) => {
+        const arquivos = Array.from(items || []); setErroFoto(''); const validos = [];
+        for (const item of arquivos) {
+            const file = item.file || item; // compatibilidade
+            const url = item.url || URL.createObjectURL(file);
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            if (!EXTENSOES_ACEITAS.includes(ext)) { setErroFoto(`"${file.name}" formato não permitido. Use JPG, PNG ou WEBP.`); continue; }
+            if (file.size > TAMANHO_MAX_MB * 1024 * 1024) { setErroFoto(`"${file.name}" excede ${TAMANHO_MAX_MB}MB.`); continue; }
+            validos.push({ file, url });
         }
         if (fotos.length + validos.length > 5) window.notifyWarning && window.notifyWarning('Limite de 5 fotos.');
         setFotos(prev => [...prev, ...validos].slice(0, 5));
     };
-    const handleCaptureFoto = (file) => handleSelecionarFotos([file]);
-    const removerFoto = (idx) => { setFotos(prev => prev.filter((_, i) => i !== idx)); };
+
+    const handleCaptureFoto = (item) => handleSelecionarFotos([item]);
+
+    const removerFoto = (idx) => {
+        setFotos(prev => {
+            const removida = prev[idx];
+            if (removida?.url) URL.revokeObjectURL(removida.url);
+            return prev.filter((_, i) => i !== idx);
+        });
+    };
+
     const toggleServico = (srv) => {
         setForm(prev => {
             const jaExiste = prev.servico.includes(srv);
             return { ...prev, servico: jaExiste ? prev.servico.filter(s => s !== srv) : [...prev.servico, srv] };
         });
     };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.equipamento) { window.notifyWarning && window.notifyWarning('Informe o equipamento.'); return; }
@@ -32,15 +49,12 @@ function TelaCorretiva({ aoSalvar }) {
         if (!form.descricao.trim()) { window.notifyWarning && window.notifyWarning('Descreva o problema.'); return; }
         if (!form.localizacao.trim()) { window.notifyWarning && window.notifyWarning('Informe a localização.'); return; }
         setEnviando(true);
-        try { await aoSalvar({ ...form, servico: form.servico.join(', '), fotos }); }
+        try { await aoSalvar({ ...form, servico: form.servico.join(', '), fotos: form.fotos.map(f => f.file) }); }
         catch (err) { window.notifyError && window.notifyError(err.message || 'Falha ao abrir chamado.'); }
         finally { setEnviando(false); }
     };
 
     const PRIORIDADES = ['Baixa', 'Média', 'Alta', 'Urgente'];
-    const Grupo = ({ titulo, children }) => (
-        <p className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">{titulo}</p>
-    );
 
     return (
         <div className="mx-auto w-full max-w-[1024px]">
@@ -63,7 +77,7 @@ function TelaCorretiva({ aoSalvar }) {
                                 <div className="mt-2 grid grid-cols-4 gap-2">
                                     {fotos.map((f, idx) => (
                                         <div key={idx} className="relative aspect-square overflow-hidden rounded-md bg-slate-100 dark:bg-slate-800">
-                                            <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+                                            <img src={f.url} alt={f.name} className="h-full w-full object-cover" />
                                             <button type="button" onClick={() => removerFoto(idx)} aria-label="Remover foto" className="icon-btn absolute right-1 top-1 !rounded-full !bg-slate-950/70 !p-0 !text-white">×</button>
                                         </div>
                                     ))}
@@ -103,7 +117,7 @@ function TelaCorretiva({ aoSalvar }) {
                         <div className="px-4 py-4 sm:px-5">
                             <label className="u-label">Prioridade</label>
                             <SegmentedControl
-                                options={PRIORIDADES.map(p => ({ value: p, label: p }))}
+                                options={['Baixa', 'Média', 'Alta', 'Urgente'].map(p => ({ value: p, label: p }))}
                                 value={form.prioridade}
                                 onChange={v => setForm({ ...form, prioridade: v })}
                             />

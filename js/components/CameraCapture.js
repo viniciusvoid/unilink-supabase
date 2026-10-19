@@ -71,7 +71,8 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
         canvas.toBlob(blob => {
             if (!blob) return;
             const file = new File([blob], `foto_${Date.now()}.jpg`, { type: 'image/jpeg' });
-            onCapture(file);
+            const url = URL.createObjectURL(file);
+            onCapture({ file, url });
             closeCamera();
         }, 'image/jpeg', 0.85);
     };
@@ -92,7 +93,8 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
                 invalid.push(`${file.name}: excede 8 MB`);
                 continue;
             }
-            validFiles.push(file);
+            const url = URL.createObjectURL(file);
+            validFiles.push({ file, url });
         }
 
         if (invalid.length) {

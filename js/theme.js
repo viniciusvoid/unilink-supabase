@@ -330,41 +330,39 @@ function TempoAberto({ dataAbertura }) {
 // ---------- Controle Segmentado (Unidade, Prioridade, etc.) ----------
 function SegmentedControl({ options, value, onChange, disabled, className }) {
     const n = options.length;
-    const selectedIndex = options.findIndex(o => o.value === value);
-    const pillStyle = {
-        position: 'absolute',
-        top: '2px',
-        bottom: '2px',
-        left: `${selectedIndex >= 0 ? (selectedIndex * (100 / n)) : 0}%`,
-        width: `${100 / n}%`,
-        borderRadius: 'inherit',
-        background: '#0E3263',
-        boxShadow: '0 1px 2px rgba(14,50,99,.2)',
-        transition: 'left .15s ease-out, width .15s ease-out',
-        zIndex: 1,
-    };
-
+    const idx = options.findIndex(o => o.value === value);
     return (
-        <div className={`relative inline-flex items-center rounded-md bg-slate-200/60 p-1 dark:bg-slate-800 ${className || ''}`} role="radiogroup">
-            {selectedIndex >= 0 && <div style={pillStyle} aria-hidden="true" />}
-            <div className="relative flex" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
-                {options.map((opt, i) => (
+        <div
+            role="radiogroup"
+            className={`relative grid w-full rounded-lg bg-slate-200/60 p-1 dark:bg-slate-800 ${className || ''}`}
+            style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}
+        >
+            {idx >= 0 && (
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute bottom-1 left-1 top-1 rounded-md bg-[#0E3263] shadow-sm transition-transform duration-150 ease-out"
+                    style={{ width: `calc((100% - 0.5rem) / ${n})`, transform: `translateX(${idx * 100}%)` }}
+                />
+            )}
+            {options.map(opt => {
+                const ativo = value === opt.value;
+                const off = disabled || opt.disabled;
+                return (
                     <button
                         key={opt.value}
                         type="button"
                         role="radio"
-                        aria-checked={value === opt.value}
-                        disabled={disabled || opt.disabled}
-                        onClick={() => !disabled && !opt.disabled && onChange(opt.value)}
-                        className={`relative z-10 flex h-10 w-full items-center justify-center rounded-[inherit] text-sm font-medium transition-colors ${value === opt.value
-                            ? 'text-white'
-                            : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-                        } ${disabled || opt.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                        aria-checked={ativo}
+                        disabled={off}
+                        onClick={() => !off && onChange(opt.value)}
+                        className={`relative z-10 flex h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-md bg-transparent px-2 text-sm font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                            ativo ? 'text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                        } ${off ? 'cursor-not-allowed opacity-40' : ''}`}
                     >
                         {opt.label}
                     </button>
-                ))}
-            </div>
+                );
+            })}
         </div>
     );
 }
