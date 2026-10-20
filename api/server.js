@@ -210,14 +210,16 @@ app.get('/admin/usuarios', exigirAdmin, async (req,res)=>{
   }))});
 });
 
-// POST /admin/usuarios {usuario, papel} — cria com senha padrão + troca forçada
+// POST /admin/usuarios {usuario, papel, senha?} — cria usuário com senha definida pelo admin (ou padrão) + troca forçada no 1º acesso
 app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
   const usuario = normalizarUsuario(req.body?.usuario);
   const papel = String(req.body?.papel || 'atendente');
+  const senha = String(req.body?.senha || SENHA_PADRAO);
   if (!usuarioValido(usuario)) return res.status(400).json({ mensagem:'Usuário inválido: use 3–40 letras minúsculas, números, ponto, _ ou -.' });
   if (!PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'Papel inválido.' });
+  if (senha.length < 6) return res.status(400).json({ mensagem:'Senha deve ter pelo menos 6 caracteres.' });
   const email = emailDeUsuario(usuario);
-  const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: SENHA_PADRAO, email_confirm: true, user_metadata: { usuario } });
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { usuario } });
   if (error){
     logger.warn(`Criar usuario falhou ${usuario}: ${error.message}`);
     if (/already|exists|duplicate/i.test(error.message)) return res.status(409).json({ mensagem:`Usuário "${usuario}" já existe.` });
@@ -227,7 +229,7 @@ app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
   if (errPerfil){ logger.error('Erro perfil novo usuario', errPerfil); }
   await auditar('CRIAR_USUARIO', { id: data.user.id, nome: usuario }, req.authUser, `papel=${papel}`);
   logger.info(`Usuario criado ${usuario} (${papel}) por ${req.authUser.email}`);
-  res.status(201).json({ ok:true, id: data.user.id, usuario });
+  res.status(201).json({ ok:true, id: data.user.id, usuario, senhaDefinida: senha !== SENHA_PADRAO });
 });
 
 // DELETE /admin/usuarios/:id — exclui (bloqueia auto-exclusão)
@@ -248,10 +250,12 @@ app.delete('/admin/usuarios/:id', exigirAdmin, async (req,res)=>{
   res.json({ ok:true });
 });
 
-// POST /admin/usuarios/:id/reset-senha — volta p/ padrão + força troca
+// POST /admin/usuarios/:id/reset-senha — admin define nova senha + força troca
 app.post('/admin/usuarios/:id/reset-senha', exigirAdmin, async (req,res)=>{
   const { id } = req.params;
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: SENHA_PADRAO });
+  const novaSenha = String(req.body?.novaSenha || SENHA_PADRAO);
+  if (novaSenha.length < 6) return res.status(400).json({ mensagem:'Nova senha deve ter pelo menos 6 caracteres.' });
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: novaSenha });
   if (error){ logger.error('Erro reset senha', error); return res.status(500).json({ mensagem:'Erro ao redefinir senha.' }); }
   await supabaseAdmin.from('perfis_usuario').update({ precisa_trocar_senha:true }).eq('user_id', id);
   const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
