@@ -260,6 +260,30 @@ app.post('/admin/usuarios/:id/reset-senha', exigirAdmin, async (req,res)=>{
   res.json({ ok:true });
 });
 
+// POST /admin/usuarios/role — altera papel do usuário (admin only)
+app.post('/admin/usuarios/role', exigirAdmin, async (req,res)=>{
+  const { usuarioId, papel } = req.body;
+  if (!usuarioId || !PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'usuarioId e papel válido são obrigatórios.' });
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ papel }).eq('user_id', usuarioId);
+  if (error){ logger.error('Erro alterar papel', error); return res.status(500).json({ mensagem:'Erro ao alterar papel.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(usuarioId);
+  await auditar('ALTERAR_PAPEL', { id: usuarioId, nome: alvo?.user ? nomeDeExibicao(alvo.user.email) : usuarioId }, req.authUser, `novo papel: ${papel}`);
+  logger.info(`Papel alterado ${usuarioId} -> ${papel} por ${req.authUser.email}`);
+  res.json({ ok:true, papel });
+});
+
+// POST /admin/usuarios/unlock — desbloqueia usuário (limpa tentativas e bloqueio)
+app.post('/admin/usuarios/unlock', exigirAdmin, async (req,res)=>{
+  const { usuarioId } = req.body;
+  if (!usuarioId) return res.status(400).json({ mensagem:'usuarioId é obrigatório.' });
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ tentativas_login:0, bloqueado_ate:null, ultima_tentativa_em:null }).eq('user_id', usuarioId);
+  if (error){ logger.error('Erro desbloquear usuario', error); return res.status(500).json({ mensagem:'Erro ao desbloquear usuário.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(usuarioId);
+  await auditar('DESBLOQUEAR_USUARIO', { id: usuarioId, nome: alvo?.user ? nomeDeExibicao(alvo.user.email) : usuarioId }, req.authUser, null);
+  logger.info(`Usuario desbloqueado ${usuarioId} por ${req.authUser.email}`);
+  res.json({ ok:true });
+});
+
 // GET /admin/movimentos?usuarioId=&limite= — eventos + status + auditoria
 app.get('/admin/movimentos', exigirAdmin, async (req,res)=>{
   const limite = Math.min(parseInt(req.query.limite || '50', 10) || 50, 200);

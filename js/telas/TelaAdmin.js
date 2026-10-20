@@ -97,6 +97,44 @@ function TelaAdmin() {
         finally { setAgindoId(null); }
     };
 
+    const abrirDetalheUsuario = (u) => {
+        setUsuarioDetalhe(u);
+        setPapelEditando(u.papel);
+    };
+
+    const fecharDetalheUsuario = () => {
+        setUsuarioDetalhe(null);
+        setEditandoPapel(false);
+        setPapelEditando('');
+    };
+
+    const handleSalvarPapel = async () => {
+        if (!usuarioDetalhe || papelEditando === usuarioDetalhe.papel) {
+            setEditandoPapel(false);
+            return;
+        }
+        setSalvandoPapel(true);
+        try {
+            await ApiClient.post('/admin/usuarios/role', { usuarioId: usuarioDetalhe.id, papel: papelEditando });
+            window.notifySuccess && window.notifySuccess(`Papel de "${usuarioDetalhe.usuario}" alterado para ${papelEditando}.`);
+            carregarUsuarios();
+            setEditandoPapel(false);
+        } catch (err) { window.notifyError && window.notifyError(erroAdmin(err)); }
+        finally { setSalvandoPapel(false); }
+    };
+
+    const handleDesbloquear = async () => {
+        if (!usuarioDetalhe) return;
+        setDesbloqueando(true);
+        try {
+            await ApiClient.post('/admin/usuarios/unlock', { usuarioId: usuarioDetalhe.id });
+            window.notifySuccess && window.notifySuccess(`Usuário "${usuarioDetalhe.usuario}" desbloqueado.`);
+            carregarUsuarios();
+            setUsuarioDetalhe(null);
+        } catch (err) { window.notifyError && window.notifyError(erroAdmin(err)); }
+        finally { setDesbloqueando(false); }
+    };
+
     const verMovimentosDe = (u) => {
         setBusca(u.usuario); setFiltroData('TODOS'); setAba('movimentos');
     };
@@ -236,9 +274,10 @@ function TelaAdmin() {
                             <ul className="u-surface divide-y u-divider max-h-[55vh] overflow-y-auto px-4">
                                 {usuariosFiltrados.map((u) => (
                                     <li key={u.id} className="flex items-center gap-2 py-2">
-                                        <button onClick={() => verMovimentosDe(u)} className="min-w-0 flex-1 truncate text-left text-[13px] leading-5" title={`Ver movimentos de ${u.usuario}`}>
+                                        <button onClick={() => abrirDetalheUsuario(u)} className="min-w-0 flex-1 truncate text-left text-[13px] leading-5" title={`Ver detalhes de ${u.usuario}`}>
                                             <span className="font-medium text-slate-900 hover:underline dark:text-slate-100">{u.usuario}</span>
                                             {u.precisaTrocarSenha && <span className="ml-2 rounded bg-[#B9770E]/10 px-1.5 py-0.5 text-[11px] text-[#B9770E]">troca pendente</span>}
+                                            {u.bloqueado && <span className="ml-2 rounded bg-[#B3261E]/10 px-1.5 py-0.5 text-[11px] text-[#B3261E]">bloqueado</span>}
                                         </button>
                                         {chipPapel(u.papel)}
                                         <span className="flex shrink-0 items-center gap-1.5">
