@@ -102,11 +102,12 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
 
     return (
         <div className="w-full">
-            {notificacaoAtiva && (
+            {notificacaoAtiva && ReactDOM.createPortal(
                 <div className="toast-in fixed left-1/2 top-4 z-50 w-[92vw] max-w-sm -translate-x-1/2 rounded-md border border-slate-200 bg-white px-3.5 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:left-auto sm:right-5 sm:translate-x-0">
                     <p className="text-[13px] text-slate-700 dark:text-slate-200">Novo chamado: {notificacaoAtiva.equipamento}</p>
                     <p className="truncate text-xs text-slate-500">{notificacaoAtiva.servico}</p>
-                </div>
+                </div>,
+                document.body
             )}
 
             {chamadoEmEncerramento && (
@@ -131,52 +132,52 @@ function TelaPendencia({ chamados, assumir, concluir, encerrar, aoNovo }) {
                 }
             />
 
-            <div className="u-surface mb-2 flex gap-2 p-2">
-                <input type="text" placeholder="Buscar protocolo, equipamento ou assunto..." aria-label="Buscar" className="u-input flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <div className="u-surface mb-3 flex flex-wrap items-center gap-2 p-2">
+                <input type="text" placeholder="Buscar protocolo, equipamento ou assunto..." aria-label="Buscar" className="u-input min-w-[200px] flex-1" value={busca} onChange={(e) => setBusca(e.target.value)} />
                 <button onClick={() => setMostrarFiltros(v => !v)} className="btn-ghost shrink-0 sm:hidden">
                     Filtros{filtrosAtivos > 0 ? ` (${filtrosAtivos})` : ''}
                 </button>
-            </div>
-            <div className={`${mostrarFiltros ? 'flex' : 'hidden'} u-surface mb-4 flex-col gap-2 p-2 sm:flex sm:flex-row sm:flex-wrap`}>
-                <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
-                    <option value="TODOS">Filial: todas</option>
-                    <option value="MATRIZ">Matriz</option>
-                    <option value="PECÉM">Pecém</option>
-                </select>
-                <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[170px]">
-                    <option value="TODOS">Status: todos</option>
-                    <option value="ABERTO">Aberto</option>
-                    <option value="EM_ATENDIMENTO">Em atendimento</option>
-                    <option value="AGUARDANDO_USUARIO">Parcial</option>
-                    <option value="ATRIBUIDO">Atribuído</option>
-                </select>
-                <select value={prioridadeFiltro} onChange={e => setPrioridadeFiltro(e.target.value)} aria-label="Prioridade" className="u-input sm:max-w-[160px]">
-                    <option value="TODOS">Prioridade: todas</option>
-                    <option value="Urgente">Urgente</option>
-                    <option value="Alta">Alta</option>
-                    <option value="Média">Média</option>
-                    <option value="Baixa">Baixa</option>
-                </select>
-                <select value={servicoFiltro} onChange={e => setServicoFiltro(e.target.value)} aria-label="Serviço" className="u-input sm:max-w-[160px]">
-                    <option value="TODOS">Serviço: todos</option>
-                    <option value="PINTURA">Pintura</option>
-                    <option value="ELETRICA">Elétrica</option>
-                    <option value="SOLDA">Solda</option>
-                    <option value="MECANICA">Mecânica</option>
-                    <option value="BORRACHARIA">Borracharia</option>
-                    <option value="TRANSLADO">Translado</option>
-                </select>
-                <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[160px]">
-                    <option value="TODOS">Período: todo</option>
-                    <option value="HOJE">Hoje</option>
-                    <option value="7d">7 dias</option>
-                    <option value="30d">30 dias</option>
-                    <option value="MES_ATUAL">Mês atual</option>
-                    <option value="MES_ANTERIOR">Mês anterior</option>
-                </select>
-                {(filtrosAtivos > 0 || busca) && (
-                    <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-[#0E3263] underline underline-offset-2 hover:text-[#0A2447] dark:text-sky-300 dark:hover:text-sky-200">Limpar</button>
-                )}
+                <div className={`${mostrarFiltros ? 'flex' : 'hidden'} w-full flex-col gap-2 sm:contents`}>
+                    <select value={unidadeFiltro} onChange={e => setUnidadeFiltro(e.target.value)} aria-label="Filial" className="u-input sm:max-w-[150px]">
+                        <option value="TODOS">Filial: todas</option>
+                        <option value="MATRIZ">Matriz</option>
+                        <option value="PECÉM">Pecém</option>
+                    </select>
+                    <select value={statusFiltro} onChange={e => setStatusFiltro(e.target.value)} aria-label="Status" className="u-input sm:max-w-[170px]">
+                        <option value="TODOS">Status: todos</option>
+                        <option value="ABERTO">Aberto</option>
+                        <option value="EM_ATENDIMENTO">Em atendimento</option>
+                        <option value="AGUARDANDO_USUARIO">Parcial</option>
+                        <option value="ATRIBUIDO">Atribuído</option>
+                    </select>
+                    <select value={prioridadeFiltro} onChange={e => setPrioridadeFiltro(e.target.value)} aria-label="Prioridade" className="u-input sm:max-w-[160px]">
+                        <option value="TODOS">Prioridade: todas</option>
+                        <option value="Urgente">Urgente</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                    <select value={servicoFiltro} onChange={e => setServicoFiltro(e.target.value)} aria-label="Serviço" className="u-input sm:max-w-[160px]">
+                        <option value="TODOS">Serviço: todos</option>
+                        <option value="PINTURA">Pintura</option>
+                        <option value="ELETRICA">Elétrica</option>
+                        <option value="SOLDA">Solda</option>
+                        <option value="MECANICA">Mecânica</option>
+                        <option value="BORRACHARIA">Borracharia</option>
+                        <option value="TRANSLADO">Translado</option>
+                    </select>
+                    <select value={dataFiltro} onChange={e => setDataFiltro(e.target.value)} aria-label="Período" className="u-input sm:max-w-[160px]">
+                        <option value="TODOS">Período: todo</option>
+                        <option value="HOJE">Hoje</option>
+                        <option value="7d">7 dias</option>
+                        <option value="30d">30 dias</option>
+                        <option value="MES_ATUAL">Mês atual</option>
+                        <option value="MES_ANTERIOR">Mês anterior</option>
+                    </select>
+                    {filtrosAtivos > 0 && (
+                        <button onClick={limparFiltros} className="shrink-0 px-2 text-xs text-[#0E3263] underline underline-offset-2 hover:text-[#0A2447] dark:text-sky-300 dark:hover:text-sky-200">Limpar</button>
+                    )}
+                </div>
             </div>
 
             {listaExibicaoPaginada.length === 0 ? (

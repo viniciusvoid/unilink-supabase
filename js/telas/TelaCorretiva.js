@@ -49,7 +49,7 @@ function TelaCorretiva({ aoSalvar }) {
         if (!form.descricao.trim()) { window.notifyWarning && window.notifyWarning('Descreva o problema.'); return; }
         if (!form.localizacao.trim()) { window.notifyWarning && window.notifyWarning('Informe a localização.'); return; }
         setEnviando(true);
-        try { await aoSalvar({ ...form, servico: form.servico.join(', '), fotos: form.fotos.map(f => f.file) }); }
+        try { await aoSalvar({ ...form, servico: form.servico.join(', '), fotos: fotos.map(f => f.file) }); }
         catch (err) { window.notifyError && window.notifyError(err.message || 'Falha ao abrir chamado.'); }
         finally { setEnviando(false); }
     };
@@ -60,12 +60,12 @@ function TelaCorretiva({ aoSalvar }) {
         <div className="mx-auto w-full max-w-[1024px]">
             <PageHeader title="Novo chamado" />
 
-            <form onSubmit={handleSubmit} className="u-surface overflow-hidden">
+            <form onSubmit={handleSubmit} className="u-surface overflow-clip">
                 <div className="grid md:grid-cols-[1.25fr_1fr]">
-                    <div className="px-4 py-4 sm:px-5 md:border-r u-divider">
+                    <div className="flex flex-col px-4 py-4 sm:px-5 md:border-r u-divider">
                         <Grupo titulo="Solicitação" />
                         <label className="u-label">Descrição</label>
-                        <textarea required maxLength="1000" rows="5" className="u-input resize-none uppercase placeholder:normal-case" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} />
+                        <textarea required maxLength="1000" rows="3" className="u-input min-h-[96px] flex-1 resize-none uppercase placeholder:normal-case" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value.toUpperCase() })} />
                         <div className="mt-4">
                             <div className="mb-1.5 flex items-center justify-between">
                                 <label className="u-label !mb-0">Evidências</label>
@@ -124,7 +124,7 @@ function TelaCorretiva({ aoSalvar }) {
                         </div>
                     </div>
                 </div>
-                <div className="border-t u-divider px-4 py-4 sm:px-5">
+                <div className="sticky bottom-[4.5rem] z-10 rounded-b-[8px] border-t u-divider bg-white px-4 py-3 dark:bg-[#111827] sm:px-5">
                     <button type="submit" disabled={enviando} className="btn-primary w-full !justify-center !text-sm disabled:opacity-60 md:w-auto md:min-w-[220px]">
                         {enviando ? 'Enviando…' : 'Abrir chamado'}
                     </button>

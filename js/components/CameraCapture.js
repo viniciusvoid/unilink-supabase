@@ -153,7 +153,7 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
             {error && <p className="text-xs text-[#B3261E] dark:text-red-400 font-medium mt-2">{error}</p>}
             <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-1.5 sm:hidden">"Escolher arquivo" abre galeria ou câmera do sistema; "Câmera" usa a do app</p>
 
-            {showCamera && (
+            {showCamera && (ReactDOM.createPortal(
                 <div className="fixed inset-0 z-[70] bg-black flex flex-col">
                     <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover sm:object-contain max-h-[100dvh]" />
@@ -179,6 +179,7 @@ function CameraCapture({ onCapture, onSelectFiles, maxFiles = 5, currentCount = 
                         </div>
                     </div>
                 </div>
+            ), document.body
             )}
         </div>
     );

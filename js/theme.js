@@ -6,6 +6,23 @@
 
 const BRAND = '#0E3263';
 
+// ---------- Portal de modal ----------
+// Renderiza o overlay direto no <body> e trava a rolagem da página enquanto houver modal aberto.
+// Sem isso, um "position: fixed" dentro de <main class="screen-enter"> fica preso à altura do <main>
+// (e não da janela): o modal nasce cortado e a tela ganha duas barras de rolagem.
+let __modaisAbertos = 0;
+function ModalPortal({ children }) {
+    React.useEffect(() => {
+        __modaisAbertos++;
+        document.documentElement.classList.add('modal-open');
+        return () => {
+            __modaisAbertos = Math.max(0, __modaisAbertos - 1);
+            if (__modaisAbertos === 0) document.documentElement.classList.remove('modal-open');
+        };
+    }, []);
+    return ReactDOM.createPortal(children, document.body);
+}
+
 // ---------- Status ----------
 const STATUS_LABEL = {
     ABERTO: 'Aberto',
@@ -253,6 +270,7 @@ function GaleriaAmpliada({ fotos = [], indice = 0, aoMudar, aoFechar }) {
     }, [indice, total]);
     if (!url) return null;
     return (
+        <ModalPortal>
         <div className="fixed inset-0 z-[80] flex flex-col bg-slate-950/90 fade-in" onClick={aoFechar}>
             <div className="flex items-center justify-between px-4 py-3" onClick={(e) => e.stopPropagation()}>
                 <button onClick={aoFechar} aria-label="Voltar" className="flex h-9 w-9 items-center justify-center rounded-md text-white hover:bg-white/10">
@@ -272,6 +290,7 @@ function GaleriaAmpliada({ fotos = [], indice = 0, aoMudar, aoFechar }) {
             </div>
             {nome && <p className="truncate px-4 pb-4 text-center text-xs text-white/60" onClick={(e) => e.stopPropagation()}>{nome}</p>}
         </div>
+        </ModalPortal>
     );
 }
 

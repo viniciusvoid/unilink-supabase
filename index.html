@@ -81,7 +81,7 @@
         }
         /* Abertura de modal/detalhes */
         .backdrop-in { animation: fadeIn 0.3s ease-out both; }
-        .modal-pop { animation: pop 0.35s ease-out both; }
+        .modal-pop { animation: pop 0.35s ease-out backwards; }
         @keyframes pop {
             from { opacity: 0; transform: translateY(10px) scale(0.98); }
             to { opacity: 1; transform: none; }
@@ -92,10 +92,22 @@
                 to { opacity: 1; transform: none; }
             }
         }
-        /* Painel de modal: altura limitada com fallback (dvh nem sempre existe no mobile) */
-        .modal-panel { max-height: 92vh; max-height: 92dvh; }
-        /* Transição entre telas (navegação) */
-        .screen-enter { animation: screenIn 0.35s ease-out both; }
+        /* Painel de modal: nunca passa da altura visível.
+           O overlay tem p-3 (1.5rem no total) e sm:p-6 (3rem no total); o painel desconta isso. */
+        .modal-panel { max-height: calc(100vh - 1.5rem); max-height: calc(100dvh - 1.5rem); overscroll-behavior: contain; }
+        @media (min-width: 640px) {
+            .modal-panel { max-height: calc(100vh - 3rem); max-height: calc(100dvh - 3rem); }
+        }
+        /* Trava a rolagem da página enquanto há modal aberto (classe aplicada pelo ModalPortal) */
+        html.modal-open, html.modal-open body { overflow: hidden; }
+        /* Respiro superior da tela: menor em janelas baixas (notebook com barra do navegador) */
+        .app-main { padding-top: 1rem; }
+        @media (min-height: 760px) and (min-width: 640px) { .app-main { padding-top: 3rem; } }
+        /* Transição entre telas (navegação).
+           IMPORTANTE: fill-mode "backwards" (não "both"). Com "both" o transform da animação continua
+           aplicado no <main> depois de terminar, e todo position:fixed dentro dele (modais, toast,
+           câmera) passa a ser posicionado em relação ao <main> e não à janela. */
+        .screen-enter { animation: screenIn 0.35s ease-out backwards; }
         @keyframes screenIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: none; }

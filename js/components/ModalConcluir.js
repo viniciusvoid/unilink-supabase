@@ -62,7 +62,8 @@ function ModalConcluir({ chamado, aoFechar }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/50 p-3 sm:p-4 backdrop-in" onClick={() => aoFechar && aoFechar()}>
+        <ModalPortal>
+        <div className="fixed inset-0 z-50 flex bg-slate-950/50 p-3 sm:p-4 backdrop-in" onClick={() => aoFechar && aoFechar()}>
             <div className="modal-pop modal-panel m-auto flex w-full max-w-xl flex-col overflow-hidden rounded-lg bg-white shadow-xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between border-b u-divider px-5 py-3">
                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">Concluir chamado</h3>
@@ -114,12 +115,13 @@ function ModalConcluir({ chamado, aoFechar }) {
                             </div>
                         )}
                     </div>
-                    <div className="flex justify-end gap-2 pt-1">
+                    <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 border-t u-divider bg-white px-5 py-3 dark:bg-slate-900">
                         <button type="button" onClick={() => aoFechar && aoFechar()} className="btn-ghost">Cancelar</button>
                         <button type="submit" disabled={enviandoFinalizacao} className="btn-success disabled:opacity-60">{enviandoFinalizacao ? 'Salvando…' : 'Salvar'}</button>
                     </div>
                 </form>
             </div>
         </div>
+        </ModalPortal>
     );
 }

@@ -55,7 +55,8 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
+        <ModalPortal>
+        <div className="fixed inset-0 z-50 flex bg-slate-950/50 p-3 sm:p-6 backdrop-in" onClick={aoFechar}>
             {imgAmpliada !== null && evidencias.length > 0 && (
                 <GaleriaAmpliada
                     fotos={evidencias}
@@ -74,7 +75,7 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                     </div>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                         <ProtocoloTag codigo={chamado.protocolo} />
-                        <h4 className="w-full text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">{chamado.equipamento}</h4>
+                        <h4 className="w-full text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:w-auto">{chamado.equipamento}</h4>
                         <StatusBadge status={chamado.status} concluido={chamado.concluido} />
                         <PriorityBadge prioridade={chamado.prioridade} />
                     </div>
@@ -153,5 +154,6 @@ function ModalDetalhes({ chamado, chamados = [], aoFechar, aoImprimir, aoAssumir
                 </div>
             </div>
         </div>
+        </ModalPortal>
     );
 }
