@@ -18,19 +18,27 @@ const app = express();
 app.set('trust proxy', 1); // Railway usa proxy — sem isso o rate-limit reclama do X-Forwarded-For
 app.use(express.json());
 
-// CORS permissivo para Railway (*.up.railway.app) e local — sem precisar configurar CORS_ORIGIN
+// CORS restrito às origens configuradas em CORS_ORIGIN (vírgula separada).
+// Localhost/127.0.0.1 sempre liberados para desenvolvimento. Nenhuma captura-corring (*).
+const corsOrigens = (process.env.CORS_ORIGIN || '')
+  .split(',').map(s => s.trim()).filter(Boolean);
+function origemPermitida(origin) {
+  if (!origin) return true;
+  try {
+    const u = new URL(origin);
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true;
+  } catch {}
+  return corsOrigens.includes(origin);
+}
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) return cb(null, true);
-    if (origin.endsWith('.up.railway.app')) return cb(null, true);
-    if (origin.endsWith('.vercel.app')) return cb(null, true);
-    return cb(null, true);
-  },
+  origin: origemPermitida,
   methods: ['GET','POST','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }));
 app.use(rateLimit({ windowMs: 60*1000, limit: 120, standardHeaders: true, legacyHeaders: false }));
+// Limite mais rígido para rotas administrativas
+const adminLimiter = rateLimit({ windowMs: 60*1000, limit: 30, standardHeaders: true, legacyHeaders: false });
+app.use('/admin', adminLimiter);
 app.use(logger.requestLogger);
 
 const STATUS_TODOS = ['ABERTO','EM_ANALISE','ATRIBUIDO','EM_ATENDIMENTO','AGUARDANDO_USUARIO','RESOLVIDO','FECHADO'];
@@ -114,11 +122,11 @@ app.patch('/chamados/:id/concluir', async (req,res)=>{
 // ----------------------------------------------------------
 // ADMINISTRAÇÃO DE USUÁRIOS
 // Login é por nome: o front envia "joao" e o Auth usa
-// "joao@unilink.local" (ver ModalLogin). A senha inicial é
-// ADMIN_SENHA_PADRAO (padrão 'unilink123') e o 1º acesso exige troca.
+// "joao@unilink.local" (ver ModalLogin). O administrador define
+// a senha inicial na criação; o 1º acesso exige troca pelo próprio
+// usuário. NÃO há senha padrão compartilhada.
 // ----------------------------------------------------------
 const DOMINIO_USUARIO = '@unilink.local';
-const SENHA_PADRAO = process.env.ADMIN_SENHA_PADRAO || 'unilink123';
 const PAPEIS = ['atendente', 'supervisor', 'administrador'];
 
 const normalizarUsuario = (u) => String(u || '').trim().toLowerCase();
@@ -131,7 +139,7 @@ async function getPerfil(userId) {
   return data || null;
 }
 
-async function auditar(acao, alvo, feitoPor, detalhe) {
+async function auditar(acao, alvo, feitoPor, detalhe, ip) {
   try {
     await supabaseAdmin.from('admin_auditoria').insert({
       acao,
@@ -139,9 +147,16 @@ async function auditar(acao, alvo, feitoPor, detalhe) {
       alvo_usuario_nome: alvo?.nome || null,
       feito_por: feitoPor?.id || null,
       feito_por_nome: feitoPor?.email || null,
-      detalhe: detalhe || null
+      detalhe: detalhe || null,
+      ip_origem: ip || null
     });
   } catch (e) { logger.warn('Falha ao auditar ' + acao, e?.message); }
+}
+
+async function contarAdministradoresAtivos() {
+  const { data } = await supabaseAdmin.from('perfis_usuario')
+    .select('user_id').eq('papel', 'administrador').eq('ativo', true);
+  return (data || []).length;
 }
 
 // exige login; anexa perfil (fallback atendente p/ usuários antigos sem linha)
@@ -166,6 +181,7 @@ async function exigirAdmin(req, res, next) {
   }
   req.authUser = usuario;
   req.perfil = perfil;
+  req.adminIp = req.ip || (req.headers['x-forwarded-for'] || '').split(',')[0]?.trim() || null;
   next();
 }
 
