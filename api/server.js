@@ -203,37 +203,79 @@ app.patch('/meu-perfil/senha-trocada', exigirLogin, async (req,res)=>{
   res.json({ ok:true });
 });
 
-// GET /admin/usuarios — lista Auth + perfis
+// GET /admin/usuarios — lista Auth + perfis (com paginação/filtros básicos no servidor)
 app.get('/admin/usuarios', exigirAdmin, async (req,res)=>{
-  const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 200 });
-  if (error){ logger.error('Erro listar usuarios', error); return res.status(500).json({ mensagem:'Erro ao listar usuários.' }); }
-  const ids = data.users.map(u=>u.id);
-  let perfis = [];
-  if (ids.length) {
-    const r = await supabaseAdmin.from('perfis_usuario').select('user_id, papel, precisa_trocar_senha, ativo, criado_em').in('user_id', ids);
-    perfis = r.data || [];
+  try {
+    const perPage = Math.min(parseInt(req.query.perPage || '200', 10) || 200, 1000);
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ perPage });
+    if (error){ logger.error('Erro listar usuarios', error); return res.status(500).json({ mensagem:'Erro ao listar usuários.' }); }
+    const ids = data.users.map(u=>u.id);
+    let perfis = [];
+    if (ids.length) {
+      const r = await supabaseAdmin.from('perfis_usuario')
+        .select('user_id, papel, precisa_trocar_senha, ativo, criado_em, tentativas_login, bloqueado_ate')
+        .in('user_id', ids);
+      perfis = r.data || [];
+    }
+    const mapa = Object.fromEntries(perfis.map(p=>[p.user_id, p]));
+    const usuarios = data.users.map(u=>{
+      const p = mapa[u.id] || {};
+      return {
+        id: u.id,
+        usuario: nomeDeExibicao(u.email),
+        email: u.email,
+        papel: p.papel || 'atendente',
+        precisaTrocarSenha: !!p.precisa_trocar_senha,
+        ativo: p.ativo !== false,
+        bloqueado: !!p.bloqueado_ate,
+        bloqueadoAte: p.bloqueado_ate || null,
+        tentativasLogin: p.tentativas_login || 0,
+        criadoEm: u.created_at,
+        criadoPerfilEm: p.criado_em || null,
+        ultimoAcessoEm: u.last_sign_in_at || null
+      };
+    });
+    res.json({ usuarios, total: usuarios.length });
+  } catch (e) {
+    logger.error('Erro listar usuarios', e);
+    res.status(500).json({ mensagem:'Erro ao listar usuários.' });
   }
-  const mapa = Object.fromEntries(perfis.map(p=>[p.user_id, p]));
-  res.json({ usuarios: data.users.map(u=>({
-    id: u.id,
-    usuario: nomeDeExibicao(u.email),
-    email: u.email,
-    papel: mapa[u.id]?.papel || 'atendente',
-    precisaTrocarSenha: !!mapa[u.id]?.precisa_trocar_senha,
-    ativo: mapa[u.id]?.ativo !== false,
-    criadoEm: u.created_at,
-    ultimoAcessoEm: u.last_sign_in_at || null
-  }))});
 });
 
-// POST /admin/usuarios {usuario, papel, senha?} — cria usuário com senha definida pelo admin (ou padrão) + troca forçada no 1º acesso
+// GET /admin/usuarios/:id — detalhes autorizados (inclui perfil + estado de bloqueio)
+app.get('/admin/usuarios/:id', exigirAdmin, async (req,res)=>{
+  const { id } = req.params;
+  try {
+    const { data: alvo, error } = await supabaseAdmin.auth.admin.getUserById(id);
+    if (error || !alvo?.user) return res.status(404).json({ mensagem:'Usuário não encontrado.' });
+    const perfil = await getPerfil(id);
+    res.json({
+      id: alvo.user.id,
+      usuario: nomeDeExibicao(alvo.user.email),
+      email: alvo.user.email,
+      papel: perfil?.papel || 'atendente',
+      ativo: perfil?.ativo !== false,
+      precisaTrocarSenha: !!perfil?.precisa_trocar_senha,
+      bloqueado: !!perfil?.bloqueado_ate,
+      bloqueadoAte: perfil?.bloqueado_ate || null,
+      tentativasLogin: perfil?.tentativas_login || 0,
+      criadoEm: alvo.user.created_at,
+      ultimoAcessoEm: alvo.user.last_sign_in_at || null
+    });
+  } catch (e) {
+    logger.error('Erro detalhes usuario', e);
+    res.status(500).json({ mensagem:'Erro ao carregar detalhes.' });
+  }
+});
+
+// POST /admin/usuarios — cria usuário (senha obrigatória, definida pelo admin) + perfil
 app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
   const usuario = normalizarUsuario(req.body?.usuario);
   const papel = String(req.body?.papel || 'atendente');
-  const senha = String(req.body?.senha || SENHA_PADRAO);
+  const senha = String(req.body?.senha || '');
   if (!usuarioValido(usuario)) return res.status(400).json({ mensagem:'Usuário inválido: use 3–40 letras minúsculas, números, ponto, _ ou -.' });
   if (!PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'Papel inválido.' });
-  if (senha.length < 8) return res.status(400).json({ mensagem:'Senha deve ter pelo menos 8 caracteres.' });
+  if (senha.length < 8) return res.status(400).json({ mensagem:'Senha inicial deve ter pelo menos 8 caracteres.' });
   const email = emailDeUsuario(usuario);
   const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { usuario } });
   if (error){
@@ -241,76 +283,180 @@ app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
     if (/already|exists|duplicate/i.test(error.message)) return res.status(409).json({ mensagem:`Usuário "${usuario}" já existe.` });
     return res.status(500).json({ mensagem:'Erro ao criar usuário.' });
   }
-  const { error: errPerfil } = await supabaseAdmin.from('perfis_usuario').upsert({ user_id: data.user.id, nome: usuario, papel, precisa_trocar_senha: true }, { onConflict: 'user_id' });
+  const { error: errPerfil } = await supabaseAdmin.from('perfis_usuario').upsert({
+    user_id: data.user.id, nome: usuario, papel, precisa_trocar_senha: true
+  }, { onConflict: 'user_id' });
   if (errPerfil){ logger.error('Erro perfil novo usuario', errPerfil); }
-  await auditar('CRIAR_USUARIO', { id: data.user.id, nome: usuario }, req.authUser, `papel=${papel}`);
+  await auditar('CRIAR_USUARIO', { id: data.user.id, nome: usuario }, req.authUser, `papel=${papel}`, req.adminIp);
   logger.info(`Usuario criado ${usuario} (${papel}) por ${req.authUser.email}`);
-  res.status(201).json({ ok:true, id: data.user.id, usuario, senhaDefinida: senha !== SENHA_PADRAO });
+  res.status(201).json({ ok:true, id: data.user.id, usuario, senhaDefinida: true });
 });
 
-// DELETE /admin/usuarios/:id — exclui (bloqueia auto-exclusão)
+// PATCH /admin/usuarios/:id — atualiza dados cadastrais permitidos (nome, ativo)
+app.patch('/admin/usuarios/:id', exigirAdmin, async (req,res)=>{
+  const { id } = req.params;
+  if (id === req.authUser.id && req.body?.ativo === false) {
+    return res.status(400).json({ mensagem:'Você não pode desativar a própria conta.' });
+  }
+  const patch = {};
+  if (typeof req.body?.nome === 'string' && req.body.nome.trim()) patch.nome = req.body.nome.trim();
+  if (typeof req.body?.ativo === 'boolean') patch.ativo = req.body.ativo;
+  if (Object.keys(patch).length === 0) return res.status(400).json({ mensagem:'Nenhum campo válido para atualizar.' });
+  const { error } = await supabaseAdmin.from('perfis_usuario').update(patch).eq('user_id', id);
+  if (error){ logger.error('Erro atualizar usuario', error); return res.status(500).json({ mensagem:'Erro ao atualizar usuário.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : id;
+  await auditar('ATUALIZAR_USUARIO', { id, nome: nomeAlvo }, req.authUser, JSON.stringify(patch), req.adminIp);
+  logger.info(`Usuario atualizado ${id} por ${req.authUser.email}`);
+  res.json({ ok:true });
+});
+
+// PATCH /admin/usuarios/:id/role — altera papel (protege último administrador)
+app.patch('/admin/usuarios/:id/role', exigirAdmin, async (req,res)=>{
+  const { id } = req.params;
+  const papel = String(req.body?.papel || '');
+  if (!PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'Papel inválido.' });
+  const alvoPerfil = await getPerfil(id);
+  if (!alvoPerfil) return res.status(404).json({ mensagem:'Perfil não encontrado.' });
+  // protege: não pode rebaixar o último admin ativo
+  if (alvoPerfil.papel === 'administrador' && papel !== 'administrador') {
+    const total = await contarAdministradoresAtivos();
+    if (total <= 1) return res.status(409).json({ mensagem:'Não é possível rebaixar o último administrador ativo.' });
+  }
+  // não pode alterar o próprio papel para não-admin se for o único
+  if (id === req.authUser.id && papel !== 'administrador') {
+    const total = await contarAdministradoresAtivos();
+    if (total <= 1) return res.status(409).json({ mensagem:'Você não pode remover suas próprias permissões de administrador (único admin ativo).' });
+  }
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ papel }).eq('user_id', id);
+  if (error){ logger.error('Erro alterar papel', error); return res.status(500).json({ mensagem:'Erro ao alterar papel.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : id;
+  await auditar('ALTERAR_PAPEL', { id, nome: nomeAlvo }, req.authUser, `novo papel: ${papel}`, req.adminIp);
+  logger.info(`Papel alterado ${id} -> ${papel} por ${req.authUser.email}`);
+  res.json({ ok:true, papel });
+});
+// compatibilidade com rota antiga POST /admin/usuarios/role (front antigo)
+app.post('/admin/usuarios/role', exigirAdmin, async (req,res)=>{
+  const uid = String(req.body?.usuarioId || '');
+  const papel = String(req.body?.papel || '');
+  if (!uid || !PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'usuarioId e papel válido são obrigatórios.' });
+  const alvoPerfil = await getPerfil(uid);
+  if (!alvoPerfil) return res.status(404).json({ mensagem:'Perfil não encontrado.' });
+  if (alvoPerfil.papel === 'administrador' && papel !== 'administrador') {
+    const total = await contarAdministradoresAtivos();
+    if (total <= 1) return res.status(409).json({ mensagem:'Não é possível rebaixar o último administrador ativo.' });
+  }
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ papel }).eq('user_id', uid);
+  if (error){ logger.error('Erro alterar papel', error); return res.status(500).json({ mensagem:'Erro ao alterar papel.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(uid);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : uid;
+  await auditar('ALTERAR_PAPEL', { id: uid, nome: nomeAlvo }, req.authUser, `novo papel: ${papel}`, req.adminIp);
+  res.json({ ok:true, papel });
+});
+
+// PATCH /admin/usuarios/:id/status — suspender ou reativar (protege último admin)
+app.patch('/admin/usuarios/:id/status', exigirAdmin, async (req,res)=>{
+  const { id } = req.params;
+  const ativo = !!req.body?.ativo;
+  if (id === req.authUser.id && !ativo) {
+    return res.status(400).json({ mensagem:'Você não pode suspender a própria conta.' });
+  }
+  const alvoPerfil = await getPerfil(id);
+  if (!alvoPerfil) return res.status(404).json({ mensagem:'Perfil não encontrado.' });
+  if (alvoPerfil.papel === 'administrador' && !ativo) {
+    const total = await contarAdministradoresAtivos();
+    if (total <= 1) return res.status(409).json({ mensagem:'Não é possível suspender o último administrador ativo.' });
+  }
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ ativo }).eq('user_id', id);
+  if (error){ logger.error('Erro status usuario', error); return res.status(500).json({ mensagem:'Erro ao alterar situação.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : id;
+  await auditar(ativo ? 'REATIVAR_USUARIO' : 'SUSPENDER_USUARIO', { id, nome: nomeAlvo }, req.authUser, `ativo=${ativo}`, req.adminIp);
+  // se suspensão, invalidar sessões existentes (Supabase: signOut global via admin)
+  if (!ativo) {
+    try { await supabaseAdmin.auth.admin.signOut(id); } catch (e) { logger.warn('Falha signOut admin', e?.message); }
+  }
+  logger.info(`Usuario ${id} ${ativo?'reativado':'suspenso'} por ${req.authUser.email}`);
+  res.json({ ok:true, ativo });
+});
+
+// POST /admin/usuarios/:id/reset-senha
+app.post('/admin/usuarios/:id/reset-senha', exigirAdmin, async (req,res)=>{
+  const { id } = req.params;
+  const novaSenha = String(req.body?.novaSenha || '');
+  if (novaSenha.length < 8) return res.status(400).json({ mensagem:'Nova senha deve ter pelo menos 8 caracteres.' });
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: novaSenha });
+  if (error){ logger.error('Erro reset senha', error); return res.status(500).json({ mensagem:'Erro ao redefinir senha.' }); }
+  await supabaseAdmin.from('perfis_usuario').update({ precisa_trocar_senha:true }).eq('user_id', id);
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : id;
+  await auditar('RESET_SENHA', { id, nome: nomeAlvo }, req.authUser, null, req.adminIp);
+  logger.info(`Senha resetada ${id} por ${req.authUser.email}`);
+  res.json({ ok:true });
+});
+
+// POST /admin/usuarios/unlock
+app.post('/admin/usuarios/unlock', exigirAdmin, async (req,res)=>{
+  const { usuarioId } = req.body || {};
+  if (!usuarioId) return res.status(400).json({ mensagem:'usuarioId é obrigatório.' });
+  const { error } = await supabaseAdmin.from('perfis_usuario').update({ tentativas_login:0, bloqueado_ate:null, ultima_tentativa_em:null }).eq('user_id', usuarioId);
+  if (error){ logger.error('Erro desbloquear usuario', error); return res.status(500).json({ mensagem:'Erro ao desbloquear usuário.' }); }
+  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(usuarioId);
+  const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : usuarioId;
+  await auditar('DESBLOQUEAR_USUARIO', { id: usuarioId, nome: nomeAlvo }, req.authUser, null, req.adminIp);
+  logger.info(`Usuario desbloqueado ${usuarioId} por ${req.authUser.email}`);
+  res.json({ ok:true });
+});
+
+// DELETE /admin/usuarios/:id
 app.delete('/admin/usuarios/:id', exigirAdmin, async (req,res)=>{
   const { id } = req.params;
   if (id === req.authUser.id) return res.status(400).json({ mensagem:'Você não pode excluir o próprio usuário.' });
+  const alvoPerfil = await getPerfil(id);
+  if (alvoPerfil?.papel === 'administrador') {
+    const total = await contarAdministradoresAtivos();
+    if (total <= 1) return res.status(409).json({ mensagem:'Não é possível excluir o último administrador ativo.' });
+  }
   const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
   const nomeAlvo = alvo?.user ? nomeDeExibicao(alvo.user.email) : id;
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
   if (error){
     logger.warn(`Excluir usuario falhou ${id}: ${error.message}`);
-    if (/foreign|reference|constraint|violates/i.test(error.message)) return res.status(409).json({ mensagem:'Usuário possui chamados vinculados e não pode ser excluído.' });
+    if (/foreign|reference|constraint|violates/i.test(error.message)) return res.status(409).json({ mensagem:'Usuário possui chamados vinculados e não pode ser excluído. Considere suspender.' });
     return res.status(500).json({ mensagem:'Erro ao excluir usuário.' });
   }
   await supabaseAdmin.from('perfis_usuario').delete().eq('user_id', id);
-  await auditar('EXCLUIR_USUARIO', { id, nome: nomeAlvo }, req.authUser, null);
+  await auditar('EXCLUIR_USUARIO', { id, nome: nomeAlvo }, req.authUser, null, req.adminIp);
   logger.info(`Usuario excluido ${nomeAlvo} por ${req.authUser.email}`);
   res.json({ ok:true });
 });
 
-// POST /admin/usuarios/:id/reset-senha — admin define nova senha + força troca
-app.post('/admin/usuarios/:id/reset-senha', exigirAdmin, async (req,res)=>{
-  const { id } = req.params;
-  const novaSenha = String(req.body?.novaSenha || SENHA_PADRAO);
-  if (novaSenha.length < 6) return res.status(400).json({ mensagem:'Nova senha deve ter pelo menos 6 caracteres.' });
-  const { error } = await supabaseAdmin.auth.admin.updateUserById(id, { password: novaSenha });
-  if (error){ logger.error('Erro reset senha', error); return res.status(500).json({ mensagem:'Erro ao redefinir senha.' }); }
-  await supabaseAdmin.from('perfis_usuario').update({ precisa_trocar_senha:true }).eq('user_id', id);
-  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(id);
-  await auditar('RESET_SENHA', { id, nome: alvo?.user ? nomeDeExibicao(alvo.user.email) : id }, req.authUser, null);
-  logger.info(`Senha resetada ${id} por ${req.authUser.email}`);
-  res.json({ ok:true });
+// GET /admin/audit-logs — consulta paginada da auditoria
+app.get('/admin/audit-logs', exigirAdmin, async (req,res)=>{
+  try {
+    const page = Math.max(1, parseInt(req.query.page || '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit || '50', 10) || 50));
+    const offset = (page - 1) * limit;
+    const { data, error, count } = await supabaseAdmin.from('admin_auditoria')
+      .select('id, acao, alvo_usuario_id, alvo_usuario_nome, feito_por, feito_por_nome, detalhe, ip_origem, criado_em', { count: 'exact' })
+      .order('criado_em', { ascending:false })
+      .range(offset, offset + limit - 1);
+    if (error){ logger.error('Erro audit-logs', error); return res.status(500).json({ mensagem:'Erro ao carregar auditoria.' }); }
+    res.json({ logs: data || [], total: count || 0, page, limit });
+  } catch (e) {
+    logger.error('Erro audit-logs', e);
+    res.status(500).json({ mensagem:'Erro ao carregar auditoria.' });
+  }
 });
 
-// POST /admin/usuarios/role — altera papel do usuário (admin only)
-app.post('/admin/usuarios/role', exigirAdmin, async (req,res)=>{
-  const { usuarioId, papel } = req.body;
-  if (!usuarioId || !PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'usuarioId e papel válido são obrigatórios.' });
-  const { error } = await supabaseAdmin.from('perfis_usuario').update({ papel }).eq('user_id', usuarioId);
-  if (error){ logger.error('Erro alterar papel', error); return res.status(500).json({ mensagem:'Erro ao alterar papel.' }); }
-  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(usuarioId);
-  await auditar('ALTERAR_PAPEL', { id: usuarioId, nome: alvo?.user ? nomeDeExibicao(alvo.user.email) : usuarioId }, req.authUser, `novo papel: ${papel}`);
-  logger.info(`Papel alterado ${usuarioId} -> ${papel} por ${req.authUser.email}`);
-  res.json({ ok:true, papel });
-});
-
-// POST /admin/usuarios/unlock — desbloqueia usuário (limpa tentativas e bloqueio)
-app.post('/admin/usuarios/unlock', exigirAdmin, async (req,res)=>{
-  const { usuarioId } = req.body;
-  if (!usuarioId) return res.status(400).json({ mensagem:'usuarioId é obrigatório.' });
-  const { error } = await supabaseAdmin.from('perfis_usuario').update({ tentativas_login:0, bloqueado_ate:null, ultima_tentativa_em:null }).eq('user_id', usuarioId);
-  if (error){ logger.error('Erro desbloquear usuario', error); return res.status(500).json({ mensagem:'Erro ao desbloquear usuário.' }); }
-  const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(usuarioId);
-  await auditar('DESBLOQUEAR_USUARIO', { id: usuarioId, nome: alvo?.user ? nomeDeExibicao(alvo.user.email) : usuarioId }, req.authUser, null);
-  logger.info(`Usuario desbloqueado ${usuarioId} por ${req.authUser.email}`);
-  res.json({ ok:true });
-});
-
-// GET /admin/movimentos?usuarioId=&limite= — eventos + status + auditoria
+// GET /admin/movimentos — eventos + status + auditoria
 app.get('/admin/movimentos', exigirAdmin, async (req,res)=>{
   const limite = Math.min(parseInt(req.query.limite || '50', 10) || 50, 200);
   const usuarioId = String(req.query.usuarioId || '').trim() || null;
   const qEv = supabaseAdmin.from('chamado_eventos').select('id, chamado_id, tipo_evento, descricao, usuario_id, usuario_nome, criado_em').order('criado_em', { ascending:false }).limit(limite);
   const qSt = supabaseAdmin.from('chamado_status_historico').select('id, chamado_id, status_anterior, status_novo, usuario_id, usuario_nome, criado_em').order('criado_em', { ascending:false }).limit(limite);
-  const qAu = supabaseAdmin.from('admin_auditoria').select('id, acao, alvo_usuario_id, alvo_usuario_nome, feito_por, feito_por_nome, detalhe, criado_em').order('criado_em', { ascending:false }).limit(limite);
+  const qAu = supabaseAdmin.from('admin_auditoria').select('id, acao, alvo_usuario_id, alvo_usuario_nome, feito_por, feito_por_nome, detalhe, ip_origem, criado_em').order('criado_em', { ascending:false }).limit(limite);
   if (usuarioId) { qEv.eq('usuario_id', usuarioId); qSt.eq('usuario_id', usuarioId); qAu.or(`alvo_usuario_id.eq.${usuarioId},feito_por.eq.${usuarioId}`); }
   const [rEv, rSt, rAu] = await Promise.all([qEv, qSt, qAu]);
   if (rEv.error || rSt.error || rAu.error){ logger.error('Erro movimentos', rEv.error || rSt.error || rAu.error); return res.status(500).json({ mensagem:'Erro ao carregar movimentos.' }); }

@@ -290,7 +290,7 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard', 'admin', 'usuario-detalhe'];
+    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard', 'admin', 'usuario-detalhe', 'gerenciar-usuarios'];
     const showDock = telasConteudo.includes(telaAtual) && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
         .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
@@ -502,6 +502,7 @@ function App() {
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
                             <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
                             {meuPerfil?.papel === 'administrador' && <EnvRow destaque label="Administração" onClick={() => setTelaAtual('admin')} icon={ICONS.shield} />}
+                            {meuPerfil?.papel === 'administrador' && <EnvRow label="Gerenciar usuários" onClick={() => setTelaAtual('gerenciar-usuarios')} icon={ICONS.shield} />}
                         </div>
                         </div>
                     </div>
@@ -547,6 +548,11 @@ function App() {
                 {telaAtual === 'admin' && (
                     autenticado && meuPerfil?.papel === 'administrador'
                         ? (typeof TelaAdmin !== 'undefined' ? <TelaAdmin /> : <TelaAusente nome="admin" />)
+                        : <div className="u-surface mx-auto w-full max-w-[480px] p-6 text-center"><p className="text-sm text-slate-500">Acesso restrito ao administrador.</p><button onClick={() => setTelaAtual('splash')} className="btn-primary mt-3">Início</button></div>
+                )}
+                {telaAtual === 'gerenciar-usuarios' && (
+                    autenticado && meuPerfil?.papel === 'administrador'
+                        ? (typeof TelaGerenciarUsuarios !== 'undefined' ? <TelaGerenciarUsuarios onVoltar={() => setTelaAtual('admin')} /> : <TelaAusente nome="gerenciar-usuarios" />)
                         : <div className="u-surface mx-auto w-full max-w-[480px] p-6 text-center"><p className="text-sm text-slate-500">Acesso restrito ao administrador.</p><button onClick={() => setTelaAtual('splash')} className="btn-primary mt-3">Início</button></div>
                 )}
                 {telaAtual === 'primeiro-acesso' && (
