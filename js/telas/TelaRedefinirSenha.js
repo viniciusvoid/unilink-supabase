@@ -10,7 +10,7 @@ function TelaRedefinirSenha({ voltar, aoSucesso, semVoltar }) {
     const handleRedefinir = async (e) => {
         e.preventDefault();
         setErro(''); setOk('');
-        if (novaSenha.length < 6) { setErro('A senha deve ter pelo menos 6 caracteres.'); return; }
+        if (novaSenha.length < 8) { setErro('A senha deve ter pelo menos 8 caracteres.'); return; }
         if (novaSenha !== confirmar) { setErro('As senhas não conferem.'); return; }
         setCarregando(true);
         try {
@@ -32,11 +32,11 @@ function TelaRedefinirSenha({ voltar, aoSucesso, semVoltar }) {
             <form onSubmit={handleRedefinir} className="space-y-3">
                 <div>
                     <label className="u-label">Nova senha</label>
-                    <input type="password" required minLength="6" autoComplete="new-password" className="u-input" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
+                    <input type="password" required minLength="8" autoComplete="new-password" className="u-input" value={novaSenha} onChange={e => setNovaSenha(e.target.value)} />
                 </div>
                 <div>
                     <label className="u-label">Confirmar senha</label>
-                    <input type="password" required minLength="6" autoComplete="new-password" className="u-input" value={confirmar} onChange={e => setConfirmar(e.target.value)} />
+                    <input type="password" required minLength="8" autoComplete="new-password" className="u-input" value={confirmar} onChange={e => setConfirmar(e.target.value)} />
                 </div>
                 <div className="flex gap-2 pt-1">
                     {!semVoltar && voltar && <button type="button" onClick={voltar} className="btn-ghost flex-1 !justify-center">Voltar</button>}

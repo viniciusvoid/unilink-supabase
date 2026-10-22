@@ -53,7 +53,7 @@ function TelaUsuarioDetalhe({ usuario, onVoltar, usuarios, onAtualizar }) {
     };
 
     const handleResetSenha = async () => {
-        if (novaSenha.length < 6) { setErroSenha('Senha deve ter pelo menos 6 caracteres.'); return; }
+        if (novaSenha.length < 8) { setErroSenha('Senha deve ter pelo menos 8 caracteres.'); return; }
         if (novaSenha !== confirmarSenha) { setErroSenha('As senhas não conferem.'); return; }
         setErroSenha('');
         setResetandoSenha(true);
@@ -154,14 +154,14 @@ function TelaUsuarioDetalhe({ usuario, onVoltar, usuarios, onAtualizar }) {
                         <div className="space-y-3">
                             <div>
                                 <label className="u-label">Nova senha</label>
-                                <input type="password" minLength="6" autoComplete="new-password" className="u-input" value={novaSenha} onChange={(e) => { setNovaSenha(e.target.value); setErroSenha(''); }} />
+                                <input type="password" minLength="8" autoComplete="new-password" className="u-input" value={novaSenha} onChange={(e) => { setNovaSenha(e.target.value); setErroSenha(''); }} />
                             </div>
                             <div>
                                 <label className="u-label">Confirmar senha</label>
-                                <input type="password" minLength="6" autoComplete="new-password" className="u-input" value={confirmarSenha} onChange={(e) => { setConfirmarSenha(e.target.value); setErroSenha(''); }} />
+                                <input type="password" minLength="8" autoComplete="new-password" className="u-input" value={confirmarSenha} onChange={(e) => { setConfirmarSenha(e.target.value); setErroSenha(''); }} />
                             </div>
                             {erroSenha && <p className="text-xs text-[#B3261E] dark:text-red-400">{erroSenha}</p>}
-                            <button onClick={handleResetSenha} disabled={resetandoSenha || novaSenha.length < 6 || novaSenha !== confirmarSenha} className="btn-primary w-full sm:w-auto !justify-center disabled:opacity-60">{resetandoSenha ? 'Redefinindo…' : 'Redefinir senha'}</button>
+                            <button onClick={handleResetSenha} disabled={resetandoSenha || novaSenha.length < 8 || novaSenha !== confirmarSenha} className="btn-primary w-full sm:w-auto !justify-center disabled:opacity-60">{resetandoSenha ? 'Redefinindo…' : 'Redefinir senha'}</button>
                         </div>
                     </section>
 

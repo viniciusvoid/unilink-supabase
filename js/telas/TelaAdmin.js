@@ -59,7 +59,7 @@ function TelaAdmin() {
         e.preventDefault();
         const u = novoUsuario.trim().toLowerCase();
         if (!/^[a-z0-9._-]{3,40}$/.test(u)) { window.notifyWarning && window.notifyWarning('Usuário inválido: 3–40 letras minúsculas, números, ponto, _ ou -.'); return; }
-        if (novaSenha.length < 6) { window.notifyWarning && window.notifyWarning('Defina uma senha inicial com pelo menos 6 caracteres.'); return; }
+        if (novaSenha.length < 8) { window.notifyWarning && window.notifyWarning('Defina uma senha inicial com pelo menos 8 caracteres.'); return; }
         setCriando(true);
         try {
             await ApiClient.post('/admin/usuarios', { usuario: u, papel: novoPapel, senha: novaSenha });
@@ -73,7 +73,7 @@ function TelaAdmin() {
     const handleReset = async (e) => {
         e.preventDefault();
         if (!resetId) { window.notifyWarning && window.notifyWarning('Escolha o usuário.'); return; }
-        if (resetSenha.length < 6) { window.notifyWarning && window.notifyWarning('A nova senha deve ter pelo menos 6 caracteres.'); return; }
+        if (resetSenha.length < 8) { window.notifyWarning && window.notifyWarning('A nova senha deve ter pelo menos 8 caracteres.'); return; }
         const alvo = usuarios.find((x) => x.id === resetId);
         setResetando(true);
         try {
@@ -202,7 +202,7 @@ function TelaAdmin() {
                             </div>
                             <div>
                                 <label className="u-label">Senha inicial</label>
-                                <input type="password" minLength="6" autoComplete="new-password" aria-label="Senha inicial" className="u-input" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
+                                <input type="password" minLength="8" autoComplete="new-password" aria-label="Senha inicial" className="u-input" value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)} />
                             </div>
                             <div>
                                 <label className="u-label">Cargo</label>
@@ -228,7 +228,7 @@ function TelaAdmin() {
                             </div>
                             <div>
                                 <label className="u-label">Nova senha</label>
-                                <input type="password" minLength="6" autoComplete="new-password" aria-label="Nova senha" className="u-input" value={resetSenha} onChange={(e) => setResetSenha(e.target.value)} />
+                                <input type="password" minLength="8" autoComplete="new-password" aria-label="Nova senha" className="u-input" value={resetSenha} onChange={(e) => setResetSenha(e.target.value)} />
                             </div>
                             <button type="submit" disabled={resetando} className="btn-ghost w-full !justify-center disabled:opacity-60">{resetando ? 'Aplicando…' : 'Aplicar nova senha'}</button>
                         </form>

@@ -217,7 +217,7 @@ app.post('/admin/usuarios', exigirAdmin, async (req,res)=>{
   const senha = String(req.body?.senha || SENHA_PADRAO);
   if (!usuarioValido(usuario)) return res.status(400).json({ mensagem:'Usuário inválido: use 3–40 letras minúsculas, números, ponto, _ ou -.' });
   if (!PAPEIS.includes(papel)) return res.status(400).json({ mensagem:'Papel inválido.' });
-  if (senha.length < 6) return res.status(400).json({ mensagem:'Senha deve ter pelo menos 6 caracteres.' });
+  if (senha.length < 8) return res.status(400).json({ mensagem:'Senha deve ter pelo menos 8 caracteres.' });
   const email = emailDeUsuario(usuario);
   const { data, error } = await supabaseAdmin.auth.admin.createUser({ email, password: senha, email_confirm: true, user_metadata: { usuario } });
   if (error){
