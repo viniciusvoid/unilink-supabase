@@ -52,6 +52,7 @@ function App() {
     const [detalheRapido, setDetalheRapido] = React.useState(null);
     const [protocoloBusca, setProtocoloBusca] = React.useState('');
     const [meuPerfil, setMeuPerfil] = React.useState(null);
+    const [usuarioDetalhe, setUsuarioDetalhe] = React.useState(null);
     const [autenticado, setAutenticado] = React.useState(false);
     const [carregandoAuth, setCarregandoAuth] = React.useState(true);
     const [darkMode, setDarkMode] = React.useState(() => {
@@ -289,7 +290,7 @@ function App() {
     };
 
     const pendentesCount = chamados.filter(c => !c.concluido).length;
-    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard', 'admin'];
+    const telasConteudo = ['corretiva', 'acompanhamento', 'sucesso', 'pendencia', 'historico', 'dashboard', 'admin', 'usuario-detalhe'];
     const showDock = telasConteudo.includes(telaAtual) && (ambiente === 'Solicitante' || autenticado);
     const emAtendimento = chamados
         .filter(c => !c.concluido && (c.status === 'EM_ATENDIMENTO' || c.emAtendimento || c.status === 'AGUARDANDO_USUARIO'))
@@ -532,6 +533,16 @@ function App() {
                 )}
                 {telaAtual === 'dashboard' && (
                     typeof TelaDashboard !== 'undefined' ? <TelaDashboard chamados={chamados} /> : <TelaAusente nome="dashboard" />
+                )}
+                {telaAtual === 'usuario-detalhe' && (
+                    typeof TelaUsuarioDetalhe !== 'undefined' ? (
+                        <TelaUsuarioDetalhe
+                            usuario={usuarioDetalhe}
+                            onVoltar={() => setTelaAtual('admin')}
+                            usuarios={usuarios}
+                            onAtualizar={(u) => setUsuarioDetalhe(u)}
+                        />
+                    ) : <TelaAusente nome="usuario-detalhe" />
                 )}
                 {telaAtual === 'admin' && (
                     autenticado && meuPerfil?.papel === 'administrador'

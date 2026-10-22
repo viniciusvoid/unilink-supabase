@@ -98,8 +98,7 @@ function TelaAdmin() {
     };
 
     const abrirDetalheUsuario = (u) => {
-        setUsuarioDetalhe(u);
-        setPapelEditando(u.papel);
+        setTelaAtual('usuario-detalhe');
     };
 
     const fecharDetalheUsuario = () => {
