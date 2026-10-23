@@ -501,8 +501,7 @@ function App() {
                             <EnvRow destaque label="Chamados" badge={pendentesCount > 0 ? <span className="rounded bg-[#0E3263]/10 px-1.5 py-0.5 text-[11px] tabular-nums text-[#0E3263] dark:bg-sky-400/10 dark:text-sky-300">{pendentesCount}</span> : null} onClick={() => setTelaAtual('pendencia')} icon={ICONS.wrench} />
                             <EnvRow label="Histórico" onClick={() => setTelaAtual('historico')} icon={ICONS.clock} />
                             <EnvRow label="Dashboard" onClick={() => setTelaAtual('dashboard')} icon={ICONS.chart} />
-                            {meuPerfil?.papel === 'administrador' && <EnvRow destaque label="Administração" onClick={() => setTelaAtual('admin')} icon={ICONS.shield} />}
-                            {meuPerfil?.papel === 'administrador' && <EnvRow label="Gerenciar usuários" onClick={() => setTelaAtual('gerenciar-usuarios')} icon={ICONS.shield} />}
+                            {meuPerfil?.papel === 'administrador' && <EnvRow destaque label="Gerenciar usuários" onClick={() => setTelaAtual('gerenciar-usuarios')} icon={ICONS.shield} />}
                         </div>
                         </div>
                     </div>
